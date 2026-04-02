@@ -2396,3 +2396,41 @@ updateBadges();
 </script>
 </body>
 </html>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const supabaseUrl = 'Thttps://qbpvrfouhsycbzgzltih.supabase.co';
+const supabaseKey = 'Tsb_publishable_WuXm4DcjX4r4ZCLeAuBBbw__2OlJl4C';
+
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// registro
+async function registerUser(email, password) {
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    alert(error.message);
+  } else {
+    alert("Usuario creado!");
+  }
+}
+
+// login
+async function loginUser(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    alert(error.message);
+  } else {
+    alert("Login OK");
+  }
+}
+</script>
+
+</body>
