@@ -864,405 +864,209 @@ button,select,input{font-family:inherit}
 .aff-prog-bar{height:4px;background:var(--surf3);border-radius:2px;overflow:hidden;margin:6px 0 4px}
 .aff-prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--g2),var(--teal))}
 
-/* ════════════════════════════════════
-   AUTH SCREENS
-════════════════════════════════════ */
-#auth-overlay{
-  position:fixed;inset:0;z-index:900;
-  background:var(--bg);
-  display:flex;align-items:center;justify-content:center;
-  padding:20px;
-  opacity:1;transition:opacity .3s;
-}
-#auth-overlay.hidden{opacity:0;pointer-events:none}
-
-.auth-box{
-  width:min(420px,100%);
-  background:var(--bg2);
-  border:1px solid var(--b2);
-  border-radius:24px;
-  overflow:hidden;
-  box-shadow:0 24px 64px rgba(0,0,0,.7);
-  animation:authIn .35s cubic-bezier(.22,1,.36,1) both;
-}
-@keyframes authIn{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:none}}
-
-.auth-brand{
-  padding:28px 28px 0;
-  text-align:center;
-}
-.auth-logo{
-  font-size:26px;font-weight:800;letter-spacing:-.8px;
-  background:linear-gradient(135deg,#34D399,#2DD4BF);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;display:block;margin-bottom:4px;
-}
-.auth-tagline{font-size:11px;color:var(--t3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:24px}
-
-.auth-tabs{
-  display:flex;border-bottom:1px solid var(--b);margin:0 28px;
-}
-.auth-tab{
-  flex:1;padding:11px 0;font-size:13px;font-weight:700;color:var(--t3);
-  cursor:pointer;background:none;border:none;border-bottom:2.5px solid transparent;
-  margin-bottom:-1px;transition:all .15s;
-}
-.auth-tab.on{color:var(--g);border-bottom-color:var(--g)}
-
-.auth-body{padding:24px 28px}
-
-.auth-field{margin-bottom:14px}
-.auth-label{display:block;font-size:11px;font-weight:700;color:var(--t2);margin-bottom:6px;letter-spacing:.3px}
-.auth-input{
-  width:100%;padding:12px 14px;
-  background:var(--surf2);border:1px solid var(--b2);border-radius:12px;
-  color:var(--t);font-size:13px;outline:none;transition:all .2s;
-  font-family:inherit;
-}
-.auth-input:focus{border-color:var(--g2);box-shadow:0 0 0 3px rgba(16,185,129,.1)}
-.auth-input::placeholder{color:var(--t3)}
-
-.auth-input-wrap{position:relative}
-.auth-eye{
-  position:absolute;right:12px;top:50%;transform:translateY(-50%);
-  cursor:pointer;font-size:16px;color:var(--t3);background:none;border:none;
-  padding:2px 4px;
-}
-.auth-eye:hover{color:var(--t2)}
-
-.auth-btn{
-  width:100%;padding:13px;border-radius:13px;margin-top:6px;
-  background:linear-gradient(135deg,#10B981,#2DD4BF);
-  color:#022C22;font-size:14px;font-weight:900;border:none;cursor:pointer;
-  transition:all .2s;font-family:inherit;letter-spacing:.2px;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.auth-btn:hover{opacity:.88;box-shadow:0 8px 24px rgba(16,185,129,.3);transform:translateY(-1px)}
-.auth-btn:active{transform:scale(.98)}
-.auth-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-
-.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0}
-.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--b2)}
-.auth-divider span{font-size:11px;color:var(--t3);font-weight:600}
-
-.auth-google{
-  width:100%;padding:11px;border-radius:12px;
-  background:var(--surf2);border:1px solid var(--b2);
-  color:var(--t2);font-size:13px;font-weight:700;cursor:pointer;
-  transition:all .15s;font-family:inherit;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.auth-google:hover{border-color:var(--b2);background:var(--surf3);color:var(--t)}
-
-.auth-err{
-  display:flex;align-items:flex-start;gap:8px;
-  background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.2);
-  border-radius:10px;padding:10px 12px;margin-bottom:14px;
-  font-size:12px;color:var(--rose);line-height:1.5;
-  animation:authIn .2s ease;
-}
-.auth-err-icon{font-size:14px;flex-shrink:0;margin-top:0}
-
-.auth-ok{
-  display:flex;align-items:flex-start;gap:8px;
-  background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);
-  border-radius:10px;padding:10px 12px;margin-bottom:14px;
-  font-size:12px;color:var(--g);line-height:1.5;
-  animation:authIn .2s ease;
-}
-
-.auth-footer{
-  text-align:center;padding:0 28px 24px;
-  font-size:12px;color:var(--t3);line-height:1.7;
-}
-.auth-footer a{color:var(--g);cursor:pointer;font-weight:600}
-.auth-footer a:hover{color:var(--teal);text-decoration:underline}
-
-.auth-forgot{
-  font-size:11px;color:var(--t3);cursor:pointer;
-  display:block;text-align:right;margin-top:-8px;margin-bottom:14px;
-}
-.auth-forgot:hover{color:var(--g)}
-
-/* Password strength bar */
-.pw-strength{margin-top:6px}
-.pw-bar{height:3px;border-radius:2px;background:var(--surf3);overflow:hidden;margin-bottom:4px}
-.pw-fill{height:100%;border-radius:2px;transition:all .3s}
-.pw-label{font-size:10px;color:var(--t3)}
-
-/* Loading spinner */
-.spin{
-  width:16px;height:16px;border-radius:50%;
-  border:2px solid rgba(2,44,34,.3);border-top-color:#022C22;
-  animation:spin .7s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* Edit profile modal */
-#edit-profile-modal{
-  display:none;position:fixed;inset:0;z-index:800;
-  background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
-  align-items:center;justify-content:center;padding:20px;
-}
-#edit-profile-modal.open{display:flex}
-.ep-box{
-  width:min(520px,100%);max-height:90vh;overflow-y:auto;
-  background:var(--bg2);border:1px solid var(--b2);border-radius:24px;
-  padding:28px;animation:authIn .3s ease;
-}
-.ep-title{font-size:18px;font-weight:800;color:var(--t);margin-bottom:4px}
-.ep-sub{font-size:12px;color:var(--t2);margin-bottom:22px}
-.ep-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:500px){.ep-row{grid-template-columns:1fr}}
-.ep-av-area{display:flex;align-items:center;gap:16px;margin-bottom:22px;padding:16px;background:var(--surf);border:1px solid var(--b);border-radius:14px}
-.ep-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
-.ep-av-info{flex:1}
-.ep-av-name{font-size:14px;font-weight:700;color:var(--t);margin-bottom:2px}
-.ep-av-email{font-size:11px;color:var(--t3)}
-.ep-av-btn{padding:6px 12px;border-radius:9px;background:var(--surf2);border:1px solid var(--b2);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
-.ep-av-btn:hover{border-color:rgba(52,211,153,.3);color:var(--g)}
-.ep-section{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin:18px 0 10px}
-.ep-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
-
-/* User info in header */
-#hdr-user-info{
-  display:flex;align-items:center;gap:8px;cursor:pointer;
-  padding:4px 10px 4px 4px;border-radius:12px;background:var(--surf);border:1px solid var(--b);
-  transition:all .15s;max-width:180px;overflow:hidden;
-}
-#hdr-user-info:hover{border-color:var(--b3)}
-.hdr-user-av{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.hdr-user-email{font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* Session indicator */
-.session-dot{
-  width:8px;height:8px;border-radius:50%;background:var(--g);
-  position:absolute;bottom:0;right:0;border:2px solid var(--bg);
-}
+/* ═══════════════════════════════════════
+   AUTH + PROFILE FLOW
+═══════════════════════════════════════ */
+#auth-modal{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px}
+#auth-modal.open{display:flex}
+#complete-profile-screen{display:none;position:fixed;inset:0;z-index:800;background:var(--bg);overflow-y:auto;padding:20px 16px}
+#complete-profile-screen.open{display:block}
+#edit-modal{display:none;position:fixed;inset:0;z-index:850;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+#edit-modal.open{display:flex}
+.auth-box{width:min(400px,100%);background:var(--bg2);border:1px solid var(--b2);border-radius:22px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7);animation:aIn .3s cubic-bezier(.22,1,.36,1) both}
+.ep-box{width:min(520px,100%);max-height:90vh;overflow-y:auto;background:var(--bg2);border:1px solid var(--b2);border-radius:22px;padding:24px;animation:aIn .3s ease;flex-shrink:0}
+.cp-box{max-width:520px;margin:0 auto;background:var(--bg2);border:1px solid var(--b2);border-radius:22px;padding:26px}
+@keyframes aIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.auth-brand{padding:24px 24px 0;text-align:center}
+.auth-logo-txt{font-size:22px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,#34D399,#2DD4BF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;margin-bottom:3px}
+.auth-tagline{font-size:10px;color:var(--t3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:18px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--b);margin:0 24px}
+.atab{flex:1;padding:10px 0;font-size:13px;font-weight:700;color:var(--t3);cursor:pointer;background:none;border:none;border-bottom:2.5px solid transparent;margin-bottom:-1px;transition:all .15s;font-family:inherit}
+.atab.on{color:var(--g);border-bottom-color:var(--g)}
+.aform{padding:20px 24px}
+.af-lbl{display:block;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.af-inp{width:100%;padding:11px 13px;background:var(--surf2);border:1px solid var(--b2);border-radius:11px;color:var(--t);font-size:13px;outline:none;transition:all .2s;font-family:inherit;margin-bottom:11px}
+.af-inp:focus{border-color:var(--g2);box-shadow:0 0 0 3px rgba(16,185,129,.1)}
+.af-inp::placeholder{color:var(--t3)}
+.af-pw{position:relative;margin-bottom:11px}
+.af-pw .af-inp{margin-bottom:0}
+.af-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:var(--t3);background:none;border:none;padding:3px}
+.af-eye:hover{color:var(--t2)}
+.af-btn{width:100%;padding:12px;border-radius:12px;margin-top:4px;background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22;font-size:13px;font-weight:900;border:none;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px}
+.af-btn:hover{opacity:.88;box-shadow:0 8px 20px rgba(16,185,129,.3);transform:translateY(-1px)}
+.af-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.af-btn.sec{background:var(--surf2);border:1px solid var(--b2);color:var(--t2);margin-top:8px}
+.af-btn.sec:hover{border-color:rgba(255,255,255,.2);color:var(--t);box-shadow:none;transform:none}
+.af-btn.danger{background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.25);color:var(--rose);margin-top:8px}
+.af-btn.danger:hover{background:rgba(251,113,133,.2);box-shadow:none;transform:none}
+.af-msg{border-radius:10px;padding:9px 12px;margin-bottom:11px;font-size:12px;line-height:1.5;display:flex;align-items:flex-start;gap:7px;animation:aIn .2s ease}
+.af-msg.err{background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.2);color:var(--rose)}
+.af-msg.ok{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--g)}
+.af-msg.warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber)}
+.af-divider{display:flex;align-items:center;gap:10px;margin:11px 0}
+.af-divider::before,.af-divider::after{content:'';flex:1;height:1px;background:var(--b2)}
+.af-divider span{font-size:11px;color:var(--t3);font-weight:600}
+.af-footer{text-align:center;padding:0 24px 18px;font-size:11px;color:var(--t3)}
+.af-link{color:var(--g);cursor:pointer;font-weight:600}
+.af-link:hover{color:var(--teal)}
+.af-spin{width:15px;height:15px;border-radius:50%;border:2px solid rgba(2,44,34,.3);border-top-color:#022C22;animation:af-spin .65s linear infinite;flex-shrink:0}
+@keyframes af-spin{to{transform:rotate(360deg)}}
+.af-str-bar{height:3px;background:var(--surf3);border-radius:2px;overflow:hidden;margin-bottom:3px}
+.af-str-fill{height:100%;border-radius:2px;transition:all .3s}
+.cp-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.cp-2col{grid-template-columns:1fr}}
+.cp-sec{font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--b)}
+.av-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px}
+.av-btn{width:36px;height:36px;border-radius:9px;font-size:18px;cursor:pointer;transition:all .15s;background:var(--surf2);border:2px solid var(--b);display:flex;align-items:center;justify-content:center}
+.av-btn.sel{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.5)}
+.av-btn:hover{border-color:var(--b2)}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:4px}
+.role-opt{padding:13px 8px;border-radius:12px;text-align:center;background:var(--surf);border:1.5px solid var(--b);cursor:pointer;transition:all .15s}
+.role-opt:hover{border-color:var(--b2)}
+.role-opt.sel{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.07)}
+.hdr-online-dot{position:absolute;bottom:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--g);border:2px solid var(--bg)}
 </style>
 </head>
 <body>
 
-<!-- ════ AUTH OVERLAY ════ -->
-<div id="auth-overlay">
+<!-- ════ AUTH MODAL ════ -->
+<div id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
   <div class="auth-box">
     <div class="auth-brand">
-      <span class="auth-logo">KOOMODOO</span>
+      <span class="auth-logo-txt">KOOMODOO</span>
       <span class="auth-tagline">Social Commerce Platform</span>
     </div>
-
     <div class="auth-tabs">
-      <button class="auth-tab on" id="auth-tab-login" onclick="switchAuthTab('login')">Iniciar sesión</button>
-      <button class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')">Crear cuenta</button>
+      <button class="atab on" id="atab-l" onclick="switchTab('login')">Iniciar sesión</button>
+      <button class="atab"    id="atab-r" onclick="switchTab('register')">Crear cuenta</button>
     </div>
+    <!-- Login -->
+    <div class="aform" id="aform-l">
+      <div id="amsg-l"></div>
+      <label class="af-lbl">Email</label>
+      <input type="email" class="af-inp" id="al-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()">
+      <label class="af-lbl">Contraseña</label>
+      <div class="af-pw">
+        <input type="password" class="af-inp" id="al-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="af-eye" onclick="togPw('al-pw',this)">👁</button>
+      </div>
+      <span onclick="doForgotPw()" style="font-size:11px;color:var(--t3);cursor:pointer;display:block;text-align:right;margin:-4px 0 11px">¿Olvidaste tu contraseña?</span>
+      <button class="af-btn" id="btn-l" onclick="doLogin()"><span>→ Iniciar sesión</span></button>
+      <div class="af-divider"><span>o</span></div>
+      <button class="af-btn sec" onclick="doGoogleAuth()">🌐 Continuar con Google</button>
+    </div>
+    <!-- Register -->
+    <div class="aform" id="aform-r" style="display:none">
+      <div id="amsg-r"></div>
+      <div class="cp-2col">
+        <div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="rg-fn" placeholder="Carlos"></div>
+        <div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="rg-ln" placeholder="Mendoza"></div>
+      </div>
+      <label class="af-lbl">Email</label>
+      <input type="email" class="af-inp" id="rg-email" placeholder="tu@email.com">
+      <label class="af-lbl">Contraseña</label>
+      <div class="af-pw">
+        <input type="password" class="af-inp" id="rg-pw" placeholder="Mín. 8 caracteres" oninput="checkPwStr(this)">
+        <button class="af-eye" onclick="togPw('rg-pw',this)">👁</button>
+      </div>
+      <div id="pw-str-wrap" style="display:none;margin:-6px 0 10px">
+        <div class="af-str-bar"><div class="af-str-fill" id="pw-str-fill"></div></div>
+        <span id="pw-str-lbl" style="font-size:10px;color:var(--t3)"></span>
+      </div>
+      <label class="af-lbl">País</label>
+      <select class="af-inp" id="rg-country" style="cursor:pointer">
+        <option value="UY">🇺🇾 Uruguay</option>
+        <option value="AR">🇦🇷 Argentina</option>
+        <option value="CL">🇨🇱 Chile</option>
+        <option value="PY">🇵🇾 Paraguay</option>
+      </select>
+      <button class="af-btn" id="btn-r" onclick="doRegister()"><span>🚀 Crear cuenta gratis</span></button>
+      <div class="af-divider"><span>o</span></div>
+      <button class="af-btn sec" onclick="doGoogleAuth()">🌐 Registrarse con Google</button>
+    </div>
+    <div class="af-footer">Al continuar aceptás los <span class="af-link" onclick="toast('📄 Términos próximamente')">Términos</span> y la <span class="af-link" onclick="toast('🔒 Privacidad próximamente')">Política de privacidad</span></div>
+  </div>
+</div>
 
-    <!-- Login form -->
-    <div class="auth-body" id="auth-login-body">
-      <div id="auth-login-err"></div>
-      <div class="auth-field">
-        <label class="auth-label">EMAIL</label>
-        <input type="email" class="auth-input" id="login-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">CONTRASEÑA</label>
-        <div class="auth-input-wrap">
-          <input type="password" class="auth-input" id="login-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-          <button class="auth-eye" onclick="togglePw('login-pw',this)" title="Ver contraseña">👁</button>
-        </div>
-      </div>
-      <span class="auth-forgot" onclick="doForgotPassword()">¿Olvidaste tu contraseña?</span>
-      <button class="auth-btn" id="login-btn" onclick="doLogin()">
-        <span>→ Iniciar sesión</span>
-      </button>
-      <div class="auth-divider"><span>o continuá con</span></div>
-      <button class="auth-google" onclick="doGoogleLogin()">
-        <span>🌐</span> Continuar con Google
-      </button>
+<!-- ════ COMPLETE PROFILE SCREEN ════ -->
+<div id="complete-profile-screen">
+  <div class="cp-box">
+    <div style="text-align:center;margin-bottom:20px">
+      <span style="font-size:22px;font-weight:800;background:linear-gradient(135deg,#34D399,#2DD4BF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">KOOMODOO</span>
+      <div style="font-size:18px;font-weight:800;color:var(--t);margin:10px 0 4px">¡Bienvenido! 👋</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.6">Completá tu perfil para empezar a comprar y vender</div>
     </div>
-
-    <!-- Register form -->
-    <div class="auth-body" id="auth-register-body" style="display:none">
-      <div id="auth-register-err"></div>
-      <div class="ep-row">
-        <div class="auth-field">
-          <label class="auth-label">NOMBRE</label>
-          <input type="text" class="auth-input" id="reg-fname" placeholder="Carlos">
-        </div>
-        <div class="auth-field">
-          <label class="auth-label">APELLIDO</label>
-          <input type="text" class="auth-input" id="reg-lname" placeholder="Mendoza">
-        </div>
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">USUARIO</label>
-        <input type="text" class="auth-input" id="reg-username" placeholder="carlosmendoza" oninput="validateUsername(this)">
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">EMAIL</label>
-        <input type="email" class="auth-input" id="reg-email" placeholder="tu@email.com">
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">CONTRASEÑA</label>
-        <div class="auth-input-wrap">
-          <input type="password" class="auth-input" id="reg-pw" placeholder="Mín. 8 caracteres" oninput="checkPwStrength(this)">
-          <button class="auth-eye" onclick="togglePw('reg-pw',this)" title="Ver contraseña">👁</button>
-        </div>
-        <div class="pw-strength" id="pw-strength" style="display:none">
-          <div class="pw-bar"><div class="pw-fill" id="pw-fill"></div></div>
-          <span class="pw-label" id="pw-label">Contraseña débil</span>
-        </div>
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">PAÍS</label>
-        <select class="auth-input" id="reg-country" style="cursor:pointer">
-          <option value="UY">🇺🇾 Uruguay</option>
-          <option value="AR">🇦🇷 Argentina</option>
-          <option value="CL">🇨🇱 Chile</option>
-          <option value="PY">🇵🇾 Paraguay</option>
-        </select>
-      </div>
-      <button class="auth-btn" id="register-btn" onclick="doRegister()">
-        <span>🚀 Crear cuenta gratis</span>
-      </button>
-      <div class="auth-divider"><span>o continuá con</span></div>
-      <button class="auth-google" onclick="doGoogleLogin()">
-        <span>🌐</span> Registrarse con Google
-      </button>
+    <div id="cp-msg"></div>
+    <div class="cp-sec">Elegí tu avatar</div>
+    <div class="av-grid" id="cp-av-grid"></div>
+    <div class="cp-sec">Información básica</div>
+    <div class="cp-2col">
+      <div><label class="af-lbl">Nombre *</label><input type="text" class="af-inp" id="cp-fn" placeholder="Carlos"></div>
+      <div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="cp-ln" placeholder="Mendoza"></div>
     </div>
-
-    <div class="auth-footer">
-      Al continuar aceptás los <a onclick="toast('📄 Términos próximamente')">Términos de uso</a>
-      y la <a onclick="toast('🔒 Política de privacidad próximamente')">Política de privacidad</a> de KOOMODOO.
+    <label class="af-lbl">Usuario *</label>
+    <input type="text" class="af-inp" id="cp-user" placeholder="carlosmendoza" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')">
+    <label class="af-lbl">Ubicación</label>
+    <input type="text" class="af-inp" id="cp-loc" placeholder="Montevideo, Uruguay">
+    <label class="af-lbl">Bio (opcional)</label>
+    <textarea class="af-inp" id="cp-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
+    <div class="cp-sec">¿Qué querés hacer en KOOMODOO?</div>
+    <div class="role-grid" id="cp-roles">
+      <div class="role-opt sel" data-role="BUYER" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">🛒</div><div style="font-size:12px;font-weight:800;color:var(--t)">Solo comprar</div><div style="font-size:10px;color:var(--t3)">Explorar y comprar</div></div>
+      <div class="role-opt" data-role="BOTH" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">⚡</div><div style="font-size:12px;font-weight:800;color:var(--t)">Comprar y vender</div><div style="font-size:10px;color:var(--t3)">Más popular</div></div>
+      <div class="role-opt" data-role="SELLER" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">🏷️</div><div style="font-size:12px;font-weight:800;color:var(--t)">Solo vender</div><div style="font-size:10px;color:var(--t3)">Gestionar tienda</div></div>
     </div>
+    <button class="af-btn" id="cp-save-btn" onclick="saveCompleteProfile()" style="margin-top:16px"><span>✅ Guardar y entrar a KOOMODOO</span></button>
+    <button onclick="skipCP()" style="width:100%;padding:9px;margin-top:8px;background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit">Completar más tarde →</button>
   </div>
 </div>
 
 <!-- ════ EDIT PROFILE MODAL ════ -->
-<div id="edit-profile-modal">
+<div id="edit-modal" onclick="if(event.target===this)closeEditModal()">
   <div class="ep-box">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div class="ep-title">✏️ Editar perfil</div>
-      <button onclick="closeEditProfile()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;padding:4px">✕</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div><div style="font-size:17px;font-weight:800;color:var(--t)">✏️ Editar perfil</div><div style="font-size:12px;color:var(--t2);margin-top:2px">Datos visibles en tu perfil público</div></div>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;padding:4px 8px">✕</button>
     </div>
-    <div class="ep-sub">Estos datos son visibles en tu perfil público de KOOMODOO</div>
-
-    <div id="ep-err"></div>
-    <div id="ep-ok"></div>
-
-    <!-- Avatar area -->
-    <div class="ep-av-area">
-      <div class="ep-av" id="ep-av-display">🦁</div>
-      <div class="ep-av-info">
-        <div class="ep-av-name" id="ep-av-name">Carlos Mendoza</div>
-        <div class="ep-av-email" id="ep-av-email">carlos@example.com</div>
-      </div>
-      <button class="ep-av-btn" onclick="toast('📷 Subida de foto próximamente')">📷 Cambiar foto</button>
+    <div id="ep-msg"></div>
+    <div style="display:flex;align-items:center;gap:13px;padding:13px;background:var(--surf);border:1px solid var(--b);border-radius:13px;margin-bottom:14px">
+      <div id="ep-av-big" style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">🦁</div>
+      <div style="flex:1"><div id="ep-name-big" style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:2px">Carlos Mendoza</div><div id="ep-email-big" style="font-size:11px;color:var(--t3)">carlos@example.com</div></div>
     </div>
-
-    <!-- Avatar emoji picker -->
-    <div class="ep-section">AVATAR EMOJI</div>
-    <div id="ep-emoji-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px">
-      <!-- rendered by JS -->
+    <div class="cp-sec">Avatar</div>
+    <div class="av-grid" id="ep-av-grid"></div>
+    <div class="cp-sec">Información básica</div>
+    <div class="cp-2col">
+      <div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="ep-fn" placeholder="Carlos"></div>
+      <div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="ep-ln" placeholder="Mendoza"></div>
     </div>
-
-    <!-- Basic info -->
-    <div class="ep-section">INFORMACIÓN BÁSICA</div>
-    <div class="ep-row">
-      <div class="auth-field">
-        <label class="auth-label">NOMBRE</label>
-        <input type="text" class="auth-input" id="ep-fname" placeholder="Carlos">
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">APELLIDO</label>
-        <input type="text" class="auth-input" id="ep-lname" placeholder="Mendoza">
-      </div>
+    <label class="af-lbl">Usuario</label>
+    <input type="text" class="af-inp" id="ep-user" placeholder="carlosmendoza">
+    <label class="af-lbl">Bio</label>
+    <textarea class="af-inp" id="ep-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
+    <div class="cp-2col">
+      <div><label class="af-lbl">Ubicación</label><input type="text" class="af-inp" id="ep-loc" placeholder="Montevideo, UY"></div>
+      <div><label class="af-lbl">Teléfono</label><input type="tel" class="af-inp" id="ep-phone" placeholder="+598 99 000 000"></div>
     </div>
-    <div class="auth-field">
-      <label class="auth-label">NOMBRE DE USUARIO</label>
-      <input type="text" class="auth-input" id="ep-username" placeholder="carlosmendoza">
+    <div class="cp-2col">
+      <div><label class="af-lbl">País</label><select class="af-inp" id="ep-country" style="cursor:pointer"><option value="UY">🇺🇾 Uruguay</option><option value="AR">🇦🇷 Argentina</option><option value="CL">🇨🇱 Chile</option></select></div>
+      <div><label class="af-lbl">Rol</label><select class="af-inp" id="ep-role" style="cursor:pointer"><option value="BUYER">🛒 Comprador</option><option value="BOTH">⚡ Comprador + Vendedor</option><option value="SELLER">🏷️ Vendedor</option></select></div>
     </div>
-    <div class="auth-field">
-      <label class="auth-label">BIO</label>
-      <textarea class="auth-input" id="ep-bio" rows="3" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
+    <div class="cp-sec">Mi tienda (opcional)</div>
+    <label class="af-lbl">Nombre de tienda</label>
+    <input type="text" class="af-inp" id="ep-store" placeholder="Mi Tienda UY">
+    <div class="cp-sec">Redes sociales</div>
+    <div class="cp-2col">
+      <div><label class="af-lbl">Instagram</label><input type="text" class="af-inp" id="ep-ig" placeholder="@usuario"></div>
+      <div><label class="af-lbl">TikTok</label><input type="text" class="af-inp" id="ep-tt" placeholder="@usuario"></div>
     </div>
-    <div class="ep-row">
-      <div class="auth-field">
-        <label class="auth-label">UBICACIÓN</label>
-        <input type="text" class="auth-input" id="ep-location" placeholder="Montevideo, Uruguay">
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">TELÉFONO</label>
-        <input type="tel" class="auth-input" id="ep-phone" placeholder="+598 99 123 456">
-      </div>
+    <div class="cp-sec">Seguridad</div>
+    <div class="cp-2col">
+      <div><label class="af-lbl">Nueva contraseña</label><input type="password" class="af-inp" id="ep-pw1" placeholder="Dejar vacío si no cambiás"></div>
+      <div><label class="af-lbl">Confirmar</label><input type="password" class="af-inp" id="ep-pw2" placeholder="Repetir contraseña"></div>
     </div>
-    <div class="ep-row">
-      <div class="auth-field">
-        <label class="auth-label">PAÍS</label>
-        <select class="auth-input" id="ep-country" style="cursor:pointer">
-          <option value="UY">🇺🇾 Uruguay</option>
-          <option value="AR">🇦🇷 Argentina</option>
-          <option value="CL">🇨🇱 Chile</option>
-          <option value="PY">🇵🇾 Paraguay</option>
-        </select>
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">ROL</label>
-        <select class="auth-input" id="ep-role" style="cursor:pointer">
-          <option value="BUYER">🛒 Solo comprar</option>
-          <option value="BOTH">⚡ Comprar y vender</option>
-          <option value="SELLER">🏷️ Solo vender</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Store info -->
-    <div class="ep-section">MI TIENDA (opcional)</div>
-    <div class="auth-field">
-      <label class="auth-label">NOMBRE DE LA TIENDA</label>
-      <input type="text" class="auth-input" id="ep-store" placeholder="TechStore UY">
-    </div>
-    <div class="auth-field">
-      <label class="auth-label">DESCRIPCIÓN DE LA TIENDA</label>
-      <textarea class="auth-input" id="ep-store-desc" rows="2" style="resize:none" placeholder="¿Qué vendés?"></textarea>
-    </div>
-
-    <!-- Social links -->
-    <div class="ep-section">REDES SOCIALES</div>
-    <div class="ep-row">
-      <div class="auth-field">
-        <label class="auth-label">INSTAGRAM</label>
-        <input type="text" class="auth-input" id="ep-instagram" placeholder="@usuario">
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">TIKTOK</label>
-        <input type="text" class="auth-input" id="ep-tiktok" placeholder="@usuario">
-      </div>
-    </div>
-
-    <!-- Change password -->
-    <div class="ep-section">SEGURIDAD</div>
-    <div class="ep-row">
-      <div class="auth-field">
-        <label class="auth-label">NUEVA CONTRASEÑA</label>
-        <input type="password" class="auth-input" id="ep-newpw" placeholder="Dejar vacío para no cambiar">
-      </div>
-      <div class="auth-field">
-        <label class="auth-label">CONFIRMAR CONTRASEÑA</label>
-        <input type="password" class="auth-input" id="ep-confirmpw" placeholder="Repetir contraseña">
-      </div>
-    </div>
-
-    <div class="ep-actions">
-      <button class="auth-btn" id="ep-save-btn" onclick="saveProfile()" style="flex:1">💾 Guardar cambios</button>
-      <button onclick="closeEditProfile()" style="padding:12px 20px;border-radius:13px;background:var(--surf2);border:1px solid var(--b2);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer">Cancelar</button>
-    </div>
-    <div style="margin-top:14px;padding:12px;border-radius:11px;background:rgba(251,113,133,.06);border:1px solid rgba(251,113,133,.15);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-      <div>
-        <div style="font-size:12px;font-weight:700;color:var(--rose);margin-bottom:2px">🚪 Cerrar sesión</div>
-        <div style="font-size:11px;color:var(--t3)">Salir de tu cuenta en este dispositivo</div>
-      </div>
-      <button onclick="doLogout()" style="padding:8px 16px;border-radius:10px;background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.25);color:var(--rose);font-size:12px;font-weight:800;cursor:pointer">Cerrar sesión</button>
-    </div>
+    <button class="af-btn" id="ep-save-btn" onclick="saveEditProfile()" style="margin-top:6px">💾 Guardar cambios</button>
+    <button class="af-btn danger" onclick="doLogout()">🚪 Cerrar sesión</button>
   </div>
 </div>
 
@@ -1293,11 +1097,10 @@ button,select,input{font-family:inherit}
     <div class="hbtn" onclick="nav('mensajes')" title="Mensajes">💬<div class="badge">3</div></div>
     <div class="hbtn" onclick="nav('favoritos')" title="Favoritos">❤️<div class="badge" id="fav-badge">3</div></div>
     <div class="hbtn" onclick="nav('carrito')" title="Carrito">🛒<div class="badge" id="cart-badge">2</div></div>
-    <div id="hdr-user-info" onclick="authAvatarClick()" title="Mi perfil" style="display:none">
-      <div class="hdr-user-av" id="hdr-av-emoji" style="position:relative">🦁<div class="session-dot"></div></div>
-      <span class="hdr-user-email" id="hdr-user-email"></span>
+    <div id="hdr-auth-btn" onclick="hdrAuthClick()" title="Mi cuenta" style="display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:11px;background:var(--surf);border:1px solid var(--b2);cursor:pointer;transition:all .15s;flex-shrink:0">
+      <div id="hdr-av" style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;position:relative">👤</div>
+      <span id="hdr-auth-label" style="font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis">Ingresar</span>
     </div>
-    <div class="hav" id="hdr-guest-btn" onclick="showAuthOverlay('login')" title="Iniciar sesión" style="display:flex">👤</div>
   </div>
 </header>
 
@@ -1446,25 +1249,25 @@ button,select,input{font-family:inherit}
 <div class="pg" id="pg-perfil">
   <div style="overflow-y:auto;flex:1">
     <div class="prof-hero">
-      <div class="prof-av-wrap"><div class="prof-av" id="prof-av-emoji">🦁</div></div>
-      <button class="prof-edit-btn" onclick="openEditProfile()">✏️ Editar</button>
+      <div class="prof-av-wrap"><div class="prof-av" id="prof-hero-av">🦁</div></div>
+      <button class="prof-edit-btn" onclick="openEditModal()">✏️ Editar</button>
     </div>
     <div class="prof-info">
-      <div class="prof-nm" id="prof-display-name">Carlos Mendoza <span class="vbdg">✓ VERIFICADO</span></div>
-      <div class="prof-hndl" id="prof-handle">@carlosmendoza · Vendedor Pro</div>
-      <div class="prof-bio" id="prof-bio-text">📍 Montevideo, UY · Emprendedor digital · Tech &amp; Moda · Envíos a todo Uruguay 🇺🇾</div>
+      <div class="prof-nm" id="prof-nm-el">Carlos Mendoza <span class="vbdg">✓ VERIFICADO</span></div>
+      <div class="prof-hndl" id="prof-hndl-el">@carlosmendoza · Vendedor Pro</div>
+      <div class="prof-bio" id="prof-bio-el">📍 Montevideo, UY · Emprendedor digital · Tech &amp; Moda · Envíos a todo Uruguay 🇺🇾</div>
       <div class="prof-stats">
         <div><div class="ps-n">1.2k</div><div class="ps-l">Seguidores</div></div>
         <div><div class="ps-n">386</div><div class="ps-l">Siguiendo</div></div>
-        <div><div class="ps-n" id="prof-sales-stat">847</div><div class="ps-l">Ventas</div></div>
+        <div><div class="ps-n">847</div><div class="ps-l">Ventas</div></div>
         <div><div class="ps-n" style="font-size:15px">4.9 ★</div><div class="ps-l">Rating</div></div>
       </div>
       <div class="prof-acts">
         <button class="btn-p btn-pri" onclick="nav('live')">📡 Live</button>
         <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
         <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
-        <button class="btn-p btn-sec" onclick="openEditProfile()" style="border:1px solid rgba(52,211,153,.3)!important">✏️ Editar</button>
-        <button class="btn-p" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.25)!important;color:var(--rose)" onclick="doLogout()">🚪 Salir</button>
+        <button class="btn-p btn-sec" onclick="openEditModal()" style="border:1px solid rgba(52,211,153,.3)!important">✏️ Editar perfil</button>
+        <button class="btn-p" onclick="doLogout()" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.25)!important;color:var(--rose)">🚪 Salir</button>
       </div>
     </div>
     <div class="prof-hls" id="prof-hls"></div>
@@ -2798,577 +2601,439 @@ function affCloseModal(){
   if(modal)modal.classList.remove('open');
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// KOOMODOO AUTH SYSTEM v5
+// Flow: open app freely → click Ingresar → login/register →
+//       complete profile if new → stay in app
+// ════════════════════════════════════════════════════════════════════════
 
-// ════════════════════════════════════════════════════════════
-// SUPABASE AUTH SYSTEM
-// ════════════════════════════════════════════════════════════
+// ── CONFIG — replace with your actual Supabase values ───────────────────
+const SB_URL  = 'https://YOUR_PROJECT.supabase.co';
+const SB_KEY  = 'YOUR_ANON_KEY_HERE';
 
-// ── Config (replace with your actual Supabase project values) ──
-const SUPABASE_URL  = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON = 'YOUR_ANON_KEY';
-
-// ── Init Supabase client ──────────────────────────────────────
-let supabase;
-try {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-} catch(e) {
-  console.warn('Supabase init failed — running in demo mode:', e.message);
-  supabase = null;
+// ── Single Supabase instance ─────────────────────────────────────────────
+let _sb = null;
+function getSB() {
+  if (_sb) return _sb;
+  try { _sb = window.supabase?.createClient(SB_URL, SB_KEY) || null; }
+  catch(e) { console.warn('[KMD] Running in demo mode —', e.message); }
+  return _sb;
 }
 
-// ── Local session state ──────────────────────────────────────
-let authSession = null;   // Supabase Session object
-let authUser    = null;   // merged user profile
+// ── Local storage helpers ────────────────────────────────────────────────
+const KSTORE = 'kmd_user_v1';
+function loadUser()    { try { return JSON.parse(localStorage.getItem(KSTORE)||'null'); } catch { return null; } }
+function saveUser(u)   { if(u) localStorage.setItem(KSTORE,JSON.stringify(u)); else localStorage.removeItem(KSTORE); }
 
-// Profile stored in localStorage (extended fields not in Supabase auth)
-const PROF_KEY = 'kmd_profile';
+// ── Global auth state ────────────────────────────────────────────────────
+let KMD = { session:null, user:null, loggedIn:false };
 
-function getStoredProfile() {
-  try { return JSON.parse(localStorage.getItem(PROF_KEY) || 'null'); } catch { return null; }
-}
-function saveStoredProfile(data) {
-  localStorage.setItem(PROF_KEY, JSON.stringify(data));
+function profileDone(u) {
+  return !!(u && u.firstName && u.firstName.trim() && u.username && u.username.trim());
 }
 
-// ── Avatar emojis ─────────────────────────────────────────────
-const AVATARS = ['🦁','🐯','🦊','🐺','🦋','🦅','🐱','🦈','🐬','🦝','🦄','🐸','🦭','🐧','🦉','🐮'];
-let selectedAvatar = '🦁';
+// ── Avatar list ──────────────────────────────────────────────────────────
+const AVEMOJIS = ['🦁','🐯','🦊','🐺','🦋','🦅','🐱','🦈','🐬','🦝','🦄','🐸','🦭','🐧','🦉','🐮'];
+let currentAv = '🦁';
 
-// ── Overlay helpers ───────────────────────────────────────────
-function showAuthOverlay(tab = 'login') {
-  const ov = document.getElementById('auth-overlay');
-  ov.classList.remove('hidden');
-  switchAuthTab(tab);
+// ════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════════════════════════════════
+function afMsg(id, type, txt) {
+  const el=document.getElementById(id); if(!el)return;
+  if(!txt){el.innerHTML='';return;}
+  const ic={err:'⚠️',ok:'✅',warn:'⏳'}[type]||'ℹ️';
+  el.innerHTML=`<div class="af-msg ${type}"><span>${ic}</span><span>${txt}</span></div>`;
+}
+function afBtn(id, loading, txt='') {
+  const b=document.getElementById(id); if(!b)return;
+  b.disabled=loading;
+  b.innerHTML=loading?'<div class="af-spin"></div>':`<span>${txt}</span>`;
+}
+function togPw(id,btn) {
+  const inp=document.getElementById(id); if(!inp)return;
+  inp.type=inp.type==='password'?'text':'password';
+  btn.textContent=inp.type==='password'?'👁':'🙈';
+}
+function checkPwStr(inp) {
+  const pw=inp.value,wrap=document.getElementById('pw-str-wrap'),
+        fill=document.getElementById('pw-str-fill'),lbl=document.getElementById('pw-str-lbl');
+  if(!wrap)return;
+  wrap.style.display=pw?'block':'none';
+  if(!pw)return;
+  let s=0;
+  if(pw.length>=8)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;
+  if(/[^A-Za-z0-9]/.test(pw))s++;if(pw.length>=12)s++;
+  const lvl=[{w:'15%',c:'var(--rose)',l:'Muy débil'},{w:'30%',c:'var(--rose)',l:'Débil'},
+             {w:'55%',c:'var(--amber)',l:'Regular'},{w:'75%',c:'var(--amber)',l:'Buena'},
+             {w:'100%',c:'var(--g)',l:'Muy segura ✓'}][Math.min(s,4)];
+  fill.style.width=lvl.w;fill.style.background=lvl.c;
+  lbl.textContent=lvl.l;lbl.style.color=lvl.c;
+}
+function authErr(msg) {
+  if(!msg)return'Error desconocido.';
+  if(msg.includes('Invalid login credentials'))return'Email o contraseña incorrectos.';
+  if(msg.includes('Email not confirmed'))return'Confirmá tu email antes de ingresar.';
+  if(msg.includes('already registered'))return'Ya existe una cuenta con ese email.';
+  if(msg.includes('Password should'))return'La contraseña debe tener al menos 6 caracteres.';
+  if(msg.includes('rate limit'))return'Demasiados intentos. Esperá un momento.';
+  return msg;
 }
 
-function hideAuthOverlay() {
-  const ov = document.getElementById('auth-overlay');
-  ov.classList.add('hidden');
+// ════════════════════════════════════════════════════════════════════════
+// AUTH MODAL
+// ════════════════════════════════════════════════════════════════════════
+function openAuthModal(tab='login') {
+  document.getElementById('auth-modal').classList.add('open');
+  switchTab(tab);
+}
+function closeAuthModal() {
+  document.getElementById('auth-modal').classList.remove('open');
+}
+function switchTab(tab) {
+  const isL=tab==='login';
+  document.getElementById('aform-l').style.display=isL?'':'none';
+  document.getElementById('aform-r').style.display=isL?'none':'';
+  document.getElementById('atab-l').classList.toggle('on',isL);
+  document.getElementById('atab-r').classList.toggle('on',!isL);
+  afMsg('amsg-l','ok','');afMsg('amsg-r','ok','');
 }
 
-function switchAuthTab(tab) {
-  const loginBody = document.getElementById('auth-login-body');
-  const regBody   = document.getElementById('auth-register-body');
-  const tabLogin  = document.getElementById('auth-tab-login');
-  const tabReg    = document.getElementById('auth-tab-register');
-  if (tab === 'login') {
-    loginBody.style.display = '';
-    regBody.style.display   = 'none';
-    tabLogin.classList.add('on');
-    tabReg.classList.remove('on');
-  } else {
-    loginBody.style.display = 'none';
-    regBody.style.display   = '';
-    tabLogin.classList.remove('on');
-    tabReg.classList.add('on');
-  }
-  clearAuthErrors();
+// Header click: logged-in → go to profile, guest → open modal
+function hdrAuthClick() {
+  KMD.loggedIn ? _baseNav('perfil') : openAuthModal('login');
 }
 
-function clearAuthErrors() {
-  ['auth-login-err','auth-register-err'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = '';
-  });
-}
-
-function showAuthError(containerId, msg) {
-  const el = document.getElementById(containerId);
-  if (el) el.innerHTML = `<div class="auth-err"><span class="auth-err-icon">⚠️</span><span>${msg}</span></div>`;
-}
-
-function showAuthSuccess(containerId, msg) {
-  const el = document.getElementById(containerId);
-  if (el) el.innerHTML = `<div class="auth-ok"><span>✅</span><span>${msg}</span></div>`;
-}
-
-function setAuthBtnLoading(btnId, loading, originalText) {
-  const btn = document.getElementById(btnId);
-  if (!btn) return;
-  btn.disabled = loading;
-  btn.innerHTML = loading
-    ? '<div class="spin"></div>'
-    : `<span>${originalText}</span>`;
-}
-
-// ── Password helpers ──────────────────────────────────────────
-function togglePw(inputId, btn) {
-  const inp = document.getElementById(inputId);
-  if (!inp) return;
-  const isHidden = inp.type === 'password';
-  inp.type = isHidden ? 'text' : 'password';
-  btn.textContent = isHidden ? '🙈' : '👁';
-}
-
-function checkPwStrength(input) {
-  const pw = input.value;
-  const el = document.getElementById('pw-strength');
-  const fill = document.getElementById('pw-fill');
-  const label = document.getElementById('pw-label');
-  if (!el || !pw) { if(el) el.style.display='none'; return; }
-  el.style.display = 'block';
-
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  if (pw.length >= 12) score++;
-
-  const levels = [
-    { w: '15%', bg: 'var(--rose)', l: 'Muy débil' },
-    { w: '30%', bg: 'var(--rose)', l: 'Débil' },
-    { w: '55%', bg: 'var(--amber)', l: 'Regular' },
-    { w: '75%', bg: 'var(--amber)', l: 'Buena' },
-    { w: '100%', bg: 'var(--g)', l: 'Muy segura ✓' },
-  ];
-  const lvl = levels[Math.min(score, 4)];
-  fill.style.width = lvl.w;
-  fill.style.background = lvl.bg;
-  label.textContent = lvl.l;
-  label.style.color = lvl.bg;
-}
-
-function validateUsername(input) {
-  const val = input.value;
-  if (!/^[a-zA-Z0-9_]*$/.test(val)) {
-    input.value = val.replace(/[^a-zA-Z0-9_]/g, '');
-  }
-}
-
-// ── REGISTER ──────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════
+// REGISTER
+// ════════════════════════════════════════════════════════════════════════
 async function doRegister() {
-  const email    = document.getElementById('reg-email')?.value?.trim();
-  const pw       = document.getElementById('reg-pw')?.value;
-  const fname    = document.getElementById('reg-fname')?.value?.trim();
-  const lname    = document.getElementById('reg-lname')?.value?.trim();
-  const username = document.getElementById('reg-username')?.value?.trim();
-  const country  = document.getElementById('reg-country')?.value || 'UY';
-
-  // Validation
-  if (!email || !pw) { showAuthError('auth-register-err', 'Email y contraseña son requeridos.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('auth-register-err', 'Ingresá un email válido.'); return; }
-  if (pw.length < 8) { showAuthError('auth-register-err', 'La contraseña debe tener al menos 8 caracteres.'); return; }
-  if (username && username.length < 3) { showAuthError('auth-register-err', 'El usuario debe tener al menos 3 caracteres.'); return; }
-
-  setAuthBtnLoading('register-btn', true, '🚀 Crear cuenta gratis');
-
-  const profile = {
-    firstName: fname || 'Usuario',
-    lastName:  lname || '',
-    username:  username || email.split('@')[0],
-    country,
-    avatar:    selectedAvatar || '🦁',
-    bio:       '',
-    location:  country === 'UY' ? 'Uruguay' : country === 'AR' ? 'Argentina' : '',
-    phone:     '',
-    role:      'BUYER',
-    storeName: '',
-    instagram: '',
-    tiktok:    '',
-    createdAt: new Date().toISOString(),
-  };
-
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: pw,
-        options: { data: profile }
-      });
-      if (error) throw error;
-      saveStoredProfile({ ...profile, email });
-      showAuthSuccess('auth-register-err', '¡Cuenta creada! Revisá tu email para confirmar. Iniciando sesión...');
-      setTimeout(() => onAuthSuccess(data.session, { ...profile, email }), 1500);
-    } catch(err) {
-      showAuthError('auth-register-err', err.message || 'Error al registrarse. Intentá de nuevo.');
-    }
-  } else {
-    // DEMO mode (no Supabase configured)
-    const demoSession = { user: { id: 'demo-' + Date.now(), email } };
-    saveStoredProfile({ ...profile, email });
-    showAuthSuccess('auth-register-err', '✅ ¡Cuenta demo creada! (Modo demo — configurá Supabase para producción)');
-    setTimeout(() => onAuthSuccess(demoSession, { ...profile, email }), 1200);
+  const email=(document.getElementById('rg-email')?.value||'').trim();
+  const pw=document.getElementById('rg-pw')?.value||'';
+  const fn=(document.getElementById('rg-fn')?.value||'').trim();
+  const ln=(document.getElementById('rg-ln')?.value||'').trim();
+  const country=document.getElementById('rg-country')?.value||'UY';
+  if(!email){afMsg('amsg-r','err','Ingresá tu email.');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){afMsg('amsg-r','err','Email inválido.');return;}
+  if(pw.length<8){afMsg('amsg-r','err','La contraseña debe tener al menos 8 caracteres.');return;}
+  afBtn('btn-r',true,'');
+  const init={email,country,firstName:fn,lastName:ln,username:'',avatar:'🦁',
+              bio:'',location:country==='UY'?'Uruguay':'',phone:'',role:'BUYER',
+              storeName:'',instagram:'',tiktok:'',profileComplete:false,
+              createdAt:new Date().toISOString()};
+  const sb=getSB();
+  if(sb){
+    try{
+      const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:init}});
+      if(error)throw error;
+      if(data.session){await onSignedIn(data.session,init);}
+      else{afMsg('amsg-r','ok','¡Cuenta creada! Revisá tu email para confirmar.');}
+    }catch(e){afMsg('amsg-r','err',authErr(e.message));}
+  }else{
+    const demo={user:{id:'demo-'+Date.now(),email}};
+    await onSignedIn(demo,init);
   }
-
-  setAuthBtnLoading('register-btn', false, '🚀 Crear cuenta gratis');
+  afBtn('btn-r',false,'🚀 Crear cuenta gratis');
 }
 
-// ── LOGIN ─────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════════════════
 async function doLogin() {
-  const email = document.getElementById('login-email')?.value?.trim();
-  const pw    = document.getElementById('login-pw')?.value;
-
-  if (!email || !pw) { showAuthError('auth-login-err', 'Ingresá tu email y contraseña.'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('auth-login-err', 'Ingresá un email válido.'); return; }
-
-  setAuthBtnLoading('login-btn', true, '→ Iniciar sesión');
-
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
-      if (error) throw error;
-      const meta = data.user?.user_metadata || {};
-      const profile = getStoredProfile() || buildDefaultProfile(email, meta);
-      saveStoredProfile({ ...profile, email });
-      onAuthSuccess(data.session, profile);
-    } catch(err) {
-      let msg = err.message || 'Error al iniciar sesión.';
-      if (msg.includes('Invalid login credentials')) msg = 'Email o contraseña incorrectos.';
-      if (msg.includes('Email not confirmed')) msg = 'Confirmá tu email antes de iniciar sesión.';
-      showAuthError('auth-login-err', msg);
-    }
-  } else {
-    // DEMO mode
-    const stored = getStoredProfile();
-    const profile = stored?.email === email
-      ? stored
-      : buildDefaultProfile(email, {});
-    saveStoredProfile(profile);
-    const demoSession = { user: { id: 'demo-user', email } };
-    onAuthSuccess(demoSession, profile);
+  const email=(document.getElementById('al-email')?.value||'').trim();
+  const pw=document.getElementById('al-pw')?.value||'';
+  if(!email){afMsg('amsg-l','err','Ingresá tu email.');return;}
+  if(!pw){afMsg('amsg-l','err','Ingresá tu contraseña.');return;}
+  afBtn('btn-l',true,'');
+  const sb=getSB();
+  if(sb){
+    try{
+      const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
+      if(error)throw error;
+      const stored=loadUser();
+      const meta=data.user?.user_metadata||{};
+      const profile=(stored?.email===email)?stored:buildDefault(email,meta);
+      await onSignedIn(data.session,profile);
+    }catch(e){afMsg('amsg-l','err',authErr(e.message));}
+  }else{
+    const stored=loadUser();
+    const profile=(stored?.email===email)?stored:buildDefault(email,{});
+    const demo={user:{id:'demo-user',email}};
+    await onSignedIn(demo,profile);
   }
-
-  setAuthBtnLoading('login-btn', false, '→ Iniciar sesión');
+  afBtn('btn-l',false,'→ Iniciar sesión');
 }
 
-function buildDefaultProfile(email, meta) {
-  return {
-    firstName: meta.firstName || email.split('@')[0],
-    lastName:  meta.lastName  || '',
-    username:  meta.username  || email.split('@')[0],
-    country:   meta.country   || 'UY',
-    avatar:    meta.avatar    || '🦁',
-    bio:       meta.bio       || '',
-    location:  meta.location  || 'Uruguay',
-    phone:     meta.phone     || '',
-    role:      meta.role      || 'BUYER',
-    storeName: meta.storeName || '',
-    instagram: meta.instagram || '',
-    tiktok:    meta.tiktok    || '',
-    email,
-    createdAt: new Date().toISOString(),
-  };
+function buildDefault(email,meta){
+  return{email,firstName:meta.firstName||'',lastName:meta.lastName||'',
+    username:meta.username||'',country:meta.country||'UY',avatar:meta.avatar||'🦁',
+    bio:meta.bio||'',location:meta.location||'',phone:meta.phone||'',role:meta.role||'BUYER',
+    storeName:meta.storeName||'',instagram:meta.instagram||'',tiktok:meta.tiktok||'',
+    profileComplete:meta.profileComplete||false,createdAt:new Date().toISOString()};
 }
 
-// ── GOOGLE LOGIN ──────────────────────────────────────────────
-async function doGoogleLogin() {
-  if (supabase) {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    if (error) showAuthError('auth-login-err', error.message);
-  } else {
-    toast('🌐 OAuth de Google requiere Supabase configurado');
-  }
+async function doGoogleAuth() {
+  const sb=getSB();
+  if(sb){const{error}=await sb.auth.signInWithOAuth({provider:'google'});if(error)afMsg('amsg-l','err',error.message);}
+  else toast('🌐 Google OAuth requiere Supabase configurado');
+}
+async function doForgotPw() {
+  const email=(document.getElementById('al-email')?.value||'').trim();
+  if(!email){afMsg('amsg-l','err','Ingresá tu email primero.');return;}
+  const sb=getSB();
+  if(sb)await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+  afMsg('amsg-l','ok',`📧 Email de recuperación enviado a ${email}`);
 }
 
-// ── FORGOT PASSWORD ───────────────────────────────────────────
-async function doForgotPassword() {
-  const email = document.getElementById('login-email')?.value?.trim();
-  if (!email) { showAuthError('auth-login-err', 'Ingresá tu email primero para recuperar la contraseña.'); return; }
-  if (supabase) {
-    await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
-  }
-  showAuthSuccess('auth-login-err', `✅ Email de recuperación enviado a ${email}`);
-}
-
-// ── LOGOUT ────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════
+// LOGOUT
+// ════════════════════════════════════════════════════════════════════════
 async function doLogout() {
-  if (supabase) {
-    try { await supabase.auth.signOut(); } catch(e) { console.warn('Signout error', e); }
-  }
-  authSession = null;
-  authUser    = null;
-  localStorage.removeItem(PROF_KEY);
-  closeEditProfile();
-  onLogout();
-}
-
-// ── AFTER AUTH SUCCESS ────────────────────────────────────────
-function onAuthSuccess(session, profile) {
-  authSession = session;
-  authUser    = { ...profile, email: session?.user?.email || profile.email };
-  hideAuthOverlay();
-  updateHeaderForUser(authUser);
-  nav('perfil');
-  toast('👋 ¡Bienvenido, ' + (authUser.firstName || authUser.email.split('@')[0]) + '!');
-}
-
-function onLogout() {
-  updateHeaderForGuest();
-  showAuthOverlay('login');
-  nav('home');
+  const sb=getSB();
+  if(sb){try{await sb.auth.signOut();}catch{}}
+  KMD.session=null;KMD.user=null;KMD.loggedIn=false;
+  saveUser(null);closeEditModal();
+  hdrGuest();
+  _baseNav('home');
   toast('👋 Sesión cerrada. ¡Hasta pronto!');
 }
 
-// ── HEADER UPDATE ─────────────────────────────────────────────
-function updateHeaderForUser(user) {
-  const userInfo  = document.getElementById('hdr-user-info');
-  const guestBtn  = document.getElementById('hdr-guest-btn');
-  const avEmoji   = document.getElementById('hdr-av-emoji');
-  const emailEl   = document.getElementById('hdr-user-email');
-
-  if (userInfo)  userInfo.style.display  = 'flex';
-  if (guestBtn)  guestBtn.style.display  = 'none';
-  if (avEmoji)   avEmoji.innerHTML = (user.avatar || '🦁') + '<div class="session-dot"></div>';
-  if (emailEl)   emailEl.textContent = user.email?.split('@')[0] || user.username || '';
-}
-
-function updateHeaderForGuest() {
-  const userInfo = document.getElementById('hdr-user-info');
-  const guestBtn = document.getElementById('hdr-guest-btn');
-  if (userInfo) userInfo.style.display = 'none';
-  if (guestBtn) guestBtn.style.display = 'flex';
-}
-
-function authAvatarClick() {
-  if (authUser) nav('perfil');
-  else showAuthOverlay('login');
-}
-
-// ── PROFILE PAGE DYNAMIC RENDER ───────────────────────────────
-function renderProfileWithUser() {
-  const user = authUser;
-  if (!user) return;
-
-  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email?.split('@')[0] || 'Usuario';
-  const handle   = '@' + (user.username || user.email?.split('@')[0] || 'usuario');
-  const bio      = user.bio || '📍 ' + (user.location || 'Uruguay') + ' · KOOMODOO member';
-  const avatar   = user.avatar || '🦁';
-
-  const nameEl   = document.getElementById('prof-display-name');
-  const handleEl = document.getElementById('prof-handle');
-  const bioEl    = document.getElementById('prof-bio-text');
-  const avEl     = document.getElementById('prof-av-emoji');
-  const avDisp   = document.getElementById('ep-av-display');
-
-  if (nameEl)   nameEl.innerHTML = fullName + (user.role !== 'BUYER' ? ' <span class="vbdg">✓ VERIFICADO</span>' : '');
-  if (handleEl) handleEl.textContent = handle + ' · ' + (user.role === 'SELLER' ? 'Vendedor' : user.role === 'BOTH' ? 'Vendedor Pro' : 'Comprador');
-  if (bioEl)    bioEl.textContent = bio;
-  if (avEl)     avEl.textContent  = avatar;
-  if (avDisp)   avDisp.textContent = avatar;
-}
-
-// ── EDIT PROFILE MODAL ────────────────────────────────────────
-function openEditProfile() {
-  if (!authUser) { showAuthOverlay('login'); return; }
-  const user = authUser;
-
-  // Fill fields
-  const fields = {
-    'ep-fname':      user.firstName   || '',
-    'ep-lname':      user.lastName    || '',
-    'ep-username':   user.username    || '',
-    'ep-bio':        user.bio         || '',
-    'ep-location':   user.location    || '',
-    'ep-phone':      user.phone       || '',
-    'ep-country':    user.country     || 'UY',
-    'ep-role':       user.role        || 'BUYER',
-    'ep-store':      user.storeName   || '',
-    'ep-store-desc': user.storeDesc   || '',
-    'ep-instagram':  user.instagram   || '',
-    'ep-tiktok':     user.tiktok      || '',
-  };
-  Object.entries(fields).forEach(([id, val]) => {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-  });
-
-  // Update header info in modal
-  const nameEl  = document.getElementById('ep-av-name');
-  const emailEl = document.getElementById('ep-av-email');
-  const avEl    = document.getElementById('ep-av-display');
-  if (nameEl)  nameEl.textContent  = [user.firstName, user.lastName].filter(Boolean).join(' ') || 'Usuario';
-  if (emailEl) emailEl.textContent = user.email || '';
-  if (avEl)    avEl.textContent    = user.avatar || '🦁';
-
-  // Emoji picker
-  selectedAvatar = user.avatar || '🦁';
-  renderEmojiPicker();
-
-  // Clear messages
-  ['ep-err','ep-ok'].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=''; });
-  document.getElementById('ep-newpw').value = '';
-  document.getElementById('ep-confirmpw').value = '';
-
-  document.getElementById('edit-profile-modal').classList.add('open');
-}
-
-function closeEditProfile() {
-  document.getElementById('edit-profile-modal').classList.remove('open');
-}
-
-function renderEmojiPicker() {
-  const container = document.getElementById('ep-emoji-picker');
-  if (!container) return;
-  container.innerHTML = AVATARS.map(em => `
-    <button
-      onclick="selectAvatar(this,'${em}')"
-      style="width:38px;height:38px;border-radius:10px;font-size:19px;cursor:pointer;transition:all .15s;
-             background:${em===selectedAvatar?'rgba(52,211,153,.15)':'var(--surf2)'};
-             border:${em===selectedAvatar?'2px solid rgba(52,211,153,.5)':'2px solid var(--b)'};
-             display:flex;align-items:center;justify-content:center;"
-      title="${em}"
-    >${em}</button>
-  `).join('');
-}
-
-function selectAvatar(btn, emoji) {
-  selectedAvatar = emoji;
-  document.querySelectorAll('#ep-emoji-picker button').forEach(b => {
-    b.style.background = 'var(--surf2)';
-    b.style.border     = '2px solid var(--b)';
-  });
-  btn.style.background = 'rgba(52,211,153,.15)';
-  btn.style.border     = '2px solid rgba(52,211,153,.5)';
-  const avEl = document.getElementById('ep-av-display');
-  if (avEl) avEl.textContent = emoji;
-}
-
-async function saveProfile() {
-  const newPw      = document.getElementById('ep-newpw')?.value;
-  const confirmPw  = document.getElementById('ep-confirmpw')?.value;
-
-  if (newPw && newPw !== confirmPw) {
-    document.getElementById('ep-err').innerHTML = '<div class="auth-err"><span>⚠️</span><span>Las contraseñas no coinciden.</span></div>';
-    return;
+// ════════════════════════════════════════════════════════════════════════
+// POST-LOGIN FLOW
+// ════════════════════════════════════════════════════════════════════════
+async function onSignedIn(session,profile) {
+  KMD.session=session;
+  KMD.user={...profile,email:session?.user?.email||profile.email};
+  KMD.loggedIn=true;
+  saveUser(KMD.user);
+  closeAuthModal();
+  hdrLoggedIn(KMD.user);
+  if(!profileDone(KMD.user)){
+    openCompleteProfile();  // CASE A: new user, needs to complete profile
+  }else{
+    // CASE B: returning user — stay in app, flash welcome
+    toast('👋 ¡Bienvenido, '+(KMD.user.firstName||KMD.user.email.split('@')[0])+'!');
+    _baseNav('perfil');
+    renderProfile();
   }
-  if (newPw && newPw.length < 8) {
-    document.getElementById('ep-err').innerHTML = '<div class="auth-err"><span>⚠️</span><span>La nueva contraseña debe tener al menos 8 caracteres.</span></div>';
-    return;
-  }
-
-  const btn = document.getElementById('ep-save-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spin"></div>';
-
-  const updatedProfile = {
-    ...authUser,
-    firstName:  document.getElementById('ep-fname')?.value?.trim() || authUser.firstName,
-    lastName:   document.getElementById('ep-lname')?.value?.trim() || authUser.lastName,
-    username:   document.getElementById('ep-username')?.value?.trim() || authUser.username,
-    bio:        document.getElementById('ep-bio')?.value?.trim() || '',
-    location:   document.getElementById('ep-location')?.value?.trim() || '',
-    phone:      document.getElementById('ep-phone')?.value?.trim() || '',
-    country:    document.getElementById('ep-country')?.value || 'UY',
-    role:       document.getElementById('ep-role')?.value || 'BUYER',
-    storeName:  document.getElementById('ep-store')?.value?.trim() || '',
-    storeDesc:  document.getElementById('ep-store-desc')?.value?.trim() || '',
-    instagram:  document.getElementById('ep-instagram')?.value?.trim() || '',
-    tiktok:     document.getElementById('ep-tiktok')?.value?.trim() || '',
-    avatar:     selectedAvatar,
-    updatedAt:  new Date().toISOString(),
-  };
-
-  if (supabase && authSession) {
-    try {
-      const updateData = { data: updatedProfile };
-      if (newPw) updateData.password = newPw;
-      const { error } = await supabase.auth.updateUser(updateData);
-      if (error) throw error;
-    } catch(err) {
-      document.getElementById('ep-err').innerHTML = `<div class="auth-err"><span>⚠️</span><span>${err.message}</span></div>`;
-      btn.disabled = false;
-      btn.innerHTML = '<span>💾 Guardar cambios</span>';
-      return;
-    }
-  }
-
-  // Always update local state
-  authUser = updatedProfile;
-  saveStoredProfile(updatedProfile);
-
-  // Update UI
-  updateHeaderForUser(authUser);
-  renderProfileWithUser();
-
-  document.getElementById('ep-ok').innerHTML = '<div class="auth-ok"><span>✅</span><span>¡Perfil actualizado correctamente!</span></div>';
-  btn.disabled = false;
-  btn.innerHTML = '<span>💾 Guardar cambios</span>';
-  toast('✅ Perfil actualizado');
-  setTimeout(closeEditProfile, 1500);
 }
 
-// ── ROUTE PROTECTION ──────────────────────────────────────────
-function requireAuth(pageName) {
-  const protectedPages = ['perfil','mensajes','carrito','pedidos','favoritos','publicar','analytics','live'];
-  if (!authUser && protectedPages.includes(pageName)) {
-    showAuthOverlay('login');
-    toast('🔒 Iniciá sesión para acceder a esta sección');
-    return false;
+// ════════════════════════════════════════════════════════════════════════
+// COMPLETE PROFILE SCREEN
+// ════════════════════════════════════════════════════════════════════════
+function openCompleteProfile() {
+  const scr=document.getElementById('complete-profile-screen');
+  scr.classList.add('open');
+  if(KMD.user?.firstName)document.getElementById('cp-fn').value=KMD.user.firstName;
+  if(KMD.user?.lastName) document.getElementById('cp-ln').value=KMD.user.lastName;
+  currentAv=KMD.user?.avatar||'🦁';
+  drawAvGrid('cp-av-grid',currentAv,'cpPick');
+  document.querySelectorAll('#cp-roles .role-opt').forEach(e=>
+    e.classList.toggle('sel',e.dataset.role===(KMD.user?.role||'BUYER')));
+  afMsg('cp-msg','ok','');
+}
+function closeCompleteProfile() {
+  document.getElementById('complete-profile-screen').classList.remove('open');
+}
+function pickRole(el) {
+  document.querySelectorAll('#cp-roles .role-opt').forEach(e=>e.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function cpPick(em) { currentAv=em; drawAvGrid('cp-av-grid',em,'cpPick'); }
+
+async function saveCompleteProfile() {
+  const fn=(document.getElementById('cp-fn')?.value||'').trim();
+  const user=(document.getElementById('cp-user')?.value||'').trim();
+  if(!fn){afMsg('cp-msg','err','El nombre es requerido.');return;}
+  if(!user){afMsg('cp-msg','err','El nombre de usuario es requerido.');return;}
+  if(user.length<3){afMsg('cp-msg','err','El usuario debe tener al menos 3 caracteres.');return;}
+  const btn=document.getElementById('cp-save-btn');
+  btn.disabled=true;btn.innerHTML='<div class="af-spin"></div>';
+  const updated={...KMD.user,
+    firstName:fn,lastName:(document.getElementById('cp-ln')?.value||'').trim(),
+    username:user,
+    location:(document.getElementById('cp-loc')?.value||'').trim(),
+    bio:(document.getElementById('cp-bio')?.value||'').trim(),
+    role:document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role||'BUYER',
+    avatar:currentAv,profileComplete:true,updatedAt:new Date().toISOString()};
+  const sb=getSB();
+  if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
+    try{await sb.auth.updateUser({data:updated});}catch(e){console.warn('SB update:',e.message);}
   }
-  return true;
+  KMD.user=updated;saveUser(updated);
+  hdrLoggedIn(updated);closeCompleteProfile();
+  renderProfile();_baseNav('perfil');
+  toast('✅ ¡Perfil completado! Bienvenido a KOOMODOO 🎉');
+  btn.disabled=false;btn.innerHTML='<span>✅ Guardar y entrar a KOOMODOO</span>';
+}
+function skipCP() {
+  closeCompleteProfile();_baseNav('home');
+  toast('💡 Completá tu perfil más tarde desde "Mi Perfil"');
 }
 
-// ── PATCH nav() for route protection ─────────────────────────
-const _origNav = nav;
+// ════════════════════════════════════════════════════════════════════════
+// EDIT PROFILE MODAL
+// ════════════════════════════════════════════════════════════════════════
+function openEditModal() {
+  if(!KMD.loggedIn){openAuthModal('login');return;}
+  const u=KMD.user;
+  const fill=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
+  fill('ep-fn',u.firstName);fill('ep-ln',u.lastName);fill('ep-user',u.username);
+  fill('ep-bio',u.bio);fill('ep-loc',u.location);fill('ep-phone',u.phone);
+  fill('ep-country',u.country||'UY');fill('ep-role',u.role||'BUYER');
+  fill('ep-store',u.storeName);fill('ep-ig',u.instagram);fill('ep-tt',u.tiktok);
+  fill('ep-pw1','');fill('ep-pw2','');
+  const fn=[u.firstName,u.lastName].filter(Boolean).join(' ')||'Usuario';
+  const nm=document.getElementById('ep-name-big');
+  const em=document.getElementById('ep-email-big');
+  const av=document.getElementById('ep-av-big');
+  if(nm)nm.textContent=fn;if(em)em.textContent=u.email||'';if(av)av.textContent=u.avatar||'🦁';
+  currentAv=u.avatar||'🦁';
+  drawAvGrid('ep-av-grid',currentAv,'epPick');
+  afMsg('ep-msg','ok','');
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal(){document.getElementById('edit-modal').classList.remove('open');}
+function epPick(em){currentAv=em;drawAvGrid('ep-av-grid',em,'epPick');const av=document.getElementById('ep-av-big');if(av)av.textContent=em;}
+
+async function saveEditProfile() {
+  const pw1=document.getElementById('ep-pw1')?.value||'';
+  const pw2=document.getElementById('ep-pw2')?.value||'';
+  if(pw1&&pw1!==pw2){afMsg('ep-msg','err','Las contraseñas no coinciden.');return;}
+  if(pw1&&pw1.length<8){afMsg('ep-msg','err','Mínimo 8 caracteres para la contraseña.');return;}
+  afBtn('ep-save-btn',true,'');
+  const get=id=>(document.getElementById(id)?.value||'').trim();
+  const updated={...KMD.user,
+    firstName:get('ep-fn')||KMD.user.firstName,lastName:get('ep-ln'),
+    username:get('ep-user')||KMD.user.username,bio:get('ep-bio'),
+    location:get('ep-loc'),phone:get('ep-phone'),
+    country:get('ep-country')||'UY',role:get('ep-role')||'BUYER',
+    storeName:get('ep-store'),instagram:get('ep-ig'),tiktok:get('ep-tt'),
+    avatar:currentAv,profileComplete:true,updatedAt:new Date().toISOString()};
+  const sb=getSB();
+  if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
+    try{
+      const payload={data:updated};if(pw1)payload.password=pw1;
+      const{error}=await sb.auth.updateUser(payload);
+      if(error)throw error;
+    }catch(e){afMsg('ep-msg','err',authErr(e.message));afBtn('ep-save-btn',false,'💾 Guardar cambios');return;}
+  }
+  KMD.user=updated;saveUser(updated);
+  hdrLoggedIn(updated);renderProfile();
+  afMsg('ep-msg','ok','✅ Perfil actualizado');
+  toast('✅ Cambios guardados');
+  afBtn('ep-save-btn',false,'💾 Guardar cambios');
+  setTimeout(closeEditModal,1400);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// PROFILE PAGE RENDER
+// ════════════════════════════════════════════════════════════════════════
+function renderProfile() {
+  const u=KMD.user;if(!u)return;
+  const name=[u.firstName,u.lastName].filter(Boolean).join(' ')||u.email?.split('@')[0]||'Usuario';
+  const handle='@'+(u.username||u.email?.split('@')[0]||'usuario');
+  const role={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
+  const bio=u.bio||('📍 '+(u.location||'Uruguay')+' · KOOMODOO member');
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
+  set('prof-hero-av',u.avatar||'🦁');
+  set('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
+  set('prof-hndl-el',handle+' · '+role);
+  set('prof-bio-el',bio);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// AVATAR GRID
+// ════════════════════════════════════════════════════════════════════════
+function drawAvGrid(containerId,active,onClickFn){
+  const c=document.getElementById(containerId);if(!c)return;
+  c.innerHTML=AVEMOJIS.map(em=>`<button class="av-btn ${em===active?'sel':''}" onclick="${onClickFn}('${em}')" title="${em}">${em}</button>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// HEADER STATE
+// ════════════════════════════════════════════════════════════════════════
+function hdrLoggedIn(u) {
+  const av=document.getElementById('hdr-av');
+  const lbl=document.getElementById('hdr-auth-label');
+  if(av) av.innerHTML=(u.avatar||'🦁')+'<div class="hdr-online-dot"></div>';
+  if(lbl)lbl.textContent=u.firstName||u.email?.split('@')[0]||'Perfil';
+}
+function hdrGuest() {
+  const av=document.getElementById('hdr-av');
+  const lbl=document.getElementById('hdr-auth-label');
+  if(av) av.innerHTML='👤';
+  if(lbl)lbl.textContent='Ingresar';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// ROUTE PROTECTION
+// Only truly sensitive actions require login; browsing is always open
+// ════════════════════════════════════════════════════════════════════════
+const NEED_AUTH=new Set(['mensajes','carrito','pedidos','publicar','analytics']);
+const _baseNav=nav; // capture original nav before overriding
+
 function nav(page) {
-  if (!requireAuth(page)) return;
-  _origNav(page);
-  if (page === 'perfil' && authUser) renderProfileWithUser();
+  if(NEED_AUTH.has(page)&&!KMD.loggedIn){
+    toast('🔒 Iniciá sesión para continuar');openAuthModal('login');return;
+  }
+  if(page==='perfil'&&!KMD.loggedIn){openAuthModal('login');return;}
+  _baseNav(page);
+  if(page==='perfil'&&KMD.loggedIn)renderProfile();
 }
 
-// ── LISTEN to Supabase auth state changes ────────────────────
-if (supabase) {
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      authSession = session;
-      const stored = getStoredProfile();
-      const meta   = session.user?.user_metadata || {};
-      authUser     = stored || buildDefaultProfile(session.user.email, meta);
-      authUser.email = session.user.email;
-      saveStoredProfile(authUser);
-      hideAuthOverlay();
-      updateHeaderForUser(authUser);
-      renderProfileWithUser();
-    } else if (event === 'SIGNED_OUT') {
-      authSession = null;
-      authUser    = null;
-      onLogout();
+// ════════════════════════════════════════════════════════════════════════
+// SUPABASE AUTH STATE LISTENER
+// ════════════════════════════════════════════════════════════════════════
+function listenAuth(){
+  const sb=getSB();if(!sb)return;
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN'&&session){
+      const stored=loadUser();const meta=session.user?.user_metadata||{};
+      const profile=(stored?.email===session.user.email)?stored:buildDefault(session.user.email,meta);
+      KMD.session=session;KMD.user={...profile,email:session.user.email};KMD.loggedIn=true;
+      saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
+      if(!profileDone(KMD.user))openCompleteProfile();else renderProfile();
+    }else if(event==='SIGNED_OUT'){
+      KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();
     }
   });
 }
 
-// ── INIT: check existing session ─────────────────────────────
-async function initAuth() {
-  // Try to restore from Supabase session
-  if (supabase) {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        authSession = session;
-        const stored = getStoredProfile();
-        const meta   = session.user?.user_metadata || {};
-        authUser     = stored || buildDefaultProfile(session.user.email, meta);
-        authUser.email = session.user.email;
-        saveStoredProfile(authUser);
-        hideAuthOverlay();
-        updateHeaderForUser(authUser);
+// ════════════════════════════════════════════════════════════════════════
+// INIT — silent session restore; app always opens normally
+// ════════════════════════════════════════════════════════════════════════
+async function initAuth(){
+  listenAuth();
+  // Try Supabase session
+  const sb=getSB();
+  if(sb){
+    try{
+      const{data:{session}}=await sb.auth.getSession();
+      if(session){
+        const stored=loadUser();const meta=session.user?.user_metadata||{};
+        const profile=(stored?.email===session.user.email)?stored:buildDefault(session.user.email,meta);
+        KMD.session=session;KMD.user={...profile,email:session.user.email};KMD.loggedIn=true;
+        saveUser(KMD.user);hdrLoggedIn(KMD.user);
+        if(!profileDone(KMD.user))openCompleteProfile();
         return;
       }
-    } catch(e) { console.warn('Session check failed:', e); }
+    }catch(e){console.warn('[KMD] Session restore:',e.message);}
   }
-
-  // Fallback: check localStorage demo session
-  const stored = getStoredProfile();
-  if (stored?.email) {
-    authUser = stored;
-    authSession = { user: { email: stored.email } };
-    hideAuthOverlay();
-    updateHeaderForUser(authUser);
+  // Fallback: localStorage session (demo mode)
+  const stored=loadUser();
+  if(stored?.email){
+    KMD.user=stored;KMD.session={user:{id:'local',email:stored.email}};KMD.loggedIn=true;
+    hdrLoggedIn(stored);
+    if(!profileDone(stored))openCompleteProfile();
     return;
   }
-
-  // No session — show login overlay
-  showAuthOverlay('login');
-  updateHeaderForGuest();
+  // No session → app runs in exploration mode, header shows "Ingresar"
+  hdrGuest();
 }
 
-// Close edit modal on backdrop click
-document.getElementById('edit-profile-modal')?.addEventListener('click', function(e) {
-  if (e.target === this) closeEditProfile();
-});
 
-// ─ Init ─
+// ── startup ──
 initAuth();
 renderHome();
 updateBadges();
