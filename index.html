@@ -864,9 +864,7 @@ button,select,input{font-family:inherit}
 .aff-prog-bar{height:4px;background:var(--surf3);border-radius:2px;overflow:hidden;margin:6px 0 4px}
 .aff-prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--g2),var(--teal))}
 
-/* ═══════════════════════════════════════
-   AUTH + PROFILE FLOW
-═══════════════════════════════════════ */
+/* ═══════════════════ AUTH + PROFILE FLOW ═══════════════════ */
 #auth-modal{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px}
 #auth-modal.open{display:flex}
 #complete-profile-screen{display:none;position:fixed;inset:0;z-index:800;background:var(--bg);overflow-y:auto;padding:20px 16px}
@@ -902,7 +900,6 @@ button,select,input{font-family:inherit}
 .af-msg{border-radius:10px;padding:9px 12px;margin-bottom:11px;font-size:12px;line-height:1.5;display:flex;align-items:flex-start;gap:7px;animation:aIn .2s ease}
 .af-msg.err{background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.2);color:var(--rose)}
 .af-msg.ok{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--g)}
-.af-msg.warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--amber)}
 .af-divider{display:flex;align-items:center;gap:10px;margin:11px 0}
 .af-divider::before,.af-divider::after{content:'';flex:1;height:1px;background:var(--b2)}
 .af-divider span{font-size:11px;color:var(--t3);font-weight:600}
@@ -922,8 +919,7 @@ button,select,input{font-family:inherit}
 .av-btn:hover{border-color:var(--b2)}
 .role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:4px}
 .role-opt{padding:13px 8px;border-radius:12px;text-align:center;background:var(--surf);border:1.5px solid var(--b);cursor:pointer;transition:all .15s}
-.role-opt:hover{border-color:var(--b2)}
-.role-opt.sel{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.07)}
+.role-opt:hover{border-color:var(--b2)}.role-opt.sel{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.07)}
 .hdr-online-dot{position:absolute;bottom:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--g);border:2px solid var(--bg)}
 </style>
 </head>
@@ -940,7 +936,6 @@ button,select,input{font-family:inherit}
       <button class="atab on" id="atab-l" onclick="switchTab('login')">Iniciar sesión</button>
       <button class="atab"    id="atab-r" onclick="switchTab('register')">Crear cuenta</button>
     </div>
-    <!-- Login -->
     <div class="aform" id="aform-l">
       <div id="amsg-l"></div>
       <label class="af-lbl">Email</label>
@@ -955,7 +950,6 @@ button,select,input{font-family:inherit}
       <div class="af-divider"><span>o</span></div>
       <button class="af-btn sec" onclick="doGoogleAuth()">🌐 Continuar con Google</button>
     </div>
-    <!-- Register -->
     <div class="aform" id="aform-r" style="display:none">
       <div id="amsg-r"></div>
       <div class="cp-2col">
@@ -1012,9 +1006,9 @@ button,select,input{font-family:inherit}
     <textarea class="af-inp" id="cp-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
     <div class="cp-sec">¿Qué querés hacer en KOOMODOO?</div>
     <div class="role-grid" id="cp-roles">
-      <div class="role-opt sel" data-role="BUYER" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">🛒</div><div style="font-size:12px;font-weight:800;color:var(--t)">Solo comprar</div><div style="font-size:10px;color:var(--t3)">Explorar y comprar</div></div>
-      <div class="role-opt" data-role="BOTH" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">⚡</div><div style="font-size:12px;font-weight:800;color:var(--t)">Comprar y vender</div><div style="font-size:10px;color:var(--t3)">Más popular</div></div>
-      <div class="role-opt" data-role="SELLER" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">🏷️</div><div style="font-size:12px;font-weight:800;color:var(--t)">Solo vender</div><div style="font-size:10px;color:var(--t3)">Gestionar tienda</div></div>
+      <div class="role-opt sel" data-role="BUYER" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">🛒</div><div style="font-size:12px;font-weight:800;color:var(--t)">Solo comprar</div></div>
+      <div class="role-opt" data-role="BOTH" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">⚡</div><div style="font-size:12px;font-weight:800;color:var(--t)">Comprar y vender</div></div>
+      <div class="role-opt" data-role="SELLER" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">🏷️</div><div style="font-size:12px;font-weight:800;color:var(--t)">Solo vender</div></div>
     </div>
     <button class="af-btn" id="cp-save-btn" onclick="saveCompleteProfile()" style="margin-top:16px"><span>✅ Guardar y entrar a KOOMODOO</span></button>
     <button onclick="skipCP()" style="width:100%;padding:9px;margin-top:8px;background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit">Completar más tarde →</button>
@@ -1097,9 +1091,9 @@ button,select,input{font-family:inherit}
     <div class="hbtn" onclick="nav('mensajes')" title="Mensajes">💬<div class="badge">3</div></div>
     <div class="hbtn" onclick="nav('favoritos')" title="Favoritos">❤️<div class="badge" id="fav-badge">3</div></div>
     <div class="hbtn" onclick="nav('carrito')" title="Carrito">🛒<div class="badge" id="cart-badge">2</div></div>
-    <div id="hdr-auth-btn" onclick="hdrAuthClick()" title="Mi cuenta" style="display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:11px;background:var(--surf);border:1px solid var(--b2);cursor:pointer;transition:all .15s;flex-shrink:0">
+    <div id="hdr-auth-btn" onclick="hdrAuthClick()" title="Mi cuenta" style="display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:11px;background:var(--surf);border:1px solid var(--b2);cursor:pointer;transition:all .15s;flex-shrink:0;min-width:0">
       <div id="hdr-av" style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;position:relative">👤</div>
-      <span id="hdr-auth-label" style="font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis">Ingresar</span>
+      <span id="hdr-auth-label" style="font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis">Ingresar</span>
     </div>
   </div>
 </header>
@@ -1601,8 +1595,14 @@ function setCurrency(c){
 // ═══════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════
-function nav(page){
-  // Close mobile sidebar
+// ─────────────────────────────────────────────────────────────────────────────
+// NAVIGATION — Single clean entry point. NO recursion possible.
+// _showSection: raw section switcher, no auth logic, never calls nav()
+// nav: public API — checks auth then calls _showSection
+// requireAuth: gate function for auth-required inline actions
+// ─────────────────────────────────────────────────────────────────────────────
+
+function _showSection(page){
   closeSidebar();
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.si').forEach(s=>s.classList.remove('on'));
@@ -1614,18 +1614,45 @@ function nav(page){
   if(si)si.classList.add('on');
   if(mn)mn.classList.add('on');
   currentPage=page;
-  // Stop live intervals
-  if(page!=='live'&&chatIv){clearInterval(chatIv);chatIv=null;}
-  if(page!=='live'&&viewerIv){clearInterval(viewerIv);viewerIv=null;}
-  // Render page
+  if(page!=='live'&&typeof chatIv!=='undefined'&&chatIv){clearInterval(chatIv);chatIv=null;}
+  if(page!=='live'&&typeof viewerIv!=='undefined'&&viewerIv){clearInterval(viewerIv);viewerIv=null;}
   if(page==='marketplace')renderMarketplace();
   if(page==='carrito')renderCart();
   if(page==='favoritos')renderFavs();
   if(page==='pedidos')renderOrders();
   if(page==='mensajes')renderMessages();
-  if(page==='perfil')renderProfile();
+  if(page==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfile();
   if(page==='live')startLive();
   if(page==='analytics')renderAnalytics();
+}
+
+// Pages that require login
+const PROTECTED_PAGES=new Set(['mensajes','carrito','pedidos','publicar','analytics']);
+
+// nav() — THE public navigation function. One definition. Handles auth. Calls _showSection.
+function nav(page){
+  if(typeof KMD!=='undefined'){
+    if(PROTECTED_PAGES.has(page)&&!KMD.loggedIn){
+      toast('🔒 Iniciá sesión para continuar');
+      if(typeof openAuthModal==='function')openAuthModal('login');
+      return;
+    }
+    if(page==='perfil'&&!KMD.loggedIn){
+      if(typeof openAuthModal==='function')openAuthModal('login');
+      return;
+    }
+  }
+  _showSection(page);
+}
+
+// requireAuth — gate for inline actions (not page navigation)
+function requireAuth(action){
+  if(typeof KMD!=='undefined'&&KMD.loggedIn){
+    if(typeof action==='function')action();
+  }else{
+    toast('🔒 Iniciá sesión para continuar');
+    if(typeof openAuthModal==='function')openAuthModal('login');
+  }
 }
 function navCat(cat){activeCat=cat;nav('marketplace');}
 function doSearch(q){if(q.trim()&&currentPage!=='marketplace')nav('marketplace');searchQ=q;if(currentPage==='marketplace')renderProdGrid();}
@@ -2601,439 +2628,437 @@ function affCloseModal(){
   if(modal)modal.classList.remove('open');
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// KOOMODOO AUTH SYSTEM v5
-// Flow: open app freely → click Ingresar → login/register →
-//       complete profile if new → stay in app
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+// KOOMODOO AUTH SYSTEM — v5 FINAL
+// No recursive nav(). Clean state machine. Safe with or without Supabase.
+// ════════════════════════════════════════════════════════════════════════════
 
-// ── CONFIG — replace with your actual Supabase values ───────────────────
-const SB_URL  = 'https://qbpvrfouhsycbzgzltih.supabase.co';
-const SB_KEY  = 'sb_publishable_WuXm4DcjX4r4ZCLeAuBBbw__2OlJl4C';
+// ── Config: replace with your Supabase project values ──────────────────────
+const SB_URL = 'https://YOUR_PROJECT.supabase.co';
+const SB_KEY = 'YOUR_ANON_KEY_HERE';
 
-// ── Single Supabase instance ─────────────────────────────────────────────
+// ── Single Supabase instance (never reinitialised) ──────────────────────────
 let _sb = null;
 function getSB() {
   if (_sb) return _sb;
   try { _sb = window.supabase?.createClient(SB_URL, SB_KEY) || null; }
-  catch(e) { console.warn('[KMD] Running in demo mode —', e.message); }
+  catch(e) { console.info('[KMD] Demo mode —', e.message); }
   return _sb;
 }
 
-// ── Local storage helpers ────────────────────────────────────────────────
+// ── Persistent local store ──────────────────────────────────────────────────
 const KSTORE = 'kmd_user_v1';
-function loadUser()    { try { return JSON.parse(localStorage.getItem(KSTORE)||'null'); } catch { return null; } }
-function saveUser(u)   { if(u) localStorage.setItem(KSTORE,JSON.stringify(u)); else localStorage.removeItem(KSTORE); }
+function loadUser() { try { return JSON.parse(localStorage.getItem(KSTORE)||'null'); } catch { return null; } }
+function saveUser(u) { u ? localStorage.setItem(KSTORE,JSON.stringify(u)) : localStorage.removeItem(KSTORE); }
 
-// ── Global auth state ────────────────────────────────────────────────────
-let KMD = { session:null, user:null, loggedIn:false };
+// ── Auth state (single source of truth) ────────────────────────────────────
+const KMD = { session:null, user:null, loggedIn:false };
 
 function profileDone(u) {
   return !!(u && u.firstName && u.firstName.trim() && u.username && u.username.trim());
 }
 
-// ── Avatar list ──────────────────────────────────────────────────────────
-const AVEMOJIS = ['🦁','🐯','🦊','🐺','🦋','🦅','🐱','🦈','🐬','🦝','🦄','🐸','🦭','🐧','🦉','🐮'];
-let currentAv = '🦁';
+// ── Avatar list ─────────────────────────────────────────────────────────────
+const AVLIST = ['🦁','🐯','🦊','🐺','🦋','🦅','🐱','🦈','🐬','🦝','🦄','🐸','🦭','🐧','🦉','🐮'];
+let curAv = '🦁';
 
-// ════════════════════════════════════════════════════════════════════════
-// UI HELPERS
-// ════════════════════════════════════════════════════════════════════════
+// ── UI helpers ──────────────────────────────────────────────────────────────
 function afMsg(id, type, txt) {
-  const el=document.getElementById(id); if(!el)return;
-  if(!txt){el.innerHTML='';return;}
-  const ic={err:'⚠️',ok:'✅',warn:'⏳'}[type]||'ℹ️';
-  el.innerHTML=`<div class="af-msg ${type}"><span>${ic}</span><span>${txt}</span></div>`;
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!txt) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="af-msg ${type}"><span>${{err:'⚠️',ok:'✅',warn:'⏳'}[type]||'ℹ️'}</span><span>${txt}</span></div>`;
 }
-function afBtn(id, loading, txt='') {
-  const b=document.getElementById(id); if(!b)return;
-  b.disabled=loading;
-  b.innerHTML=loading?'<div class="af-spin"></div>':`<span>${txt}</span>`;
+function afBtnLoad(id, loading, txt='') {
+  const b = document.getElementById(id);
+  if (!b) return;
+  b.disabled = loading;
+  b.innerHTML = loading ? '<div class="af-spin"></div>' : `<span>${txt}</span>`;
 }
-function togPw(id,btn) {
-  const inp=document.getElementById(id); if(!inp)return;
-  inp.type=inp.type==='password'?'text':'password';
-  btn.textContent=inp.type==='password'?'👁':'🙈';
+function togPw(id, btn) {
+  const inp = document.getElementById(id); if (!inp) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁' : '🙈';
 }
 function checkPwStr(inp) {
-  const pw=inp.value,wrap=document.getElementById('pw-str-wrap'),
-        fill=document.getElementById('pw-str-fill'),lbl=document.getElementById('pw-str-lbl');
-  if(!wrap)return;
-  wrap.style.display=pw?'block':'none';
-  if(!pw)return;
-  let s=0;
-  if(pw.length>=8)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;
-  if(/[^A-Za-z0-9]/.test(pw))s++;if(pw.length>=12)s++;
-  const lvl=[{w:'15%',c:'var(--rose)',l:'Muy débil'},{w:'30%',c:'var(--rose)',l:'Débil'},
-             {w:'55%',c:'var(--amber)',l:'Regular'},{w:'75%',c:'var(--amber)',l:'Buena'},
-             {w:'100%',c:'var(--g)',l:'Muy segura ✓'}][Math.min(s,4)];
-  fill.style.width=lvl.w;fill.style.background=lvl.c;
-  lbl.textContent=lvl.l;lbl.style.color=lvl.c;
+  const pw = inp.value;
+  const wrap = document.getElementById('pw-str-wrap'),
+        fill = document.getElementById('pw-str-fill'),
+        lbl  = document.getElementById('pw-str-lbl');
+  if (!wrap) return;
+  wrap.style.display = pw ? 'block' : 'none';
+  if (!pw) return;
+  let s = 0;
+  if (pw.length >= 8) s++; if (/[A-Z]/.test(pw)) s++; if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++; if (pw.length >= 12) s++;
+  const lvl = [{w:'15%',c:'var(--rose)',l:'Muy débil'},{w:'30%',c:'var(--rose)',l:'Débil'},
+               {w:'55%',c:'var(--amber)',l:'Regular'},{w:'75%',c:'var(--amber)',l:'Buena'},
+               {w:'100%',c:'var(--g)',l:'Muy segura ✓'}][Math.min(s,4)];
+  fill.style.width = lvl.w; fill.style.background = lvl.c;
+  lbl.textContent = lvl.l; lbl.style.color = lvl.c;
 }
-function authErr(msg) {
-  if(!msg)return'Error desconocido.';
-  if(msg.includes('Invalid login credentials'))return'Email o contraseña incorrectos.';
-  if(msg.includes('Email not confirmed'))return'Confirmá tu email antes de ingresar.';
-  if(msg.includes('already registered'))return'Ya existe una cuenta con ese email.';
-  if(msg.includes('Password should'))return'La contraseña debe tener al menos 6 caracteres.';
-  if(msg.includes('rate limit'))return'Demasiados intentos. Esperá un momento.';
+function authErrMsg(msg) {
+  if (!msg) return 'Error desconocido. Intentá de nuevo.';
+  if (msg.includes('Invalid login credentials')) return 'Email o contraseña incorrectos.';
+  if (msg.includes('Email not confirmed'))        return 'Confirmá tu email antes de ingresar.';
+  if (msg.includes('already registered'))         return 'Ya existe una cuenta con ese email.';
+  if (msg.includes('Password should'))            return 'La contraseña debe tener al menos 6 caracteres.';
+  if (msg.includes('rate limit'))                 return 'Demasiados intentos. Esperá un momento.';
   return msg;
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 // AUTH MODAL
-// ════════════════════════════════════════════════════════════════════════
-function openAuthModal(tab='login') {
+// ════════════════════════════════════════════════════════════════════════════
+function openAuthModal(tab) {
   document.getElementById('auth-modal').classList.add('open');
-  switchTab(tab);
+  switchTab(tab || 'login');
 }
 function closeAuthModal() {
   document.getElementById('auth-modal').classList.remove('open');
 }
 function switchTab(tab) {
-  const isL=tab==='login';
-  document.getElementById('aform-l').style.display=isL?'':'none';
-  document.getElementById('aform-r').style.display=isL?'none':'';
-  document.getElementById('atab-l').classList.toggle('on',isL);
-  document.getElementById('atab-r').classList.toggle('on',!isL);
-  afMsg('amsg-l','ok','');afMsg('amsg-r','ok','');
+  const isL = tab === 'login';
+  document.getElementById('aform-l').style.display = isL ? '' : 'none';
+  document.getElementById('aform-r').style.display = isL ? 'none' : '';
+  document.getElementById('atab-l').classList.toggle('on', isL);
+  document.getElementById('atab-r').classList.toggle('on', !isL);
+  afMsg('amsg-l','ok',''); afMsg('amsg-r','ok','');
 }
-
-// Header click: logged-in → go to profile, guest → open modal
 function hdrAuthClick() {
-  KMD.loggedIn ? _baseNav('perfil') : openAuthModal('login');
+  // Called by header button — uses _showSection to avoid going through nav() auth check
+  if (KMD.loggedIn) _showSection('perfil');
+  else openAuthModal('login');
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 // REGISTER
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 async function doRegister() {
-  const email=(document.getElementById('rg-email')?.value||'').trim();
-  const pw=document.getElementById('rg-pw')?.value||'';
-  const fn=(document.getElementById('rg-fn')?.value||'').trim();
-  const ln=(document.getElementById('rg-ln')?.value||'').trim();
-  const country=document.getElementById('rg-country')?.value||'UY';
-  if(!email){afMsg('amsg-r','err','Ingresá tu email.');return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){afMsg('amsg-r','err','Email inválido.');return;}
-  if(pw.length<8){afMsg('amsg-r','err','La contraseña debe tener al menos 8 caracteres.');return;}
-  afBtn('btn-r',true,'');
-  const init={email,country,firstName:fn,lastName:ln,username:'',avatar:'🦁',
-              bio:'',location:country==='UY'?'Uruguay':'',phone:'',role:'BUYER',
-              storeName:'',instagram:'',tiktok:'',profileComplete:false,
-              createdAt:new Date().toISOString()};
-  const sb=getSB();
-  if(sb){
-    try{
-      const {data,error}=await sb.auth.signUp({email,password:pw,options:{data:init}});
-      if(error)throw error;
-      if(data.session){await onSignedIn(data.session,init);}
-      else{afMsg('amsg-r','ok','¡Cuenta creada! Revisá tu email para confirmar.');}
-    }catch(e){afMsg('amsg-r','err',authErr(e.message));}
-  }else{
-    const demo={user:{id:'demo-'+Date.now(),email}};
-    await onSignedIn(demo,init);
+  const email   = (document.getElementById('rg-email')?.value || '').trim();
+  const pw      = document.getElementById('rg-pw')?.value || '';
+  const fn      = (document.getElementById('rg-fn')?.value || '').trim();
+  const ln      = (document.getElementById('rg-ln')?.value || '').trim();
+  const country = document.getElementById('rg-country')?.value || 'UY';
+  if (!email)           { afMsg('amsg-r','err','Ingresá tu email.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { afMsg('amsg-r','err','Email inválido.'); return; }
+  if (pw.length < 8)    { afMsg('amsg-r','err','La contraseña debe tener al menos 8 caracteres.'); return; }
+  afBtnLoad('btn-r', true, '');
+  const init = { email, country, firstName:fn, lastName:ln, username:'', avatar:'🦁',
+                 bio:'', location:'', phone:'', role:'BUYER', storeName:'',
+                 instagram:'', tiktok:'', profileComplete:false,
+                 createdAt: new Date().toISOString() };
+  const sb = getSB();
+  if (sb) {
+    try {
+      const { data, error } = await sb.auth.signUp({ email, password:pw, options:{data:init} });
+      if (error) throw error;
+      if (data.session) { await onSignedIn(data.session, init); }
+      else { afMsg('amsg-r','ok','¡Cuenta creada! Revisá tu email para confirmar.'); }
+    } catch(e) { afMsg('amsg-r','err', authErrMsg(e.message)); }
+  } else {
+    // Demo mode
+    await onSignedIn({ user:{id:'demo-'+Date.now(), email} }, init);
   }
-  afBtn('btn-r',false,'🚀 Crear cuenta gratis');
+  afBtnLoad('btn-r', false, '🚀 Crear cuenta gratis');
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 // LOGIN
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 async function doLogin() {
-  const email=(document.getElementById('al-email')?.value||'').trim();
-  const pw=document.getElementById('al-pw')?.value||'';
-  if(!email){afMsg('amsg-l','err','Ingresá tu email.');return;}
-  if(!pw){afMsg('amsg-l','err','Ingresá tu contraseña.');return;}
-  afBtn('btn-l',true,'');
-  const sb=getSB();
-  if(sb){
-    try{
-      const {data,error}=await sb.auth.signInWithPassword({email,password:pw});
-      if(error)throw error;
-      const stored=loadUser();
-      const meta=data.user?.user_metadata||{};
-      const profile=(stored?.email===email)?stored:buildDefault(email,meta);
-      await onSignedIn(data.session,profile);
-    }catch(e){afMsg('amsg-l','err',authErr(e.message));}
-  }else{
-    const stored=loadUser();
-    const profile=(stored?.email===email)?stored:buildDefault(email,{});
-    const demo={user:{id:'demo-user',email}};
-    await onSignedIn(demo,profile);
+  const email = (document.getElementById('al-email')?.value || '').trim();
+  const pw    = document.getElementById('al-pw')?.value || '';
+  if (!email) { afMsg('amsg-l','err','Ingresá tu email.'); return; }
+  if (!pw)    { afMsg('amsg-l','err','Ingresá tu contraseña.'); return; }
+  afBtnLoad('btn-l', true, '');
+  const sb = getSB();
+  if (sb) {
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password:pw });
+      if (error) throw error;
+      const stored = loadUser();
+      const profile = (stored?.email === email) ? stored : mkDefault(email, data.user?.user_metadata||{});
+      await onSignedIn(data.session, profile);
+    } catch(e) { afMsg('amsg-l','err', authErrMsg(e.message)); }
+  } else {
+    // Demo mode: any credentials work
+    const stored = loadUser();
+    const profile = (stored?.email === email) ? stored : mkDefault(email, {});
+    await onSignedIn({ user:{id:'demo-user', email} }, profile);
   }
-  afBtn('btn-l',false,'→ Iniciar sesión');
+  afBtnLoad('btn-l', false, '→ Iniciar sesión');
 }
 
-function buildDefault(email,meta){
-  return{email,firstName:meta.firstName||'',lastName:meta.lastName||'',
-    username:meta.username||'',country:meta.country||'UY',avatar:meta.avatar||'🦁',
-    bio:meta.bio||'',location:meta.location||'',phone:meta.phone||'',role:meta.role||'BUYER',
-    storeName:meta.storeName||'',instagram:meta.instagram||'',tiktok:meta.tiktok||'',
-    profileComplete:meta.profileComplete||false,createdAt:new Date().toISOString()};
+function mkDefault(email, meta) {
+  return { email, firstName:meta.firstName||'', lastName:meta.lastName||'',
+           username:meta.username||'', country:meta.country||'UY', avatar:meta.avatar||'🦁',
+           bio:meta.bio||'', location:meta.location||'', phone:meta.phone||'', role:meta.role||'BUYER',
+           storeName:meta.storeName||'', instagram:meta.instagram||'', tiktok:meta.tiktok||'',
+           profileComplete:meta.profileComplete||false, createdAt:new Date().toISOString() };
 }
 
 async function doGoogleAuth() {
-  const sb=getSB();
-  if(sb){const{error}=await sb.auth.signInWithOAuth({provider:'google'});if(error)afMsg('amsg-l','err',error.message);}
+  const sb = getSB();
+  if (sb) { const{error}=await sb.auth.signInWithOAuth({provider:'google'}); if(error)afMsg('amsg-l','err',error.message); }
   else toast('🌐 Google OAuth requiere Supabase configurado');
 }
 async function doForgotPw() {
-  const email=(document.getElementById('al-email')?.value||'').trim();
-  if(!email){afMsg('amsg-l','err','Ingresá tu email primero.');return;}
-  const sb=getSB();
-  if(sb)await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+  const email = (document.getElementById('al-email')?.value||'').trim();
+  if (!email) { afMsg('amsg-l','err','Ingresá tu email primero.'); return; }
+  const sb = getSB();
+  if (sb) await sb.auth.resetPasswordForEmail(email, { redirectTo:window.location.href });
   afMsg('amsg-l','ok',`📧 Email de recuperación enviado a ${email}`);
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 // LOGOUT
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 async function doLogout() {
-  const sb=getSB();
-  if(sb){try{await sb.auth.signOut();}catch{}}
-  KMD.session=null;KMD.user=null;KMD.loggedIn=false;
-  saveUser(null);closeEditModal();
+  const sb = getSB();
+  if (sb) { try { await sb.auth.signOut(); } catch {} }
+  KMD.session = null; KMD.user = null; KMD.loggedIn = false;
+  saveUser(null); closeEditModal();
   hdrGuest();
-  _baseNav('home');
+  // Use _showSection directly — no auth check needed here
+  _showSection('home');
   toast('👋 Sesión cerrada. ¡Hasta pronto!');
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// POST-LOGIN FLOW
-// ════════════════════════════════════════════════════════════════════════
-async function onSignedIn(session,profile) {
-  KMD.session=session;
-  KMD.user={...profile,email:session?.user?.email||profile.email};
-  KMD.loggedIn=true;
+// ════════════════════════════════════════════════════════════════════════════
+// POST-LOGIN: decide which flow
+// ════════════════════════════════════════════════════════════════════════════
+async function onSignedIn(session, profile) {
+  KMD.session  = session;
+  KMD.user     = { ...profile, email: session?.user?.email || profile.email };
+  KMD.loggedIn = true;
   saveUser(KMD.user);
   closeAuthModal();
   hdrLoggedIn(KMD.user);
-  if(!profileDone(KMD.user)){
-    openCompleteProfile();  // CASE A: new user, needs to complete profile
-  }else{
-    // CASE B: returning user — stay in app, flash welcome
-    toast('👋 ¡Bienvenido, '+(KMD.user.firstName||KMD.user.email.split('@')[0])+'!');
-    _baseNav('perfil');
+  if (!profileDone(KMD.user)) {
+    // CASE A — new user, needs to complete profile
+    openCompleteProfile();
+  } else {
+    // CASE B — returning user, stay in app
+    toast('👋 ¡Bienvenido, ' + (KMD.user.firstName || KMD.user.email.split('@')[0]) + '!');
+    _showSection('perfil'); // direct, no auth check needed (we just logged in)
     renderProfile();
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 // COMPLETE PROFILE SCREEN
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 function openCompleteProfile() {
-  const scr=document.getElementById('complete-profile-screen');
+  const scr = document.getElementById('complete-profile-screen');
   scr.classList.add('open');
-  if(KMD.user?.firstName)document.getElementById('cp-fn').value=KMD.user.firstName;
-  if(KMD.user?.lastName) document.getElementById('cp-ln').value=KMD.user.lastName;
-  currentAv=KMD.user?.avatar||'🦁';
-  drawAvGrid('cp-av-grid',currentAv,'cpPick');
-  document.querySelectorAll('#cp-roles .role-opt').forEach(e=>
-    e.classList.toggle('sel',e.dataset.role===(KMD.user?.role||'BUYER')));
+  if (KMD.user?.firstName) document.getElementById('cp-fn').value = KMD.user.firstName;
+  if (KMD.user?.lastName)  document.getElementById('cp-ln').value = KMD.user.lastName;
+  curAv = KMD.user?.avatar || '🦁';
+  drawAvGrid('cp-av-grid', curAv, 'cpPick');
+  document.querySelectorAll('#cp-roles .role-opt').forEach(e =>
+    e.classList.toggle('sel', e.dataset.role === (KMD.user?.role || 'BUYER')));
   afMsg('cp-msg','ok','');
 }
 function closeCompleteProfile() {
   document.getElementById('complete-profile-screen').classList.remove('open');
 }
 function pickRole(el) {
-  document.querySelectorAll('#cp-roles .role-opt').forEach(e=>e.classList.remove('sel'));
+  document.querySelectorAll('#cp-roles .role-opt').forEach(e => e.classList.remove('sel'));
   el.classList.add('sel');
 }
-function cpPick(em) { currentAv=em; drawAvGrid('cp-av-grid',em,'cpPick'); }
+function cpPick(em) { curAv = em; drawAvGrid('cp-av-grid', em, 'cpPick'); }
 
 async function saveCompleteProfile() {
-  const fn=(document.getElementById('cp-fn')?.value||'').trim();
-  const user=(document.getElementById('cp-user')?.value||'').trim();
-  if(!fn){afMsg('cp-msg','err','El nombre es requerido.');return;}
-  if(!user){afMsg('cp-msg','err','El nombre de usuario es requerido.');return;}
-  if(user.length<3){afMsg('cp-msg','err','El usuario debe tener al menos 3 caracteres.');return;}
-  const btn=document.getElementById('cp-save-btn');
-  btn.disabled=true;btn.innerHTML='<div class="af-spin"></div>';
-  const updated={...KMD.user,
-    firstName:fn,lastName:(document.getElementById('cp-ln')?.value||'').trim(),
-    username:user,
-    location:(document.getElementById('cp-loc')?.value||'').trim(),
-    bio:(document.getElementById('cp-bio')?.value||'').trim(),
-    role:document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role||'BUYER',
-    avatar:currentAv,profileComplete:true,updatedAt:new Date().toISOString()};
-  const sb=getSB();
-  if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
-    try{await sb.auth.updateUser({data:updated});}catch(e){console.warn('SB update:',e.message);}
+  const fn   = (document.getElementById('cp-fn')?.value   || '').trim();
+  const user = (document.getElementById('cp-user')?.value || '').trim();
+  if (!fn)           { afMsg('cp-msg','err','El nombre es requerido.'); return; }
+  if (!user)         { afMsg('cp-msg','err','El nombre de usuario es requerido.'); return; }
+  if (user.length<3) { afMsg('cp-msg','err','El usuario debe tener al menos 3 caracteres.'); return; }
+  afBtnLoad('cp-save-btn', true, '');
+  const updated = { ...KMD.user,
+    firstName: fn, lastName: (document.getElementById('cp-ln')?.value||'').trim(),
+    username: user,
+    location: (document.getElementById('cp-loc')?.value||'').trim(),
+    bio:      (document.getElementById('cp-bio')?.value||'').trim(),
+    role:     document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role || 'BUYER',
+    avatar:   curAv, profileComplete:true, updatedAt:new Date().toISOString() };
+  const sb = getSB();
+  if (sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')) {
+    try { await sb.auth.updateUser({ data:updated }); } catch(e) { console.warn('SB update:', e.message); }
   }
-  KMD.user=updated;saveUser(updated);
-  hdrLoggedIn(updated);closeCompleteProfile();
-  renderProfile();_baseNav('perfil');
+  KMD.user = updated; saveUser(updated);
+  hdrLoggedIn(updated); closeCompleteProfile(); renderProfile();
+  _showSection('perfil');
   toast('✅ ¡Perfil completado! Bienvenido a KOOMODOO 🎉');
-  btn.disabled=false;btn.innerHTML='<span>✅ Guardar y entrar a KOOMODOO</span>';
+  afBtnLoad('cp-save-btn', false, '✅ Guardar y entrar a KOOMODOO');
 }
 function skipCP() {
-  closeCompleteProfile();_baseNav('home');
+  closeCompleteProfile(); _showSection('home');
   toast('💡 Completá tu perfil más tarde desde "Mi Perfil"');
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 // EDIT PROFILE MODAL
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 function openEditModal() {
-  if(!KMD.loggedIn){openAuthModal('login');return;}
-  const u=KMD.user;
-  const fill=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
-  fill('ep-fn',u.firstName);fill('ep-ln',u.lastName);fill('ep-user',u.username);
-  fill('ep-bio',u.bio);fill('ep-loc',u.location);fill('ep-phone',u.phone);
-  fill('ep-country',u.country||'UY');fill('ep-role',u.role||'BUYER');
-  fill('ep-store',u.storeName);fill('ep-ig',u.instagram);fill('ep-tt',u.tiktok);
-  fill('ep-pw1','');fill('ep-pw2','');
-  const fn=[u.firstName,u.lastName].filter(Boolean).join(' ')||'Usuario';
-  const nm=document.getElementById('ep-name-big');
-  const em=document.getElementById('ep-email-big');
-  const av=document.getElementById('ep-av-big');
-  if(nm)nm.textContent=fn;if(em)em.textContent=u.email||'';if(av)av.textContent=u.avatar||'🦁';
-  currentAv=u.avatar||'🦁';
-  drawAvGrid('ep-av-grid',currentAv,'epPick');
+  if (!KMD.loggedIn) { openAuthModal('login'); return; }
+  const u = KMD.user;
+  const fill = (id,v) => { const e=document.getElementById(id); if(e) e.value=v||''; };
+  fill('ep-fn',u.firstName); fill('ep-ln',u.lastName); fill('ep-user',u.username);
+  fill('ep-bio',u.bio); fill('ep-loc',u.location); fill('ep-phone',u.phone);
+  fill('ep-country',u.country||'UY'); fill('ep-role',u.role||'BUYER');
+  fill('ep-store',u.storeName); fill('ep-ig',u.instagram); fill('ep-tt',u.tiktok);
+  fill('ep-pw1',''); fill('ep-pw2','');
+  const fullName = [u.firstName,u.lastName].filter(Boolean).join(' ') || 'Usuario';
+  const nm = document.getElementById('ep-name-big');
+  const em = document.getElementById('ep-email-big');
+  const av = document.getElementById('ep-av-big');
+  if (nm) nm.textContent = fullName;
+  if (em) em.textContent = u.email || '';
+  if (av) av.textContent = u.avatar || '🦁';
+  curAv = u.avatar || '🦁';
+  drawAvGrid('ep-av-grid', curAv, 'epPick');
   afMsg('ep-msg','ok','');
   document.getElementById('edit-modal').classList.add('open');
 }
-function closeEditModal(){document.getElementById('edit-modal').classList.remove('open');}
-function epPick(em){currentAv=em;drawAvGrid('ep-av-grid',em,'epPick');const av=document.getElementById('ep-av-big');if(av)av.textContent=em;}
-
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); }
+function epPick(em) {
+  curAv = em; drawAvGrid('ep-av-grid', em, 'epPick');
+  const av = document.getElementById('ep-av-big'); if (av) av.textContent = em;
+}
 async function saveEditProfile() {
-  const pw1=document.getElementById('ep-pw1')?.value||'';
-  const pw2=document.getElementById('ep-pw2')?.value||'';
-  if(pw1&&pw1!==pw2){afMsg('ep-msg','err','Las contraseñas no coinciden.');return;}
-  if(pw1&&pw1.length<8){afMsg('ep-msg','err','Mínimo 8 caracteres para la contraseña.');return;}
-  afBtn('ep-save-btn',true,'');
-  const get=id=>(document.getElementById(id)?.value||'').trim();
-  const updated={...KMD.user,
-    firstName:get('ep-fn')||KMD.user.firstName,lastName:get('ep-ln'),
-    username:get('ep-user')||KMD.user.username,bio:get('ep-bio'),
-    location:get('ep-loc'),phone:get('ep-phone'),
-    country:get('ep-country')||'UY',role:get('ep-role')||'BUYER',
-    storeName:get('ep-store'),instagram:get('ep-ig'),tiktok:get('ep-tt'),
-    avatar:currentAv,profileComplete:true,updatedAt:new Date().toISOString()};
-  const sb=getSB();
-  if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
-    try{
-      const payload={data:updated};if(pw1)payload.password=pw1;
-      const{error}=await sb.auth.updateUser(payload);
-      if(error)throw error;
-    }catch(e){afMsg('ep-msg','err',authErr(e.message));afBtn('ep-save-btn',false,'💾 Guardar cambios');return;}
+  const pw1 = document.getElementById('ep-pw1')?.value || '';
+  const pw2 = document.getElementById('ep-pw2')?.value || '';
+  if (pw1 && pw1 !== pw2)   { afMsg('ep-msg','err','Las contraseñas no coinciden.'); return; }
+  if (pw1 && pw1.length < 8){ afMsg('ep-msg','err','Mínimo 8 caracteres.'); return; }
+  afBtnLoad('ep-save-btn', true, '');
+  const get = id => (document.getElementById(id)?.value||'').trim();
+  const updated = { ...KMD.user,
+    firstName: get('ep-fn')||KMD.user.firstName, lastName:get('ep-ln'),
+    username:  get('ep-user')||KMD.user.username, bio:get('ep-bio'),
+    location:  get('ep-loc'), phone:get('ep-phone'),
+    country:   get('ep-country')||'UY', role:get('ep-role')||'BUYER',
+    storeName: get('ep-store'), instagram:get('ep-ig'), tiktok:get('ep-tt'),
+    avatar: curAv, profileComplete:true, updatedAt:new Date().toISOString() };
+  const sb = getSB();
+  if (sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')) {
+    try {
+      const payload = { data:updated }; if (pw1) payload.password = pw1;
+      const { error } = await sb.auth.updateUser(payload);
+      if (error) throw error;
+    } catch(e) { afMsg('ep-msg','err',authErrMsg(e.message)); afBtnLoad('ep-save-btn',false,'💾 Guardar cambios'); return; }
   }
-  KMD.user=updated;saveUser(updated);
-  hdrLoggedIn(updated);renderProfile();
-  afMsg('ep-msg','ok','✅ Perfil actualizado');
-  toast('✅ Cambios guardados');
-  afBtn('ep-save-btn',false,'💾 Guardar cambios');
-  setTimeout(closeEditModal,1400);
+  KMD.user = updated; saveUser(updated);
+  hdrLoggedIn(updated); renderProfile();
+  afMsg('ep-msg','ok','✅ Perfil actualizado'); toast('✅ Cambios guardados');
+  afBtnLoad('ep-save-btn', false, '💾 Guardar cambios');
+  setTimeout(closeEditModal, 1400);
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// PROFILE PAGE RENDER
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+// PROFILE RENDER
+// ════════════════════════════════════════════════════════════════════════════
 function renderProfile() {
-  const u=KMD.user;if(!u)return;
-  const name=[u.firstName,u.lastName].filter(Boolean).join(' ')||u.email?.split('@')[0]||'Usuario';
-  const handle='@'+(u.username||u.email?.split('@')[0]||'usuario');
-  const role={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
-  const bio=u.bio||('📍 '+(u.location||'Uruguay')+' · KOOMODOO member');
-  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
-  set('prof-hero-av',u.avatar||'🦁');
-  set('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
-  set('prof-hndl-el',handle+' · '+role);
-  set('prof-bio-el',bio);
+  const u = KMD.user; if (!u) return;
+  const name   = [u.firstName,u.lastName].filter(Boolean).join(' ') || u.email?.split('@')[0] || 'Usuario';
+  const handle = '@' + (u.username || u.email?.split('@')[0] || 'usuario');
+  const role   = {BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role] || 'Miembro';
+  const bio    = u.bio || ('📍 ' + (u.location||'Uruguay') + ' · KOOMODOO member');
+  const set = (id,v) => { const e=document.getElementById(id); if(e) e.innerHTML=v; };
+  set('prof-hero-av', u.avatar||'🦁');
+  set('prof-nm-el',   name + (u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
+  set('prof-hndl-el', handle + ' · ' + role);
+  set('prof-bio-el',  bio);
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 // AVATAR GRID
-// ════════════════════════════════════════════════════════════════════════
-function drawAvGrid(containerId,active,onClickFn){
-  const c=document.getElementById(containerId);if(!c)return;
-  c.innerHTML=AVEMOJIS.map(em=>`<button class="av-btn ${em===active?'sel':''}" onclick="${onClickFn}('${em}')" title="${em}">${em}</button>`).join('');
+// ════════════════════════════════════════════════════════════════════════════
+function drawAvGrid(containerId, active, onClickFn) {
+  const c = document.getElementById(containerId); if (!c) return;
+  c.innerHTML = AVLIST.map(em =>
+    `<button class="av-btn ${em===active?'sel':''}" onclick="${onClickFn}('${em}')" title="${em}">${em}</button>`
+  ).join('');
 }
 
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 // HEADER STATE
-// ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
 function hdrLoggedIn(u) {
-  const av=document.getElementById('hdr-av');
-  const lbl=document.getElementById('hdr-auth-label');
-  if(av) av.innerHTML=(u.avatar||'🦁')+'<div class="hdr-online-dot"></div>';
-  if(lbl)lbl.textContent=u.firstName||u.email?.split('@')[0]||'Perfil';
+  const av  = document.getElementById('hdr-av');
+  const lbl = document.getElementById('hdr-auth-label');
+  if (av)  av.innerHTML  = (u.avatar||'🦁') + '<div class="hdr-online-dot"></div>';
+  if (lbl) lbl.textContent = u.firstName || u.email?.split('@')[0] || 'Perfil';
 }
 function hdrGuest() {
-  const av=document.getElementById('hdr-av');
-  const lbl=document.getElementById('hdr-auth-label');
-  if(av) av.innerHTML='👤';
-  if(lbl)lbl.textContent='Ingresar';
+  const av  = document.getElementById('hdr-av');
+  const lbl = document.getElementById('hdr-auth-label');
+  if (av)  av.innerHTML  = '👤';
+  if (lbl) lbl.textContent = 'Ingresar';
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// ROUTE PROTECTION
-// Only truly sensitive actions require login; browsing is always open
-// ════════════════════════════════════════════════════════════════════════
-const NEED_AUTH=new Set(['mensajes','carrito','pedidos','publicar','analytics']);
-const _baseNav=nav; // capture original nav before overriding
-
-function nav(page) {
-  if(NEED_AUTH.has(page)&&!KMD.loggedIn){
-    toast('🔒 Iniciá sesión para continuar');openAuthModal('login');return;
-  }
-  if(page==='perfil'&&!KMD.loggedIn){openAuthModal('login');return;}
-  _baseNav(page);
-  if(page==='perfil'&&KMD.loggedIn)renderProfile();
-}
-
-// ════════════════════════════════════════════════════════════════════════
-// SUPABASE AUTH STATE LISTENER
-// ════════════════════════════════════════════════════════════════════════
-function listenAuth(){
-  const sb=getSB();if(!sb)return;
-  sb.auth.onAuthStateChange(async(event,session)=>{
-    if(event==='SIGNED_IN'&&session){
-      const stored=loadUser();const meta=session.user?.user_metadata||{};
-      const profile=(stored?.email===session.user.email)?stored:buildDefault(session.user.email,meta);
-      KMD.session=session;KMD.user={...profile,email:session.user.email};KMD.loggedIn=true;
-      saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
-      if(!profileDone(KMD.user))openCompleteProfile();else renderProfile();
-    }else if(event==='SIGNED_OUT'){
-      KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();
+// ════════════════════════════════════════════════════════════════════════════
+// SUPABASE STATE LISTENER
+// ════════════════════════════════════════════════════════════════════════════
+function listenAuth() {
+  const sb = getSB(); if (!sb) return;
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      const stored  = loadUser();
+      const meta    = session.user?.user_metadata || {};
+      const profile = (stored?.email === session.user.email) ? stored : mkDefault(session.user.email, meta);
+      KMD.session  = session;
+      KMD.user     = { ...profile, email: session.user.email };
+      KMD.loggedIn = true;
+      saveUser(KMD.user); closeAuthModal(); hdrLoggedIn(KMD.user);
+      if (!profileDone(KMD.user)) openCompleteProfile(); else renderProfile();
+    } else if (event === 'SIGNED_OUT') {
+      KMD.session = null; KMD.user = null; KMD.loggedIn = false;
+      saveUser(null); hdrGuest();
     }
   });
 }
 
-// ════════════════════════════════════════════════════════════════════════
-// INIT — silent session restore; app always opens normally
-// ════════════════════════════════════════════════════════════════════════
-async function initAuth(){
+// ════════════════════════════════════════════════════════════════════════════
+// INIT — runs once at startup. App always opens normally.
+// ════════════════════════════════════════════════════════════════════════════
+async function initAuth() {
   listenAuth();
-  // Try Supabase session
-  const sb=getSB();
-  if(sb){
-    try{
-      const{data:{session}}=await sb.auth.getSession();
-      if(session){
-        const stored=loadUser();const meta=session.user?.user_metadata||{};
-        const profile=(stored?.email===session.user.email)?stored:buildDefault(session.user.email,meta);
-        KMD.session=session;KMD.user={...profile,email:session.user.email};KMD.loggedIn=true;
-        saveUser(KMD.user);hdrLoggedIn(KMD.user);
-        if(!profileDone(KMD.user))openCompleteProfile();
+  // 1. Try Supabase session
+  const sb = getSB();
+  if (sb) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        const stored  = loadUser();
+        const meta    = session.user?.user_metadata || {};
+        const profile = (stored?.email === session.user.email) ? stored : mkDefault(session.user.email, meta);
+        KMD.session  = session;
+        KMD.user     = { ...profile, email: session.user.email };
+        KMD.loggedIn = true;
+        saveUser(KMD.user); hdrLoggedIn(KMD.user);
+        if (!profileDone(KMD.user)) openCompleteProfile();
         return;
       }
-    }catch(e){console.warn('[KMD] Session restore:',e.message);}
+    } catch(e) { console.warn('[KMD] Session restore:', e.message); }
   }
-  // Fallback: localStorage session (demo mode)
-  const stored=loadUser();
-  if(stored?.email){
-    KMD.user=stored;KMD.session={user:{id:'local',email:stored.email}};KMD.loggedIn=true;
+  // 2. Fallback: localStorage (demo mode / offline)
+  const stored = loadUser();
+  if (stored?.email) {
+    KMD.user     = stored;
+    KMD.session  = { user: { id:'local', email:stored.email } };
+    KMD.loggedIn = true;
     hdrLoggedIn(stored);
-    if(!profileDone(stored))openCompleteProfile();
+    if (!profileDone(stored)) openCompleteProfile();
     return;
   }
-  // No session → app runs in exploration mode, header shows "Ingresar"
+  // 3. No session — exploration mode, no overlay shown
   hdrGuest();
 }
 
 
-// ── startup ──
+// ── App startup ──
 initAuth();
 renderHome();
 updateBadges();
