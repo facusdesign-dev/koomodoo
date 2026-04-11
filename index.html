@@ -509,19 +509,61 @@ button,select,input{font-family:inherit}
 /* ════════════════════════════════════
    PROFILE
 ════════════════════════════════════ */
-.prof-hero{height:130px;position:relative;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#022C22,#064E3B,#051a12)}
-.prof-av-wrap{position:absolute;bottom:-22px;left:20px;padding:3px;border-radius:50%;background:linear-gradient(135deg,#34D399,#2DD4BF)}
-.prof-av{width:64px;height:64px;border-radius:50%;background:var(--bg3);border:3px solid var(--bg2);display:flex;align-items:center;justify-content:center;font-size:26px}
-.prof-edit-btn{position:absolute;bottom:10px;right:16px;font-size:11px;font-weight:700;padding:5px 12px;border-radius:9px;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer}
-.prof-info{padding:30px 20px 16px;background:var(--bg2);border-bottom:1px solid var(--b);flex-shrink:0}
-.prof-nm{font-size:20px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.vbdg{font-size:9px;font-weight:900;padding:2px 7px;border-radius:50px;background:var(--teal);color:#0a2a2a}
-.prof-hndl{font-size:11px;color:var(--t3);margin-bottom:6px}
-.prof-bio{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;max-width:480px}
-.prof-stats{display:flex;gap:20px;margin-bottom:14px;flex-wrap:wrap}
-.ps-n{font-size:18px;font-weight:900;background:linear-gradient(135deg,#34D399,#2DD4BF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ps-l{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3)}
-.prof-acts{display:flex;gap:8px;flex-wrap:wrap}
+/* ── Profile v6.1 — clean horizontal layout ─────────────────────────────── */
+@keyframes ddIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.prof-hero{height:110px;position:relative;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#022C22,#064E3B,#051a12)}
+.prof-hero-cover{position:absolute;inset:0;background:linear-gradient(135deg,rgba(52,211,153,.08),rgba(45,212,191,.05))}
+/* Avatar */
+.prof-av-wrap{
+  width:96px;height:96px;border-radius:50%;
+  background:linear-gradient(135deg,#34D399,#2DD4BF);
+  padding:3px;flex-shrink:0;position:relative;cursor:pointer;
+}
+.prof-av-wrap:hover .prof-photo-overlay{opacity:1}
+.prof-photo-overlay{
+  position:absolute;inset:3px;border-radius:50%;
+  background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;
+  font-size:18px;opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.prof-av{
+  width:100%;height:100%;border-radius:50%;
+  background:var(--bg3);border:3px solid var(--bg2);
+  display:flex;align-items:center;justify-content:center;font-size:38px;
+  overflow:hidden;
+}
+.prof-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+/* Info section */
+.prof-info{padding:16px 20px 0;background:var(--bg2);border-bottom:1px solid var(--b);flex-shrink:0}
+.prof-info-row{display:flex;align-items:flex-start;gap:18px;margin-bottom:14px}
+@media(max-width:480px){.prof-info-row{gap:12px}.prof-av-wrap{width:76px;height:76px}.prof-av{font-size:30px}}
+.prof-info-body{flex:1;min-width:0;padding-top:4px}
+.prof-nm{font-size:19px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;color:var(--t);margin-bottom:3px}
+.vbdg{font-size:9px;font-weight:900;padding:2px 7px;border-radius:50px;background:var(--teal);color:#0a2a2a;flex-shrink:0}
+.prof-hndl{font-size:12px;color:var(--t3);margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.prof-location{font-size:12px;color:var(--t3);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.prof-bio{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:0;max-width:520px}
+.prof-acts{display:flex;gap:8px;flex-wrap:wrap;padding-top:11px}
+/* Stats bar */
+.prof-stats{
+  display:flex;gap:0;padding:11px 0;margin-top:0;
+  border-top:1px solid var(--b);
+  flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+}
+.prof-stats::-webkit-scrollbar{display:none}
+.prof-stat-item{
+  display:flex;align-items:center;gap:5px;
+  padding:0 14px;border-right:1px solid var(--b);flex-shrink:0;
+}
+.prof-stat-item:first-child{padding-left:0}
+.prof-stat-item:last-child{border-right:none}
+.ps-n{font-size:14px;font-weight:900;color:var(--t)}
+.ps-l{font-size:11px;color:var(--t3)}
+/* Dropdown */
+.dd-item{padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:8px}
+.dd-item:hover{background:var(--surf2);color:var(--t)}
+.dd-item-danger{color:var(--rose)!important}
+.dd-item-danger:hover{background:rgba(251,113,133,.08)!important}
+.hdr-online-dot{position:absolute;bottom:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--g);border:2px solid var(--bg)}
 .btn-p{padding:7px 16px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;border:none}
 .btn-pri{background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22}
 .btn-pri:hover{opacity:.88;box-shadow:0 6px 18px rgba(16,185,129,.3)}
@@ -864,23 +906,9 @@ button,select,input{font-family:inherit}
 .aff-prog-bar{height:4px;background:var(--surf3);border-radius:2px;overflow:hidden;margin:6px 0 4px}
 .aff-prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--g2),var(--teal))}
 
-/* ══════════════════════════════════════════════
-   V6 — DROPDOWN, AUTH, PROFILE, POSTS, GOOGLE
-══════════════════════════════════════════════ */
-@keyframes ddIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+/* ═══ AUTH + POSTS + PHOTO MODALS ═══ */
 @keyframes aIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 @keyframes af-spin{to{transform:rotate(360deg)}}
-
-/* Header dropdown */
-.dd-item{
-  padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;
-  color:var(--t2);cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:8px;
-}
-.dd-item:hover{background:var(--surf2);color:var(--t)}
-.dd-item-danger{color:var(--rose)!important}
-.dd-item-danger:hover{background:rgba(251,113,133,.08)!important}
-
-/* Auth overlays */
 #auth-modal{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px}
 #auth-modal.open{display:flex}
 #complete-profile-screen{display:none;position:fixed;inset:0;z-index:800;background:var(--bg);overflow-y:auto;padding:20px 16px}
@@ -891,8 +919,6 @@ button,select,input{font-family:inherit}
 #photo-modal.open{display:flex}
 #google-loading{display:none;position:fixed;inset:0;z-index:950;background:rgba(7,9,13,.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;flex-direction:column;gap:16px}
 #google-loading.open{display:flex}
-
-/* Auth box */
 .auth-box{width:min(400px,100%);background:var(--bg2);border:1px solid var(--b2);border-radius:22px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7);animation:aIn .3s cubic-bezier(.22,1,.36,1) both}
 .ep-box{width:min(520px,100%);max-height:90vh;overflow-y:auto;background:var(--bg2);border:1px solid var(--b2);border-radius:22px;padding:24px;animation:aIn .3s ease;flex-shrink:0}
 .cp-box{max-width:520px;margin:0 auto;background:var(--bg2);border:1px solid var(--b2);border-radius:22px;padding:26px}
@@ -907,8 +933,7 @@ button,select,input{font-family:inherit}
 .af-inp{width:100%;padding:11px 13px;background:var(--surf2);border:1px solid var(--b2);border-radius:11px;color:var(--t);font-size:13px;outline:none;transition:all .2s;font-family:inherit;margin-bottom:11px}
 .af-inp:focus{border-color:var(--g2);box-shadow:0 0 0 3px rgba(16,185,129,.1)}
 .af-inp::placeholder{color:var(--t3)}
-.af-pw{position:relative;margin-bottom:11px}
-.af-pw .af-inp{margin-bottom:0}
+.af-pw{position:relative;margin-bottom:11px}.af-pw .af-inp{margin-bottom:0}
 .af-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:var(--t3);background:none;border:none;padding:3px}
 .af-btn{width:100%;padding:12px;border-radius:12px;margin-top:4px;background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22;font-size:13px;font-weight:900;border:none;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px}
 .af-btn:hover{opacity:.88;box-shadow:0 8px 20px rgba(16,185,129,.3);transform:translateY(-1px)}
@@ -917,8 +942,6 @@ button,select,input{font-family:inherit}
 .af-btn.sec:hover{border-color:rgba(255,255,255,.2);color:var(--t);box-shadow:none;transform:none}
 .af-btn.google{background:#fff;color:#1f1f1f;margin-top:8px;font-weight:700}
 .af-btn.google:hover{background:#f5f5f5;box-shadow:0 4px 12px rgba(0,0,0,.2);transform:translateY(-1px)}
-.af-btn.danger{background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.25);color:var(--rose);margin-top:8px}
-.af-btn.danger:hover{background:rgba(251,113,133,.2);box-shadow:none;transform:none}
 .af-msg{border-radius:10px;padding:9px 12px;margin-bottom:11px;font-size:12px;line-height:1.5;display:flex;align-items:flex-start;gap:7px;animation:aIn .2s ease}
 .af-msg.err{background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.2);color:var(--rose)}
 .af-msg.ok{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--g)}
@@ -940,29 +963,18 @@ button,select,input{font-family:inherit}
 .role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:4px}
 .role-opt{padding:13px 8px;border-radius:12px;text-align:center;background:var(--surf);border:1.5px solid var(--b);cursor:pointer;transition:all .15s}
 .role-opt:hover{border-color:var(--b2)}.role-opt.sel{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.07)}
-.hdr-online-dot{position:absolute;bottom:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--g);border:2px solid var(--bg)}
-
-/* Posts system */
+.photo-modal-box{width:min(340px,90vw);background:var(--bg2);border:1px solid var(--b2);border-radius:20px;padding:24px;animation:aIn .25s ease}
+.photo-drop-area{border:2px dashed rgba(52,211,153,.3);border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(52,211,153,.02)}
+.photo-drop-area:hover{border-color:rgba(52,211,153,.55);background:rgba(52,211,153,.05)}
+.post-card{background:var(--surf);border:1px solid var(--b);border-radius:16px;margin-bottom:14px;overflow:hidden;transition:border-color .2s;animation:aIn .3s ease both}
+.post-card:hover{border-color:rgba(52,211,153,.15)}
 .post-compose{background:var(--surf);border:1px solid var(--b);border-radius:16px;padding:16px;margin-bottom:16px}
 .post-compose-input{width:100%;padding:11px 13px;background:var(--surf2);border:1px solid var(--b2);border-radius:11px;color:var(--t);font-size:13px;resize:none;outline:none;font-family:inherit;transition:all .2s;min-height:80px}
 .post-compose-input:focus{border-color:var(--g2);box-shadow:0 0 0 3px rgba(16,185,129,.1)}
 .post-compose-input::placeholder{color:var(--t3)}
-.post-compose-actions{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
-.pc-btn{padding:7px 14px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;border:none;font-family:inherit}
-.pc-btn.primary{background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22}
-.pc-btn.primary:hover{opacity:.88;transform:translateY(-1px)}
-.pc-btn.ghost{background:var(--surf2);border:1px solid var(--b2);color:var(--t2)}
-.pc-btn.ghost:hover{border-color:var(--b2);color:var(--t)}
-.post-card{background:var(--surf);border:1px solid var(--b);border-radius:16px;margin-bottom:14px;overflow:hidden;transition:border-color .2s;animation:aIn .3s ease both}
-.post-card:hover{border-color:rgba(52,211,153,.15)}
-.post-card-hdr{display:flex;align-items:center;gap:10px;padding:13px 14px 0}
-.post-card-body{padding:10px 14px}
-.post-card-text{font-size:14px;line-height:1.65;color:rgba(237,242,255,.9);margin-bottom:10px}
-.post-card-img{width:100%;border-radius:10px;max-height:360px;object-fit:cover;margin-bottom:10px;display:block}
 .post-card-actions{display:flex;align-items:center;gap:4px;padding:9px 14px;border-top:1px solid var(--b)}
 .pca-btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;font-size:12px;color:var(--t3);cursor:pointer;background:none;border:none;font-family:inherit;transition:all .15s}
-.pca-btn:hover{background:var(--surf2);color:var(--t2)}
-.pca-btn.liked{color:var(--rose)}
+.pca-btn:hover{background:var(--surf2);color:var(--t2)}.pca-btn.liked{color:var(--rose)}
 .comment-thread{padding:10px 14px;border-top:1px solid var(--b);background:rgba(0,0,0,.15)}
 .comment-item{display:flex;gap:9px;margin-bottom:10px}
 .comment-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
@@ -972,114 +984,61 @@ button,select,input{font-family:inherit}
 .comment-field{flex:1;padding:8px 12px;background:var(--surf2);border:1px solid var(--b2);border-radius:20px;color:var(--t);font-size:12px;outline:none;font-family:inherit;transition:border-color .2s}
 .comment-field:focus{border-color:var(--g2)}
 .comment-send{width:32px;height:32px;border-radius:50%;background:var(--g2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:#022C22;transition:all .2s;flex-shrink:0}
-.comment-send:hover{opacity:.88}
-
-/* Profile photo modal */
-.photo-modal-box{width:min(340px,90vw);background:var(--bg2);border:1px solid var(--b2);border-radius:20px;padding:24px;animation:aIn .25s ease}
-.photo-drop-area{border:2px dashed rgba(52,211,153,.3);border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(52,211,153,.02)}
-.photo-drop-area:hover{border-color:rgba(52,211,153,.55);background:rgba(52,211,153,.05)}
-
-/* Products by category */
-.cat-section{margin-bottom:28px}
-.cat-section-title{font-size:13px;font-weight:800;color:var(--t);margin-bottom:12px;display:flex;align-items:center;gap:7px}
 </style>
 </head>
 <body>
 
-<!-- ════ GOOGLE LOADING OVERLAY ════ -->
-<div id="google-loading">
-  <div class="af-spin-lg"></div>
-  <div style="font-size:14px;font-weight:700;color:var(--t2)">Conectando con Google...</div>
-</div>
+<!-- ════ GOOGLE LOADING ════ -->
+<div id="google-loading"><div class="af-spin-lg"></div><div style="font-size:14px;font-weight:700;color:var(--t2)">Conectando con Google...</div></div>
 
 <!-- ════ AUTH MODAL ════ -->
 <div id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
   <div class="auth-box">
-    <div class="auth-brand">
-      <span class="auth-logo-txt">KOOMODOO</span>
-      <span class="auth-tagline">Social Commerce Platform</span>
-    </div>
+    <div class="auth-brand"><span class="auth-logo-txt">KOOMODOO</span><span class="auth-tagline">Social Commerce Platform</span></div>
     <div class="auth-tabs">
       <button class="atab on" id="atab-l" onclick="switchTab('login')">Iniciar sesión</button>
       <button class="atab"    id="atab-r" onclick="switchTab('register')">Crear cuenta</button>
     </div>
-    <!-- Login -->
     <div class="aform" id="aform-l">
       <div id="amsg-l"></div>
-      <button class="af-btn google" id="btn-google-l" onclick="doGoogleAuth()">
-        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 13 5 4 14 4 24s9 19 20 19c11 0 19.3-7.7 19.3-19 0-1.3-.1-2.7-.3-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 16.2 5 9.4 9 6.3 14.7z"/><path fill="#4CAF50" d="M24 43c5 0 9.4-1.9 12.8-5l-5.9-5C29.2 34.5 26.7 35 24 35c-5.3 0-9.6-2.6-11.3-6.2l-6.5 5C9.4 39.3 16.2 43 24 43z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.4-2.5 4.4-4.7 5.7l5.9 5C40.3 36.1 43.3 30.5 43.3 24c0-1.3-.1-2.7-.3-4z"/></svg>
-        Continuar con Google
-      </button>
+      <button class="af-btn google" onclick="doGoogleAuth()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 13 5 4 14 4 24s9 19 20 19c11 0 19.3-7.7 19.3-19 0-1.3-.1-2.7-.3-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 16.2 5 9.4 9 6.3 14.7z"/><path fill="#4CAF50" d="M24 43c5 0 9.4-1.9 12.8-5l-5.9-5C29.2 34.5 26.7 35 24 35c-5.3 0-9.6-2.6-11.3-6.2l-6.5 5C9.4 39.3 16.2 43 24 43z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.4-2.5 4.4-4.7 5.7l5.9 5C40.3 36.1 43.3 30.5 43.3 24c0-1.3-.1-2.7-.3-4z"/></svg> Continuar con Google</button>
       <div class="af-divider"><span>o con email</span></div>
       <label class="af-lbl">Email</label>
       <input type="email" class="af-inp" id="al-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()">
       <label class="af-lbl">Contraseña</label>
-      <div class="af-pw">
-        <input type="password" class="af-inp" id="al-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
-        <button class="af-eye" onclick="togPw('al-pw',this)">👁</button>
-      </div>
+      <div class="af-pw"><input type="password" class="af-inp" id="al-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"><button class="af-eye" onclick="togPw('al-pw',this)">👁</button></div>
       <span onclick="doForgotPw()" style="font-size:11px;color:var(--t3);cursor:pointer;display:block;text-align:right;margin:-4px 0 11px">¿Olvidaste tu contraseña?</span>
       <button class="af-btn" id="btn-l" onclick="doLogin()"><span>→ Iniciar sesión</span></button>
     </div>
-    <!-- Register -->
     <div class="aform" id="aform-r" style="display:none">
       <div id="amsg-r"></div>
-      <button class="af-btn google" id="btn-google-r" onclick="doGoogleAuth()">
-        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 13 5 4 14 4 24s9 19 20 19c11 0 19.3-7.7 19.3-19 0-1.3-.1-2.7-.3-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 16.2 5 9.4 9 6.3 14.7z"/><path fill="#4CAF50" d="M24 43c5 0 9.4-1.9 12.8-5l-5.9-5C29.2 34.5 26.7 35 24 35c-5.3 0-9.6-2.6-11.3-6.2l-6.5 5C9.4 39.3 16.2 43 24 43z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.4-2.5 4.4-4.7 5.7l5.9 5C40.3 36.1 43.3 30.5 43.3 24c0-1.3-.1-2.7-.3-4z"/></svg>
-        Registrarse con Google
-      </button>
+      <button class="af-btn google" onclick="doGoogleAuth()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 13 5 4 14 4 24s9 19 20 19c11 0 19.3-7.7 19.3-19 0-1.3-.1-2.7-.3-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 16.2 5 9.4 9 6.3 14.7z"/><path fill="#4CAF50" d="M24 43c5 0 9.4-1.9 12.8-5l-5.9-5C29.2 34.5 26.7 35 24 35c-5.3 0-9.6-2.6-11.3-6.2l-6.5 5C9.4 39.3 16.2 43 24 43z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.4-2.5 4.4-4.7 5.7l5.9 5C40.3 36.1 43.3 30.5 43.3 24c0-1.3-.1-2.7-.3-4z"/></svg> Registrarse con Google</button>
       <div class="af-divider"><span>o con email</span></div>
-      <div class="cp-2col">
-        <div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="rg-fn" placeholder="Carlos"></div>
-        <div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="rg-ln" placeholder="Mendoza"></div>
-      </div>
-      <label class="af-lbl">Email</label>
-      <input type="email" class="af-inp" id="rg-email" placeholder="tu@email.com">
+      <div class="cp-2col"><div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="rg-fn" placeholder="Carlos"></div><div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="rg-ln" placeholder="Mendoza"></div></div>
+      <label class="af-lbl">Email</label><input type="email" class="af-inp" id="rg-email" placeholder="tu@email.com">
       <label class="af-lbl">Contraseña</label>
-      <div class="af-pw">
-        <input type="password" class="af-inp" id="rg-pw" placeholder="Mín. 8 caracteres" oninput="checkPwStr(this)">
-        <button class="af-eye" onclick="togPw('rg-pw',this)">👁</button>
-      </div>
-      <div id="pw-str-wrap" style="display:none;margin:-6px 0 10px">
-        <div class="af-str-bar"><div class="af-str-fill" id="pw-str-fill"></div></div>
-        <span id="pw-str-lbl" style="font-size:10px;color:var(--t3)"></span>
-      </div>
+      <div class="af-pw"><input type="password" class="af-inp" id="rg-pw" placeholder="Mín. 8 caracteres" oninput="checkPwStr(this)"><button class="af-eye" onclick="togPw('rg-pw',this)">👁</button></div>
+      <div id="pw-str-wrap" style="display:none;margin:-6px 0 10px"><div class="af-str-bar"><div class="af-str-fill" id="pw-str-fill"></div></div><span id="pw-str-lbl" style="font-size:10px;color:var(--t3)"></span></div>
       <label class="af-lbl">País</label>
-      <select class="af-inp" id="rg-country" style="cursor:pointer">
-        <option value="UY">🇺🇾 Uruguay</option>
-        <option value="AR">🇦🇷 Argentina</option>
-        <option value="CL">🇨🇱 Chile</option>
-        <option value="PY">🇵🇾 Paraguay</option>
-      </select>
+      <select class="af-inp" id="rg-country" style="cursor:pointer"><option value="UY">🇺🇾 Uruguay</option><option value="AR">🇦🇷 Argentina</option><option value="CL">🇨🇱 Chile</option></select>
       <button class="af-btn" id="btn-r" onclick="doRegister()"><span>🚀 Crear cuenta gratis</span></button>
     </div>
-    <div class="af-footer">Al continuar aceptás los <span class="af-link" onclick="toast('📄 Términos próximamente')">Términos</span> y la <span class="af-link">Política de privacidad</span></div>
+    <div class="af-footer">Al continuar aceptás los <span class="af-link" onclick="toast('📄 Términos')">Términos</span> y la <span class="af-link">Privacidad</span></div>
   </div>
 </div>
 
-<!-- ════ COMPLETE PROFILE SCREEN ════ -->
+<!-- ════ COMPLETE PROFILE ════ -->
 <div id="complete-profile-screen">
   <div class="cp-box">
-    <div style="text-align:center;margin-bottom:20px">
-      <span style="font-size:22px;font-weight:800;background:linear-gradient(135deg,#34D399,#2DD4BF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">KOOMODOO</span>
-      <div style="font-size:18px;font-weight:800;color:var(--t);margin:10px 0 4px">¡Bienvenido! 👋</div>
-      <div style="font-size:13px;color:var(--t2);line-height:1.6">Completá tu perfil para empezar</div>
-    </div>
+    <div style="text-align:center;margin-bottom:20px"><span style="font-size:22px;font-weight:800;background:linear-gradient(135deg,#34D399,#2DD4BF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">KOOMODOO</span><div style="font-size:18px;font-weight:800;color:var(--t);margin:10px 0 4px">¡Bienvenido! 👋</div><div style="font-size:13px;color:var(--t2);line-height:1.6">Completá tu perfil para empezar</div></div>
     <div id="cp-msg"></div>
-    <div class="cp-sec">Elegí tu avatar</div>
-    <div class="av-grid" id="cp-av-grid"></div>
+    <div class="cp-sec">Elegí tu avatar</div><div class="av-grid" id="cp-av-grid"></div>
     <div class="cp-sec">Información básica</div>
-    <div class="cp-2col">
-      <div><label class="af-lbl">Nombre *</label><input type="text" class="af-inp" id="cp-fn" placeholder="Carlos"></div>
-      <div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="cp-ln" placeholder="Mendoza"></div>
-    </div>
-    <label class="af-lbl">Usuario *</label>
-    <input type="text" class="af-inp" id="cp-user" placeholder="carlosmendoza" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')">
-    <label class="af-lbl">Ubicación</label>
-    <input type="text" class="af-inp" id="cp-loc" placeholder="Montevideo, Uruguay">
-    <label class="af-lbl">Bio (opcional)</label>
-    <textarea class="af-inp" id="cp-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
-    <div class="cp-sec">¿Qué querés hacer en KOOMODOO?</div>
+    <div class="cp-2col"><div><label class="af-lbl">Nombre *</label><input type="text" class="af-inp" id="cp-fn" placeholder="Carlos"></div><div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="cp-ln" placeholder="Mendoza"></div></div>
+    <label class="af-lbl">Usuario *</label><input type="text" class="af-inp" id="cp-user" placeholder="carlosmendoza" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')">
+    <label class="af-lbl">Ubicación</label><input type="text" class="af-inp" id="cp-loc" placeholder="Montevideo, Uruguay">
+    <label class="af-lbl">Bio (opcional)</label><textarea class="af-inp" id="cp-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
+    <div class="cp-sec">¿Qué querés hacer?</div>
     <div class="role-grid" id="cp-roles">
       <div class="role-opt sel" data-role="BUYER" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">🛒</div><div style="font-size:12px;font-weight:800;color:var(--t)">Solo comprar</div></div>
       <div class="role-opt" data-role="BOTH" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">⚡</div><div style="font-size:12px;font-weight:800;color:var(--t)">Comprar y vender</div></div>
@@ -1103,17 +1062,11 @@ button,select,input{font-family:inherit}
       <div style="flex:1"><div id="ep-name-big" style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:2px">Carlos Mendoza</div><div id="ep-email-big" style="font-size:11px;color:var(--t3)">carlos@example.com</div></div>
       <button onclick="pickProfilePhoto()" style="padding:6px 12px;border-radius:9px;background:var(--surf2);border:1px solid var(--b2);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer">📷 Foto</button>
     </div>
-    <div class="cp-sec">Avatar emoji</div>
-    <div class="av-grid" id="ep-av-grid"></div>
+    <div class="cp-sec">Avatar emoji</div><div class="av-grid" id="ep-av-grid"></div>
     <div class="cp-sec">Información básica</div>
-    <div class="cp-2col">
-      <div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="ep-fn" placeholder="Carlos"></div>
-      <div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="ep-ln" placeholder="Mendoza"></div>
-    </div>
-    <label class="af-lbl">Usuario</label>
-    <input type="text" class="af-inp" id="ep-user" placeholder="carlosmendoza">
-    <label class="af-lbl">Bio</label>
-    <textarea class="af-inp" id="ep-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
+    <div class="cp-2col"><div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="ep-fn" placeholder="Carlos"></div><div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="ep-ln" placeholder="Mendoza"></div></div>
+    <label class="af-lbl">Usuario</label><input type="text" class="af-inp" id="ep-user" placeholder="carlosmendoza">
+    <label class="af-lbl">Bio</label><textarea class="af-inp" id="ep-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
     <div class="cp-2col">
       <div><label class="af-lbl">Ubicación</label><input type="text" class="af-inp" id="ep-loc" placeholder="Montevideo, UY"></div>
       <div><label class="af-lbl">Teléfono</label><input type="tel" class="af-inp" id="ep-phone" placeholder="+598 99 000 000"></div>
@@ -1123,18 +1076,11 @@ button,select,input{font-family:inherit}
       <div><label class="af-lbl">Rol</label><select class="af-inp" id="ep-role" style="cursor:pointer"><option value="BUYER">🛒 Comprador</option><option value="BOTH">⚡ Comprador + Vendedor</option><option value="SELLER">🏷️ Vendedor</option></select></div>
     </div>
     <div class="cp-sec">Mi tienda (opcional)</div>
-    <label class="af-lbl">Nombre de tienda</label>
-    <input type="text" class="af-inp" id="ep-store" placeholder="Mi Tienda UY">
+    <label class="af-lbl">Nombre de tienda</label><input type="text" class="af-inp" id="ep-store" placeholder="Mi Tienda UY">
     <div class="cp-sec">Redes sociales</div>
-    <div class="cp-2col">
-      <div><label class="af-lbl">Instagram</label><input type="text" class="af-inp" id="ep-ig" placeholder="@usuario"></div>
-      <div><label class="af-lbl">TikTok</label><input type="text" class="af-inp" id="ep-tt" placeholder="@usuario"></div>
-    </div>
+    <div class="cp-2col"><div><label class="af-lbl">Instagram</label><input type="text" class="af-inp" id="ep-ig" placeholder="@usuario"></div><div><label class="af-lbl">TikTok</label><input type="text" class="af-inp" id="ep-tt" placeholder="@usuario"></div></div>
     <div class="cp-sec">Seguridad</div>
-    <div class="cp-2col">
-      <div><label class="af-lbl">Nueva contraseña</label><input type="password" class="af-inp" id="ep-pw1" placeholder="Dejar vacío si no cambiás"></div>
-      <div><label class="af-lbl">Confirmar</label><input type="password" class="af-inp" id="ep-pw2" placeholder="Repetir"></div>
-    </div>
+    <div class="cp-2col"><div><label class="af-lbl">Nueva contraseña</label><input type="password" class="af-inp" id="ep-pw1" placeholder="Dejar vacío si no cambiás"></div><div><label class="af-lbl">Confirmar</label><input type="password" class="af-inp" id="ep-pw2" placeholder="Repetir"></div></div>
     <button class="af-btn" id="ep-save-btn" onclick="saveEditProfile()" style="margin-top:6px">💾 Guardar cambios</button>
   </div>
 </div>
@@ -1147,11 +1093,9 @@ button,select,input{font-family:inherit}
       <button onclick="closePhotoModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button>
     </div>
     <div id="photo-msg"></div>
-    <!-- Preview -->
     <div style="display:flex;justify-content:center;margin-bottom:16px">
       <div id="photo-preview" style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:46px;overflow:hidden;border:3px solid rgba(52,211,153,.3)">🦁</div>
     </div>
-    <!-- Upload -->
     <div class="photo-drop-area" onclick="document.getElementById('photo-file-inp').click()">
       <div style="font-size:28px;margin-bottom:8px">📤</div>
       <div style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:4px">Subir foto</div>
@@ -1191,16 +1135,13 @@ button,select,input{font-family:inherit}
     <div class="hbtn" onclick="nav('mensajes')" title="Mensajes">💬<div class="badge">3</div></div>
     <div class="hbtn" onclick="nav('favoritos')" title="Favoritos">❤️<div class="badge" id="fav-badge">3</div></div>
     <div class="hbtn" onclick="nav('carrito')" title="Carrito">🛒<div class="badge" id="cart-badge">2</div></div>
-    <!-- ── AUTH BUTTON + DROPDOWN ── -->
     <div style="position:relative;flex-shrink:0" id="hdr-auth-wrap">
       <div id="hdr-auth-btn" onclick="hdrAuthClick()" title="Mi cuenta" style="display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:11px;background:var(--surf);border:1px solid var(--b2);cursor:pointer;transition:all .15s">
         <div id="hdr-av" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;position:relative;overflow:hidden">👤</div>
         <span id="hdr-auth-label" style="font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis">Ingresar</span>
         <span id="hdr-dd-arrow" style="font-size:10px;color:var(--t3);display:none">▾</span>
       </div>
-      <!-- Dropdown menu -->
       <div id="hdr-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:220px;background:var(--bg2);border:1px solid var(--b2);border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.6);z-index:500;animation:ddIn .18s ease">
-        <!-- User header -->
         <div id="dd-user-hdr" style="padding:14px 16px;background:var(--surf);border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px">
           <div id="dd-av" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden">🦁</div>
           <div style="flex:1;min-width:0">
@@ -1208,7 +1149,6 @@ button,select,input{font-family:inherit}
             <div id="dd-email" style="font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">carlos@example.com</div>
           </div>
         </div>
-        <!-- Usuario section -->
         <div style="padding:6px 8px">
           <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px">Usuario</div>
           <div class="dd-item" onclick="ddNav('perfil')">👤 Mi perfil</div>
@@ -1218,7 +1158,6 @@ button,select,input{font-family:inherit}
           <div class="dd-item" onclick="toast('⭐ Opiniones próximamente')">⭐ Mis opiniones</div>
         </div>
         <div style="height:1px;background:var(--b);margin:0 8px"></div>
-        <!-- Vendedor section -->
         <div style="padding:6px 8px">
           <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px">Vendedor</div>
           <div class="dd-item" onclick="ddNav('publicar')">🏷️ Vender</div>
@@ -1228,9 +1167,8 @@ button,select,input{font-family:inherit}
           <div class="dd-item" onclick="toast('📢 Marketing próximamente')">📢 Marketing</div>
         </div>
         <div style="height:1px;background:var(--b);margin:0 8px"></div>
-        <!-- Account -->
         <div style="padding:6px 8px">
-          <div class="dd-item" onclick="openEditModal()">✏️ Editar perfil</div>
+          <div class="dd-item" onclick="closeDd();openEditModal()">✏️ Editar perfil</div>
           <div class="dd-item dd-item-danger" onclick="closeDd();doLogout()">🚪 Cerrar sesión</div>
         </div>
       </div>
@@ -1382,27 +1320,43 @@ button,select,input{font-family:inherit}
 <!-- ── PERFIL ── -->
 <div class="pg" id="pg-perfil">
   <div style="overflow-y:auto;flex:1">
-    <div class="prof-hero">
-      <div class="prof-av-wrap" style="cursor:pointer" onclick="requireAuth(pickProfilePhoto)" title="Cambiar foto"><div class="prof-av" id="prof-hero-av" style="overflow:hidden">🦁</div><div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--bg2)">📷</div></div>
-      <button class="prof-edit-btn">✏️ Editar</button>
-    </div>
+    <!-- Cover strip (no edit button here) -->
+    <div class="prof-hero"><div class="prof-hero-cover"></div></div>
+
     <div class="prof-info">
-      <div class="prof-nm" id="prof-nm-el">Carlos Mendoza <span class="vbdg">✓ VERIFICADO</span></div>
-      <div class="prof-hndl" id="prof-hndl-el">@carlosmendoza · Vendedor Pro</div>
-      <div class="prof-bio" id="prof-bio-el">📍 Montevideo, UY · Emprendedor digital · Tech &amp; Moda · Envíos a todo Uruguay 🇺🇾</div>
-      <div class="prof-stats">
-        <div><div class="ps-n">1.2k</div><div class="ps-l">Seguidores</div></div>
-        <div><div class="ps-n">386</div><div class="ps-l">Siguiendo</div></div>
-        <div><div class="ps-n">847</div><div class="ps-l">Ventas</div></div>
-        <div><div class="ps-n" style="font-size:15px">4.9 ★</div><div class="ps-l">Rating</div></div>
+      <!-- Main info row -->
+      <div class="prof-info-row">
+        <!-- Avatar (pulls up over the hero) -->
+        <div class="prof-av-wrap" style="margin-top:-52px" onclick="requireAuth(pickProfilePhoto)" title="Cambiar foto de perfil">
+          <div class="prof-av" id="prof-hero-av">🦁</div>
+          <div class="prof-photo-overlay">📷</div>
+        </div>
+        <!-- Text -->
+        <div class="prof-info-body">
+          <div class="prof-nm" id="prof-nm-el">Carlos Mendoza</div>
+          <div class="prof-hndl" id="prof-hndl-el">
+            <span>@carlosmendoza</span>
+            <span style="color:var(--b2)">·</span>
+            <span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">Vendedor Pro</span>
+          </div>
+          <div class="prof-location" id="prof-location-el"><span>📍</span><span>Montevideo, Uruguay</span></div>
+          <div class="prof-bio" id="prof-bio-el">Emprendedor digital · Tech &amp; Moda · Envíos a todo Uruguay 🇺🇾</div>
+          <div class="prof-acts" id="prof-acts-el">
+            <button class="btn-p btn-pri" onclick="nav('live')">📡 Live</button>
+            <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
+            <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
+          </div>
+        </div>
       </div>
-      <div class="prof-acts" id="prof-acts-el">
-        <button class="btn-p btn-pri" onclick="nav('live')">📡 Live</button>
-        <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
-        <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
-        <button class="btn-p btn-sec" onclick="openEditModal()" style="border:1px solid rgba(52,211,153,.3)!important">✏️ Editar</button>
+      <!-- Stats bar -->
+      <div class="prof-stats" id="prof-stats-el">
+        <div class="prof-stat-item"><span class="ps-n" id="prof-stat-seguidores">1.2k</span><span class="ps-l">Seguidores</span></div>
+        <div class="prof-stat-item"><span class="ps-n" id="prof-stat-siguiendo">386</span><span class="ps-l">Siguiendo</span></div>
+        <div class="prof-stat-item"><span class="ps-n" id="prof-stat-ventas">847</span><span class="ps-l">Ventas</span></div>
+        <div class="prof-stat-item"><span class="ps-n" id="prof-stat-rating">⭐ 4.9</span><span class="ps-l">Rating</span></div>
       </div>
     </div>
+
     <div class="prof-hls" id="prof-hls"></div>
     <div class="prof-tabs">
       <button class="ptab on" id="ptab-0" onclick="setPTab(0)">🛍️ Productos</button>
@@ -1723,7 +1677,7 @@ function setCurrency(c){
   if(currentPage==='marketplace')renderProdGrid();
   if(currentPage==='carrito')renderCart();
   if(currentPage==='favoritos')renderFavs();
-  if(currentPage==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfilePage();
+  if(currentPage==='perfil')renderProfile();
   if(currentPage==='pedidos')renderOrders();
   toast(c==='USD'?'💵 Precios en dólares (USD)':'🇺🇾 Precios en pesos (UYU)');
 }
@@ -1731,9 +1685,10 @@ function setCurrency(c){
 // ═══════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════
-// ─── Navigation (v6 — no recursion) ────────────────────────────────────────
+// ─── Navigation v6 (no recursion) ──────────────────────────────────────────
 function _showSection(page){
-  closeSidebar();closeDd();
+  closeSidebar();
+  if(typeof closeDd==='function')closeDd();
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.si').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.mob-nav-item').forEach(m=>m.classList.remove('on'));
@@ -2078,28 +2033,39 @@ function sendMsg(id){
 // ═══════════════════════════════════════
 // PROFILE
 // ═══════════════════════════════════════
-// ─── Profile page (v6) ──────────────────────────────────────────────────────
-function renderProfile(){} // stub (kept for backward compat from _showSection)
+function renderProfile(){} // compat stub
 
 function renderProfilePage(){
-  const u=KMD&&KMD.user;
-  if(!u)return;
-  // Update hero
+  const u=KMD&&KMD.user; if(!u)return;
   const name=[u.firstName,u.lastName].filter(Boolean).join(' ')||u.email?.split('@')[0]||'Usuario';
   const handle='@'+(u.username||u.email?.split('@')[0]||'usuario');
-  const role={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
-  const bio=u.bio||('📍 '+(u.location||'Uruguay')+' · KOOMODOO member');
-  const av=u.photoUrl||u.avatar||'🦁';
-  const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
-  // Avatar: photo or emoji
-  if(u.photoUrl){
-    setEl('prof-hero-av',`<img src="${u.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`);
-  }else{
-    setEl('prof-hero-av',u.avatar||'🦁');
+  const roleLabel={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
+  const location=u.location||'Uruguay';
+  const bio=u.bio||'Miembro de KOOMODOO';
+
+  // avatar_type / avatar_value system
+  const avType = u.avatar_type||(u.photoUrl?'image':'emoji');
+  const avValue= u.avatar_value||u.photoUrl||u.avatar||'🦁';
+  const avEl=document.getElementById('prof-hero-av');
+  if(avEl){
+    if(avType==='image'&&avValue){
+      avEl.innerHTML=`<img src="${avValue}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="foto">`;
+    }else{avEl.textContent=avValue||'🦁';}
   }
-  setEl('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
-  setEl('prof-hndl-el',handle+' · '+role);
-  setEl('prof-bio-el',bio);
+
+  const setTxt=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  const setHtml=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
+
+  setHtml('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
+  const hndlEl=document.getElementById('prof-hndl-el');
+  if(hndlEl)hndlEl.innerHTML=`<span>${handle}</span><span style="color:var(--b2)">·</span><span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">${roleLabel}</span>`;
+  const locEl=document.getElementById('prof-location-el');
+  if(locEl)locEl.innerHTML=`<span>📍</span><span>${location}</span>`;
+  setTxt('prof-bio-el',bio);
+
+  // Sync header + dropdown
+  hdrLoggedIn(u);
+
   // Highlights
   const hls=[{em:'➕',add:true},{em:'🔥',l:'Ofertas'},{em:'💻',l:'Tech'},{em:'👗',l:'Moda'},{em:'🎁',l:'Combos'}];
   const hlEl=document.getElementById('prof-hls');
@@ -2107,7 +2073,6 @@ function renderProfilePage(){
     hl.add?`<div class="hl" onclick="toast('➕ Nueva destacada')"><div style="width:52px;height:52px;border-radius:50%;border:2px dashed rgba(52,211,153,.4);display:flex;align-items:center;justify-content:center;font-size:19px">➕</div><div class="hl-lbl">Nueva</div></div>`
     :`<div class="hl"><div class="hl-ring"><div class="hl-in">${hl.em}</div></div><div class="hl-lbl">${hl.l}</div></div>`
   ).join('');
-  // Default tab: products
   setPTab(0);
 }
 
@@ -2116,33 +2081,22 @@ function setPTab(idx){
   const tc=document.getElementById('prof-tab-content');
   if(!tc)return;
   if(idx===0){
-    // Products by category
-    tc.innerHTML=renderProfileProducts();
+    const grouped={};
+    products.forEach(p=>{if(!grouped[p.cat])grouped[p.cat]=[];grouped[p.cat].push(p);});
+    const catEmoji={tecnologia:'💻',moda:'👗',hogar:'🏠',deportes:'👟',belleza:'💄',joyeria:'💍',cocina:'🍳'};
+    const catName={tecnologia:'Tecnología',moda:'Moda',hogar:'Hogar',deportes:'Deportes',belleza:'Belleza',joyeria:'Joyería',cocina:'Cocina'};
+    tc.innerHTML=Object.entries(grouped).map(([cat,prods])=>`
+      <div style="margin-bottom:24px">
+        <div style="font-size:13px;font-weight:800;color:var(--t);margin-bottom:12px;display:flex;align-items:center;gap:7px">${catEmoji[cat]||'📦'} ${catName[cat]||cat}</div>
+        <div class="pgrid-inner">${prods.map(p=>buildProdCard(p)).join('')}</div>
+      </div>`).join('');
   }else if(idx===1){
-    // Posts
     tc.innerHTML=renderPostsTab();
     initPostTab();
   }else if(idx===2){
-    // Affiliates
-    tc.innerHTML='<div id="aff-panel" style="padding:0 -20px"></div>';
+    tc.innerHTML='<div id="aff-panel"></div>';
     renderAffPanel();
   }
-}
-
-function renderProfileProducts(){
-  // Group mock products by category
-  const grouped={};
-  products.forEach(p=>{
-    if(!grouped[p.cat])grouped[p.cat]=[];
-    grouped[p.cat].push(p);
-  });
-  const catEmoji={tecnologia:'💻',moda:'👗',hogar:'🏠',deportes:'👟',belleza:'💄',joyeria:'💍',cocina:'🍳'};
-  const catName={tecnologia:'Tecnología',moda:'Moda',hogar:'Hogar',deportes:'Deportes',belleza:'Belleza',joyeria:'Joyería',cocina:'Cocina'};
-  return Object.entries(grouped).map(([cat,prods])=>`
-    <div class="cat-section">
-      <div class="cat-section-title">${catEmoji[cat]||'📦'} ${catName[cat]||cat}</div>
-      <div class="pgrid-inner">${prods.map(p=>buildProdCard(p)).join('')}</div>
-    </div>`).join('');
 }
 
 // ═══════════════════════════════════════
