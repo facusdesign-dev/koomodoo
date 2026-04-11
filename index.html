@@ -864,17 +864,38 @@ button,select,input{font-family:inherit}
 .aff-prog-bar{height:4px;background:var(--surf3);border-radius:2px;overflow:hidden;margin:6px 0 4px}
 .aff-prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--g2),var(--teal))}
 
-/* ═══════════════════ AUTH + PROFILE FLOW ═══════════════════ */
+/* ══════════════════════════════════════════════
+   V6 — DROPDOWN, AUTH, PROFILE, POSTS, GOOGLE
+══════════════════════════════════════════════ */
+@keyframes ddIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes aIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes af-spin{to{transform:rotate(360deg)}}
+
+/* Header dropdown */
+.dd-item{
+  padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;
+  color:var(--t2);cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:8px;
+}
+.dd-item:hover{background:var(--surf2);color:var(--t)}
+.dd-item-danger{color:var(--rose)!important}
+.dd-item-danger:hover{background:rgba(251,113,133,.08)!important}
+
+/* Auth overlays */
 #auth-modal{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:16px}
 #auth-modal.open{display:flex}
 #complete-profile-screen{display:none;position:fixed;inset:0;z-index:800;background:var(--bg);overflow-y:auto;padding:20px 16px}
 #complete-profile-screen.open{display:block}
 #edit-modal{display:none;position:fixed;inset:0;z-index:850;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;overflow-y:auto}
 #edit-modal.open{display:flex}
+#photo-modal{display:none;position:fixed;inset:0;z-index:860;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px}
+#photo-modal.open{display:flex}
+#google-loading{display:none;position:fixed;inset:0;z-index:950;background:rgba(7,9,13,.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#google-loading.open{display:flex}
+
+/* Auth box */
 .auth-box{width:min(400px,100%);background:var(--bg2);border:1px solid var(--b2);border-radius:22px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7);animation:aIn .3s cubic-bezier(.22,1,.36,1) both}
 .ep-box{width:min(520px,100%);max-height:90vh;overflow-y:auto;background:var(--bg2);border:1px solid var(--b2);border-radius:22px;padding:24px;animation:aIn .3s ease;flex-shrink:0}
 .cp-box{max-width:520px;margin:0 auto;background:var(--bg2);border:1px solid var(--b2);border-radius:22px;padding:26px}
-@keyframes aIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 .auth-brand{padding:24px 24px 0;text-align:center}
 .auth-logo-txt{font-size:22px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,#34D399,#2DD4BF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block;margin-bottom:3px}
 .auth-tagline{font-size:10px;color:var(--t3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:18px}
@@ -889,12 +910,13 @@ button,select,input{font-family:inherit}
 .af-pw{position:relative;margin-bottom:11px}
 .af-pw .af-inp{margin-bottom:0}
 .af-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:var(--t3);background:none;border:none;padding:3px}
-.af-eye:hover{color:var(--t2)}
 .af-btn{width:100%;padding:12px;border-radius:12px;margin-top:4px;background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22;font-size:13px;font-weight:900;border:none;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px}
 .af-btn:hover{opacity:.88;box-shadow:0 8px 20px rgba(16,185,129,.3);transform:translateY(-1px)}
 .af-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .af-btn.sec{background:var(--surf2);border:1px solid var(--b2);color:var(--t2);margin-top:8px}
 .af-btn.sec:hover{border-color:rgba(255,255,255,.2);color:var(--t);box-shadow:none;transform:none}
+.af-btn.google{background:#fff;color:#1f1f1f;margin-top:8px;font-weight:700}
+.af-btn.google:hover{background:#f5f5f5;box-shadow:0 4px 12px rgba(0,0,0,.2);transform:translateY(-1px)}
 .af-btn.danger{background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.25);color:var(--rose);margin-top:8px}
 .af-btn.danger:hover{background:rgba(251,113,133,.2);box-shadow:none;transform:none}
 .af-msg{border-radius:10px;padding:9px 12px;margin-bottom:11px;font-size:12px;line-height:1.5;display:flex;align-items:flex-start;gap:7px;animation:aIn .2s ease}
@@ -905,9 +927,8 @@ button,select,input{font-family:inherit}
 .af-divider span{font-size:11px;color:var(--t3);font-weight:600}
 .af-footer{text-align:center;padding:0 24px 18px;font-size:11px;color:var(--t3)}
 .af-link{color:var(--g);cursor:pointer;font-weight:600}
-.af-link:hover{color:var(--teal)}
 .af-spin{width:15px;height:15px;border-radius:50%;border:2px solid rgba(2,44,34,.3);border-top-color:#022C22;animation:af-spin .65s linear infinite;flex-shrink:0}
-@keyframes af-spin{to{transform:rotate(360deg)}}
+.af-spin-lg{width:40px;height:40px;border-radius:50%;border:3px solid rgba(52,211,153,.2);border-top-color:var(--g);animation:af-spin .8s linear infinite}
 .af-str-bar{height:3px;background:var(--surf3);border-radius:2px;overflow:hidden;margin-bottom:3px}
 .af-str-fill{height:100%;border-radius:2px;transition:all .3s}
 .cp-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -916,14 +937,60 @@ button,select,input{font-family:inherit}
 .av-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:4px}
 .av-btn{width:36px;height:36px;border-radius:9px;font-size:18px;cursor:pointer;transition:all .15s;background:var(--surf2);border:2px solid var(--b);display:flex;align-items:center;justify-content:center}
 .av-btn.sel{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.5)}
-.av-btn:hover{border-color:var(--b2)}
 .role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:4px}
 .role-opt{padding:13px 8px;border-radius:12px;text-align:center;background:var(--surf);border:1.5px solid var(--b);cursor:pointer;transition:all .15s}
 .role-opt:hover{border-color:var(--b2)}.role-opt.sel{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.07)}
 .hdr-online-dot{position:absolute;bottom:-2px;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--g);border:2px solid var(--bg)}
+
+/* Posts system */
+.post-compose{background:var(--surf);border:1px solid var(--b);border-radius:16px;padding:16px;margin-bottom:16px}
+.post-compose-input{width:100%;padding:11px 13px;background:var(--surf2);border:1px solid var(--b2);border-radius:11px;color:var(--t);font-size:13px;resize:none;outline:none;font-family:inherit;transition:all .2s;min-height:80px}
+.post-compose-input:focus{border-color:var(--g2);box-shadow:0 0 0 3px rgba(16,185,129,.1)}
+.post-compose-input::placeholder{color:var(--t3)}
+.post-compose-actions{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pc-btn{padding:7px 14px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;border:none;font-family:inherit}
+.pc-btn.primary{background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22}
+.pc-btn.primary:hover{opacity:.88;transform:translateY(-1px)}
+.pc-btn.ghost{background:var(--surf2);border:1px solid var(--b2);color:var(--t2)}
+.pc-btn.ghost:hover{border-color:var(--b2);color:var(--t)}
+.post-card{background:var(--surf);border:1px solid var(--b);border-radius:16px;margin-bottom:14px;overflow:hidden;transition:border-color .2s;animation:aIn .3s ease both}
+.post-card:hover{border-color:rgba(52,211,153,.15)}
+.post-card-hdr{display:flex;align-items:center;gap:10px;padding:13px 14px 0}
+.post-card-body{padding:10px 14px}
+.post-card-text{font-size:14px;line-height:1.65;color:rgba(237,242,255,.9);margin-bottom:10px}
+.post-card-img{width:100%;border-radius:10px;max-height:360px;object-fit:cover;margin-bottom:10px;display:block}
+.post-card-actions{display:flex;align-items:center;gap:4px;padding:9px 14px;border-top:1px solid var(--b)}
+.pca-btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:8px;font-size:12px;color:var(--t3);cursor:pointer;background:none;border:none;font-family:inherit;transition:all .15s}
+.pca-btn:hover{background:var(--surf2);color:var(--t2)}
+.pca-btn.liked{color:var(--rose)}
+.comment-thread{padding:10px 14px;border-top:1px solid var(--b);background:rgba(0,0,0,.15)}
+.comment-item{display:flex;gap:9px;margin-bottom:10px}
+.comment-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.comment-body{flex:1;background:var(--surf2);border-radius:0 10px 10px 10px;padding:8px 11px;font-size:12px;color:var(--t2);line-height:1.5}
+.comment-user{font-weight:700;color:var(--t);font-size:11px;margin-bottom:2px}
+.comment-inp-row{display:flex;gap:8px;align-items:center;margin-top:4px}
+.comment-field{flex:1;padding:8px 12px;background:var(--surf2);border:1px solid var(--b2);border-radius:20px;color:var(--t);font-size:12px;outline:none;font-family:inherit;transition:border-color .2s}
+.comment-field:focus{border-color:var(--g2)}
+.comment-send{width:32px;height:32px;border-radius:50%;background:var(--g2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:#022C22;transition:all .2s;flex-shrink:0}
+.comment-send:hover{opacity:.88}
+
+/* Profile photo modal */
+.photo-modal-box{width:min(340px,90vw);background:var(--bg2);border:1px solid var(--b2);border-radius:20px;padding:24px;animation:aIn .25s ease}
+.photo-drop-area{border:2px dashed rgba(52,211,153,.3);border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(52,211,153,.02)}
+.photo-drop-area:hover{border-color:rgba(52,211,153,.55);background:rgba(52,211,153,.05)}
+
+/* Products by category */
+.cat-section{margin-bottom:28px}
+.cat-section-title{font-size:13px;font-weight:800;color:var(--t);margin-bottom:12px;display:flex;align-items:center;gap:7px}
 </style>
 </head>
 <body>
+
+<!-- ════ GOOGLE LOADING OVERLAY ════ -->
+<div id="google-loading">
+  <div class="af-spin-lg"></div>
+  <div style="font-size:14px;font-weight:700;color:var(--t2)">Conectando con Google...</div>
+</div>
 
 <!-- ════ AUTH MODAL ════ -->
 <div id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
@@ -936,8 +1003,14 @@ button,select,input{font-family:inherit}
       <button class="atab on" id="atab-l" onclick="switchTab('login')">Iniciar sesión</button>
       <button class="atab"    id="atab-r" onclick="switchTab('register')">Crear cuenta</button>
     </div>
+    <!-- Login -->
     <div class="aform" id="aform-l">
       <div id="amsg-l"></div>
+      <button class="af-btn google" id="btn-google-l" onclick="doGoogleAuth()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 13 5 4 14 4 24s9 19 20 19c11 0 19.3-7.7 19.3-19 0-1.3-.1-2.7-.3-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 16.2 5 9.4 9 6.3 14.7z"/><path fill="#4CAF50" d="M24 43c5 0 9.4-1.9 12.8-5l-5.9-5C29.2 34.5 26.7 35 24 35c-5.3 0-9.6-2.6-11.3-6.2l-6.5 5C9.4 39.3 16.2 43 24 43z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.4-2.5 4.4-4.7 5.7l5.9 5C40.3 36.1 43.3 30.5 43.3 24c0-1.3-.1-2.7-.3-4z"/></svg>
+        Continuar con Google
+      </button>
+      <div class="af-divider"><span>o con email</span></div>
       <label class="af-lbl">Email</label>
       <input type="email" class="af-inp" id="al-email" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')doLogin()">
       <label class="af-lbl">Contraseña</label>
@@ -947,11 +1020,15 @@ button,select,input{font-family:inherit}
       </div>
       <span onclick="doForgotPw()" style="font-size:11px;color:var(--t3);cursor:pointer;display:block;text-align:right;margin:-4px 0 11px">¿Olvidaste tu contraseña?</span>
       <button class="af-btn" id="btn-l" onclick="doLogin()"><span>→ Iniciar sesión</span></button>
-      <div class="af-divider"><span>o</span></div>
-      <button class="af-btn sec" onclick="doGoogleAuth()">🌐 Continuar con Google</button>
     </div>
+    <!-- Register -->
     <div class="aform" id="aform-r" style="display:none">
       <div id="amsg-r"></div>
+      <button class="af-btn google" id="btn-google-r" onclick="doGoogleAuth()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 13 5 4 14 4 24s9 19 20 19c11 0 19.3-7.7 19.3-19 0-1.3-.1-2.7-.3-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 16.2 5 9.4 9 6.3 14.7z"/><path fill="#4CAF50" d="M24 43c5 0 9.4-1.9 12.8-5l-5.9-5C29.2 34.5 26.7 35 24 35c-5.3 0-9.6-2.6-11.3-6.2l-6.5 5C9.4 39.3 16.2 43 24 43z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.4-2.5 4.4-4.7 5.7l5.9 5C40.3 36.1 43.3 30.5 43.3 24c0-1.3-.1-2.7-.3-4z"/></svg>
+        Registrarse con Google
+      </button>
+      <div class="af-divider"><span>o con email</span></div>
       <div class="cp-2col">
         <div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="rg-fn" placeholder="Carlos"></div>
         <div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="rg-ln" placeholder="Mendoza"></div>
@@ -975,10 +1052,8 @@ button,select,input{font-family:inherit}
         <option value="PY">🇵🇾 Paraguay</option>
       </select>
       <button class="af-btn" id="btn-r" onclick="doRegister()"><span>🚀 Crear cuenta gratis</span></button>
-      <div class="af-divider"><span>o</span></div>
-      <button class="af-btn sec" onclick="doGoogleAuth()">🌐 Registrarse con Google</button>
     </div>
-    <div class="af-footer">Al continuar aceptás los <span class="af-link" onclick="toast('📄 Términos próximamente')">Términos</span> y la <span class="af-link" onclick="toast('🔒 Privacidad próximamente')">Política de privacidad</span></div>
+    <div class="af-footer">Al continuar aceptás los <span class="af-link" onclick="toast('📄 Términos próximamente')">Términos</span> y la <span class="af-link">Política de privacidad</span></div>
   </div>
 </div>
 
@@ -988,7 +1063,7 @@ button,select,input{font-family:inherit}
     <div style="text-align:center;margin-bottom:20px">
       <span style="font-size:22px;font-weight:800;background:linear-gradient(135deg,#34D399,#2DD4BF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">KOOMODOO</span>
       <div style="font-size:18px;font-weight:800;color:var(--t);margin:10px 0 4px">¡Bienvenido! 👋</div>
-      <div style="font-size:13px;color:var(--t2);line-height:1.6">Completá tu perfil para empezar a comprar y vender</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.6">Completá tu perfil para empezar</div>
     </div>
     <div id="cp-msg"></div>
     <div class="cp-sec">Elegí tu avatar</div>
@@ -1010,7 +1085,7 @@ button,select,input{font-family:inherit}
       <div class="role-opt" data-role="BOTH" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">⚡</div><div style="font-size:12px;font-weight:800;color:var(--t)">Comprar y vender</div></div>
       <div class="role-opt" data-role="SELLER" onclick="pickRole(this)"><div style="font-size:20px;margin-bottom:5px">🏷️</div><div style="font-size:12px;font-weight:800;color:var(--t)">Solo vender</div></div>
     </div>
-    <button class="af-btn" id="cp-save-btn" onclick="saveCompleteProfile()" style="margin-top:16px"><span>✅ Guardar y entrar a KOOMODOO</span></button>
+    <button class="af-btn" id="cp-save-btn" onclick="saveCompleteProfile()" style="margin-top:16px"><span>✅ Guardar y entrar</span></button>
     <button onclick="skipCP()" style="width:100%;padding:9px;margin-top:8px;background:none;border:none;color:var(--t3);font-size:12px;cursor:pointer;font-family:inherit">Completar más tarde →</button>
   </div>
 </div>
@@ -1019,15 +1094,16 @@ button,select,input{font-family:inherit}
 <div id="edit-modal" onclick="if(event.target===this)closeEditModal()">
   <div class="ep-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <div><div style="font-size:17px;font-weight:800;color:var(--t)">✏️ Editar perfil</div><div style="font-size:12px;color:var(--t2);margin-top:2px">Datos visibles en tu perfil público</div></div>
+      <div><div style="font-size:17px;font-weight:800;color:var(--t)">✏️ Editar perfil</div><div style="font-size:12px;color:var(--t2);margin-top:2px">Datos de tu perfil público</div></div>
       <button onclick="closeEditModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;padding:4px 8px">✕</button>
     </div>
     <div id="ep-msg"></div>
     <div style="display:flex;align-items:center;gap:13px;padding:13px;background:var(--surf);border:1px solid var(--b);border-radius:13px;margin-bottom:14px">
-      <div id="ep-av-big" style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">🦁</div>
+      <div id="ep-av-big" style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden">🦁</div>
       <div style="flex:1"><div id="ep-name-big" style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:2px">Carlos Mendoza</div><div id="ep-email-big" style="font-size:11px;color:var(--t3)">carlos@example.com</div></div>
+      <button onclick="pickProfilePhoto()" style="padding:6px 12px;border-radius:9px;background:var(--surf2);border:1px solid var(--b2);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer">📷 Foto</button>
     </div>
-    <div class="cp-sec">Avatar</div>
+    <div class="cp-sec">Avatar emoji</div>
     <div class="av-grid" id="ep-av-grid"></div>
     <div class="cp-sec">Información básica</div>
     <div class="cp-2col">
@@ -1057,13 +1133,37 @@ button,select,input{font-family:inherit}
     <div class="cp-sec">Seguridad</div>
     <div class="cp-2col">
       <div><label class="af-lbl">Nueva contraseña</label><input type="password" class="af-inp" id="ep-pw1" placeholder="Dejar vacío si no cambiás"></div>
-      <div><label class="af-lbl">Confirmar</label><input type="password" class="af-inp" id="ep-pw2" placeholder="Repetir contraseña"></div>
+      <div><label class="af-lbl">Confirmar</label><input type="password" class="af-inp" id="ep-pw2" placeholder="Repetir"></div>
     </div>
     <button class="af-btn" id="ep-save-btn" onclick="saveEditProfile()" style="margin-top:6px">💾 Guardar cambios</button>
-    <button class="af-btn danger" onclick="doLogout()">🚪 Cerrar sesión</button>
   </div>
 </div>
 
+<!-- ════ PHOTO MODAL ════ -->
+<div id="photo-modal" onclick="if(event.target===this)closePhotoModal()">
+  <div class="photo-modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:800;color:var(--t)">📷 Foto de perfil</div>
+      <button onclick="closePhotoModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div id="photo-msg"></div>
+    <!-- Preview -->
+    <div style="display:flex;justify-content:center;margin-bottom:16px">
+      <div id="photo-preview" style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:46px;overflow:hidden;border:3px solid rgba(52,211,153,.3)">🦁</div>
+    </div>
+    <!-- Upload -->
+    <div class="photo-drop-area" onclick="document.getElementById('photo-file-inp').click()">
+      <div style="font-size:28px;margin-bottom:8px">📤</div>
+      <div style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:4px">Subir foto</div>
+      <div style="font-size:12px;color:var(--t3)">JPG, PNG · Máx 2MB</div>
+      <input type="file" id="photo-file-inp" accept="image/*" style="display:none" onchange="handlePhotoFile(this)">
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button id="photo-save-btn" onclick="saveProfilePhoto()" class="af-btn" style="flex:1"><span>✅ Guardar foto</span></button>
+      <button onclick="closePhotoModal()" class="af-btn sec" style="flex:0;width:80px;margin-top:0">Cancelar</button>
+    </div>
+  </div>
+</div>
 <div id="app">
 
 <!-- ════ HEADER ════ -->
@@ -1091,9 +1191,49 @@ button,select,input{font-family:inherit}
     <div class="hbtn" onclick="nav('mensajes')" title="Mensajes">💬<div class="badge">3</div></div>
     <div class="hbtn" onclick="nav('favoritos')" title="Favoritos">❤️<div class="badge" id="fav-badge">3</div></div>
     <div class="hbtn" onclick="nav('carrito')" title="Carrito">🛒<div class="badge" id="cart-badge">2</div></div>
-    <div id="hdr-auth-btn" onclick="hdrAuthClick()" title="Mi cuenta" style="display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:11px;background:var(--surf);border:1px solid var(--b2);cursor:pointer;transition:all .15s;flex-shrink:0;min-width:0">
-      <div id="hdr-av" style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;position:relative">👤</div>
-      <span id="hdr-auth-label" style="font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis">Ingresar</span>
+    <!-- ── AUTH BUTTON + DROPDOWN ── -->
+    <div style="position:relative;flex-shrink:0" id="hdr-auth-wrap">
+      <div id="hdr-auth-btn" onclick="hdrAuthClick()" title="Mi cuenta" style="display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:11px;background:var(--surf);border:1px solid var(--b2);cursor:pointer;transition:all .15s">
+        <div id="hdr-av" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;position:relative;overflow:hidden">👤</div>
+        <span id="hdr-auth-label" style="font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis">Ingresar</span>
+        <span id="hdr-dd-arrow" style="font-size:10px;color:var(--t3);display:none">▾</span>
+      </div>
+      <!-- Dropdown menu -->
+      <div id="hdr-dropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:220px;background:var(--bg2);border:1px solid var(--b2);border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.6);z-index:500;animation:ddIn .18s ease">
+        <!-- User header -->
+        <div id="dd-user-hdr" style="padding:14px 16px;background:var(--surf);border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px">
+          <div id="dd-av" style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden">🦁</div>
+          <div style="flex:1;min-width:0">
+            <div id="dd-name" style="font-size:13px;font-weight:800;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Carlos Mendoza</div>
+            <div id="dd-email" style="font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">carlos@example.com</div>
+          </div>
+        </div>
+        <!-- Usuario section -->
+        <div style="padding:6px 8px">
+          <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px">Usuario</div>
+          <div class="dd-item" onclick="ddNav('perfil')">👤 Mi perfil</div>
+          <div class="dd-item" onclick="ddNav('pedidos')">📦 Mis compras</div>
+          <div class="dd-item" onclick="ddNav('favoritos')">❤️ Guardados</div>
+          <div class="dd-item" onclick="toast('❓ Preguntas próximamente')">❓ Preguntas</div>
+          <div class="dd-item" onclick="toast('⭐ Opiniones próximamente')">⭐ Mis opiniones</div>
+        </div>
+        <div style="height:1px;background:var(--b);margin:0 8px"></div>
+        <!-- Vendedor section -->
+        <div style="padding:6px 8px">
+          <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px">Vendedor</div>
+          <div class="dd-item" onclick="ddNav('publicar')">🏷️ Vender</div>
+          <div class="dd-item" onclick="ddNav('analytics')">📊 Métricas</div>
+          <div class="dd-item" onclick="ddNav('pedidos')">💰 Mis ventas</div>
+          <div class="dd-item" onclick="toast('⭐ Reputación próximamente')">⭐ Reputación</div>
+          <div class="dd-item" onclick="toast('📢 Marketing próximamente')">📢 Marketing</div>
+        </div>
+        <div style="height:1px;background:var(--b);margin:0 8px"></div>
+        <!-- Account -->
+        <div style="padding:6px 8px">
+          <div class="dd-item" onclick="openEditModal()">✏️ Editar perfil</div>
+          <div class="dd-item dd-item-danger" onclick="closeDd();doLogout()">🚪 Cerrar sesión</div>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -1243,8 +1383,8 @@ button,select,input{font-family:inherit}
 <div class="pg" id="pg-perfil">
   <div style="overflow-y:auto;flex:1">
     <div class="prof-hero">
-      <div class="prof-av-wrap"><div class="prof-av" id="prof-hero-av">🦁</div></div>
-      <button class="prof-edit-btn" onclick="openEditModal()">✏️ Editar</button>
+      <div class="prof-av-wrap" style="cursor:pointer" onclick="requireAuth(pickProfilePhoto)" title="Cambiar foto"><div class="prof-av" id="prof-hero-av" style="overflow:hidden">🦁</div><div style="position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--bg2)">📷</div></div>
+      <button class="prof-edit-btn">✏️ Editar</button>
     </div>
     <div class="prof-info">
       <div class="prof-nm" id="prof-nm-el">Carlos Mendoza <span class="vbdg">✓ VERIFICADO</span></div>
@@ -1256,24 +1396,20 @@ button,select,input{font-family:inherit}
         <div><div class="ps-n">847</div><div class="ps-l">Ventas</div></div>
         <div><div class="ps-n" style="font-size:15px">4.9 ★</div><div class="ps-l">Rating</div></div>
       </div>
-      <div class="prof-acts">
+      <div class="prof-acts" id="prof-acts-el">
         <button class="btn-p btn-pri" onclick="nav('live')">📡 Live</button>
         <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
         <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
-        <button class="btn-p btn-sec" onclick="openEditModal()" style="border:1px solid rgba(52,211,153,.3)!important">✏️ Editar perfil</button>
-        <button class="btn-p" onclick="doLogout()" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.25)!important;color:var(--rose)">🚪 Salir</button>
+        <button class="btn-p btn-sec" onclick="openEditModal()" style="border:1px solid rgba(52,211,153,.3)!important">✏️ Editar</button>
       </div>
     </div>
     <div class="prof-hls" id="prof-hls"></div>
     <div class="prof-tabs">
-      <button class="ptab on" onclick="setPTab(this,0)">Productos</button>
-      <button class="ptab" onclick="setPTab(this,1)">Posts</button>
-      <button class="ptab" onclick="setPTab(this,2)">Historias</button>
-      <button class="ptab" onclick="setPTab(this,3)">Reseñas</button>
-      <button class="ptab" onclick="setPTab(this,4)">🔗 Afiliados</button>
+      <button class="ptab on" id="ptab-0" onclick="setPTab(0)">🛍️ Productos</button>
+      <button class="ptab"    id="ptab-1" onclick="setPTab(1)">📝 Posts</button>
+      <button class="ptab"    id="ptab-2" onclick="setPTab(2)">🔗 Afiliados</button>
     </div>
-    <div class="pgrid" id="prof-grid-wrap"><div class="pgrid-inner" id="prof-grid"></div></div>
-    <div id="aff-panel" style="display:none"></div>
+    <div id="prof-tab-content" style="padding:16px 20px"></div>
   </div>
 </div>
 
@@ -1587,7 +1723,7 @@ function setCurrency(c){
   if(currentPage==='marketplace')renderProdGrid();
   if(currentPage==='carrito')renderCart();
   if(currentPage==='favoritos')renderFavs();
-  if(currentPage==='perfil')renderProfile();
+  if(currentPage==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfilePage();
   if(currentPage==='pedidos')renderOrders();
   toast(c==='USD'?'💵 Precios en dólares (USD)':'🇺🇾 Precios en pesos (UYU)');
 }
@@ -1595,24 +1731,16 @@ function setCurrency(c){
 // ═══════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════
-// ─────────────────────────────────────────────────────────────────────────────
-// NAVIGATION — Single clean entry point. NO recursion possible.
-// _showSection: raw section switcher, no auth logic, never calls nav()
-// nav: public API — checks auth then calls _showSection
-// requireAuth: gate function for auth-required inline actions
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ─── Navigation (v6 — no recursion) ────────────────────────────────────────
 function _showSection(page){
-  closeSidebar();
+  closeSidebar();closeDd();
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.si').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.mob-nav-item').forEach(m=>m.classList.remove('on'));
   const pg=document.getElementById('pg-'+page);
   const si=document.getElementById('si-'+page);
   const mn=document.getElementById('mn-'+page);
-  if(pg)pg.classList.add('on');
-  if(si)si.classList.add('on');
-  if(mn)mn.classList.add('on');
+  if(pg)pg.classList.add('on');if(si)si.classList.add('on');if(mn)mn.classList.add('on');
   currentPage=page;
   if(page!=='live'&&typeof chatIv!=='undefined'&&chatIv){clearInterval(chatIv);chatIv=null;}
   if(page!=='live'&&typeof viewerIv!=='undefined'&&viewerIv){clearInterval(viewerIv);viewerIv=null;}
@@ -1621,38 +1749,21 @@ function _showSection(page){
   if(page==='favoritos')renderFavs();
   if(page==='pedidos')renderOrders();
   if(page==='mensajes')renderMessages();
-  if(page==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfile();
+  if(page==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfilePage();
   if(page==='live')startLive();
   if(page==='analytics')renderAnalytics();
 }
-
-// Pages that require login
 const PROTECTED_PAGES=new Set(['mensajes','carrito','pedidos','publicar','analytics']);
-
-// nav() — THE public navigation function. One definition. Handles auth. Calls _showSection.
 function nav(page){
   if(typeof KMD!=='undefined'){
-    if(PROTECTED_PAGES.has(page)&&!KMD.loggedIn){
-      toast('🔒 Iniciá sesión para continuar');
-      if(typeof openAuthModal==='function')openAuthModal('login');
-      return;
-    }
-    if(page==='perfil'&&!KMD.loggedIn){
-      if(typeof openAuthModal==='function')openAuthModal('login');
-      return;
-    }
+    if(PROTECTED_PAGES.has(page)&&!KMD.loggedIn){toast('🔒 Iniciá sesión para continuar');if(typeof openAuthModal==='function')openAuthModal('login');return;}
+    if(page==='perfil'&&!KMD.loggedIn){if(typeof openAuthModal==='function')openAuthModal('login');return;}
   }
   _showSection(page);
 }
-
-// requireAuth — gate for inline actions (not page navigation)
 function requireAuth(action){
-  if(typeof KMD!=='undefined'&&KMD.loggedIn){
-    if(typeof action==='function')action();
-  }else{
-    toast('🔒 Iniciá sesión para continuar');
-    if(typeof openAuthModal==='function')openAuthModal('login');
-  }
+  if(typeof KMD!=='undefined'&&KMD.loggedIn){if(typeof action==='function')action();}
+  else{toast('🔒 Iniciá sesión para continuar');if(typeof openAuthModal==='function')openAuthModal('login');}
 }
 function navCat(cat){activeCat=cat;nav('marketplace');}
 function doSearch(q){if(q.trim()&&currentPage!=='marketplace')nav('marketplace');searchQ=q;if(currentPage==='marketplace')renderProdGrid();}
@@ -1967,22 +2078,71 @@ function sendMsg(id){
 // ═══════════════════════════════════════
 // PROFILE
 // ═══════════════════════════════════════
-function renderProfile(){
-  const hls=[{em:'➕',add:true},{em:'🔥',l:'Ofertas'},{em:'💻',l:'Tech'},{em:'👗',l:'Moda'},{em:'🎁',l:'Combos'},{em:'⭐',l:'Reviews'}];
-  document.getElementById('prof-hls').innerHTML=hls.map(h=>
-    h.add?`<div class="hl" onclick="toast('➕ Nueva destacada')"><div style="width:52px;height:52px;border-radius:50%;border:2px dashed rgba(52,211,153,.4);display:flex;align-items:center;justify-content:center;font-size:19px">➕</div><div class="hl-lbl">Nueva</div></div>`
-    :`<div class="hl"><div class="hl-ring"><div class="hl-in">${h.em}</div></div><div class="hl-lbl">${h.l}</div></div>`
+// ─── Profile page (v6) ──────────────────────────────────────────────────────
+function renderProfile(){} // stub (kept for backward compat from _showSection)
+
+function renderProfilePage(){
+  const u=KMD&&KMD.user;
+  if(!u)return;
+  // Update hero
+  const name=[u.firstName,u.lastName].filter(Boolean).join(' ')||u.email?.split('@')[0]||'Usuario';
+  const handle='@'+(u.username||u.email?.split('@')[0]||'usuario');
+  const role={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
+  const bio=u.bio||('📍 '+(u.location||'Uruguay')+' · KOOMODOO member');
+  const av=u.photoUrl||u.avatar||'🦁';
+  const setEl=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
+  // Avatar: photo or emoji
+  if(u.photoUrl){
+    setEl('prof-hero-av',`<img src="${u.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`);
+  }else{
+    setEl('prof-hero-av',u.avatar||'🦁');
+  }
+  setEl('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
+  setEl('prof-hndl-el',handle+' · '+role);
+  setEl('prof-bio-el',bio);
+  // Highlights
+  const hls=[{em:'➕',add:true},{em:'🔥',l:'Ofertas'},{em:'💻',l:'Tech'},{em:'👗',l:'Moda'},{em:'🎁',l:'Combos'}];
+  const hlEl=document.getElementById('prof-hls');
+  if(hlEl)hlEl.innerHTML=hls.map(hl=>
+    hl.add?`<div class="hl" onclick="toast('➕ Nueva destacada')"><div style="width:52px;height:52px;border-radius:50%;border:2px dashed rgba(52,211,153,.4);display:flex;align-items:center;justify-content:center;font-size:19px">➕</div><div class="hl-lbl">Nueva</div></div>`
+    :`<div class="hl"><div class="hl-ring"><div class="hl-in">${hl.em}</div></div><div class="hl-lbl">${hl.l}</div></div>`
   ).join('');
-  document.getElementById('prof-grid').innerHTML=products.slice(0,9).map(buildProdCard).join('');
+  // Default tab: products
+  setPTab(0);
 }
-function setPTab(el,i){
-  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('on'));el.classList.add('on');
-  const w=document.getElementById('prof-grid-wrap');
-  const ap=document.getElementById('aff-panel');
-  ap.style.display='none';
-  if(i===0){w.style.display='';document.getElementById('prof-grid').innerHTML=products.slice(0,9).map(buildProdCard).join('');}
-  else if(i===4){w.style.display='none';ap.style.display='block';renderAffPanel();}
-  else{w.style.display='none';toast(['','📸 Posts próximamente','⭕ Historias próximamente','⭐ Reseñas próximamente'][i]);}
+
+function setPTab(idx){
+  document.querySelectorAll('.ptab').forEach((t,i)=>t.classList.toggle('on',i===idx));
+  const tc=document.getElementById('prof-tab-content');
+  if(!tc)return;
+  if(idx===0){
+    // Products by category
+    tc.innerHTML=renderProfileProducts();
+  }else if(idx===1){
+    // Posts
+    tc.innerHTML=renderPostsTab();
+    initPostTab();
+  }else if(idx===2){
+    // Affiliates
+    tc.innerHTML='<div id="aff-panel" style="padding:0 -20px"></div>';
+    renderAffPanel();
+  }
+}
+
+function renderProfileProducts(){
+  // Group mock products by category
+  const grouped={};
+  products.forEach(p=>{
+    if(!grouped[p.cat])grouped[p.cat]=[];
+    grouped[p.cat].push(p);
+  });
+  const catEmoji={tecnologia:'💻',moda:'👗',hogar:'🏠',deportes:'👟',belleza:'💄',joyeria:'💍',cocina:'🍳'};
+  const catName={tecnologia:'Tecnología',moda:'Moda',hogar:'Hogar',deportes:'Deportes',belleza:'Belleza',joyeria:'Joyería',cocina:'Cocina'};
+  return Object.entries(grouped).map(([cat,prods])=>`
+    <div class="cat-section">
+      <div class="cat-section-title">${catEmoji[cat]||'📦'} ${catName[cat]||cat}</div>
+      <div class="pgrid-inner">${prods.map(p=>buildProdCard(p)).join('')}</div>
+    </div>`).join('');
 }
 
 // ═══════════════════════════════════════
@@ -2629,49 +2789,50 @@ function affCloseModal(){
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// KOOMODOO AUTH SYSTEM — v5 FINAL
-// No recursive nav(). Clean state machine. Safe with or without Supabase.
+// KOOMODOO AUTH + PROFILE SYSTEM — v6
+// Google OAuth, dropdown, posts, photo upload. Zero recursive nav().
 // ════════════════════════════════════════════════════════════════════════════
 
-// ── Config: replace with your Supabase project values ──────────────────────
-const SB_URL = 'https://qbpvrfouhsycbzgzltih.supabase.co';
-const SB_KEY = 'sb_publishable_WuXm4DcjX4r4ZCLeAuBBbw__2OlJl4C';
+// ── Config ──────────────────────────────────────────────────────────────────
+const SB_URL = 'https://YOUR_PROJECT.supabase.co';
+const SB_KEY = 'YOUR_ANON_KEY_HERE';
 
-// ── Single Supabase instance (never reinitialised) ──────────────────────────
+// ── Single Supabase instance ─────────────────────────────────────────────────
 let _sb = null;
 function getSB() {
   if (_sb) return _sb;
   try { _sb = window.supabase?.createClient(SB_URL, SB_KEY) || null; }
-  catch(e) { console.info('[KMD] Demo mode —', e.message); }
+  catch(e) { console.info('[KMD] Demo mode:', e.message); }
   return _sb;
 }
 
-// ── Persistent local store ──────────────────────────────────────────────────
+// ── Persistent store ─────────────────────────────────────────────────────────
 const KSTORE = 'kmd_user_v1';
 function loadUser() { try { return JSON.parse(localStorage.getItem(KSTORE)||'null'); } catch { return null; } }
-function saveUser(u) { u ? localStorage.setItem(KSTORE,JSON.stringify(u)) : localStorage.removeItem(KSTORE); }
+function saveUser(u) { u ? localStorage.setItem(KSTORE, JSON.stringify(u)) : localStorage.removeItem(KSTORE); }
 
-// ── Auth state (single source of truth) ────────────────────────────────────
-const KMD = { session:null, user:null, loggedIn:false };
+// ── Global auth state ─────────────────────────────────────────────────────────
+const KMD = { session: null, user: null, loggedIn: false };
 
 function profileDone(u) {
   return !!(u && u.firstName && u.firstName.trim() && u.username && u.username.trim());
 }
 
-// ── Avatar list ─────────────────────────────────────────────────────────────
+// ── Avatar list ───────────────────────────────────────────────────────────────
 const AVLIST = ['🦁','🐯','🦊','🐺','🦋','🦅','🐱','🦈','🐬','🦝','🦄','🐸','🦭','🐧','🦉','🐮'];
 let curAv = '🦁';
+let pendingPhotoDataUrl = null;
 
-// ── UI helpers ──────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════════════════════════════════════
 function afMsg(id, type, txt) {
-  const el = document.getElementById(id);
-  if (!el) return;
+  const el = document.getElementById(id); if (!el) return;
   if (!txt) { el.innerHTML = ''; return; }
   el.innerHTML = `<div class="af-msg ${type}"><span>${{err:'⚠️',ok:'✅',warn:'⏳'}[type]||'ℹ️'}</span><span>${txt}</span></div>`;
 }
 function afBtnLoad(id, loading, txt='') {
-  const b = document.getElementById(id);
-  if (!b) return;
+  const b = document.getElementById(id); if (!b) return;
   b.disabled = loading;
   b.innerHTML = loading ? '<div class="af-spin"></div>' : `<span>${txt}</span>`;
 }
@@ -2691,9 +2852,11 @@ function checkPwStr(inp) {
   let s = 0;
   if (pw.length >= 8) s++; if (/[A-Z]/.test(pw)) s++; if (/[0-9]/.test(pw)) s++;
   if (/[^A-Za-z0-9]/.test(pw)) s++; if (pw.length >= 12) s++;
-  const lvl = [{w:'15%',c:'var(--rose)',l:'Muy débil'},{w:'30%',c:'var(--rose)',l:'Débil'},
-               {w:'55%',c:'var(--amber)',l:'Regular'},{w:'75%',c:'var(--amber)',l:'Buena'},
-               {w:'100%',c:'var(--g)',l:'Muy segura ✓'}][Math.min(s,4)];
+  const lvl = [
+    {w:'15%',c:'var(--rose)',l:'Muy débil'},{w:'30%',c:'var(--rose)',l:'Débil'},
+    {w:'55%',c:'var(--amber)',l:'Regular'},{w:'75%',c:'var(--amber)',l:'Buena'},
+    {w:'100%',c:'var(--g)',l:'Muy segura ✓'}
+  ][Math.min(s,4)];
   fill.style.width = lvl.w; fill.style.background = lvl.c;
   lbl.textContent = lvl.l; lbl.style.color = lvl.c;
 }
@@ -2705,6 +2868,37 @@ function authErrMsg(msg) {
   if (msg.includes('Password should'))            return 'La contraseña debe tener al menos 6 caracteres.';
   if (msg.includes('rate limit'))                 return 'Demasiados intentos. Esperá un momento.';
   return msg;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// DROPDOWN MENU
+// ════════════════════════════════════════════════════════════════════════════
+function openDd() {
+  const dd = document.getElementById('hdr-dropdown'); if (!dd) return;
+  dd.style.display = 'block';
+  document.getElementById('hdr-dd-arrow').style.transform = 'rotate(180deg)';
+}
+function closeDd() {
+  const dd = document.getElementById('hdr-dropdown'); if (!dd) return;
+  dd.style.display = 'none';
+  const arr = document.getElementById('hdr-dd-arrow');
+  if (arr) arr.style.transform = '';
+}
+function toggleDd() {
+  const dd = document.getElementById('hdr-dropdown'); if (!dd) return;
+  dd.style.display === 'block' ? closeDd() : openDd();
+}
+function ddNav(page) { closeDd(); nav(page); }
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('hdr-auth-wrap');
+  if (wrap && !wrap.contains(e.target)) closeDd();
+});
+
+function hdrAuthClick() {
+  if (KMD.loggedIn) toggleDd();
+  else openAuthModal('login');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -2725,10 +2919,49 @@ function switchTab(tab) {
   document.getElementById('atab-r').classList.toggle('on', !isL);
   afMsg('amsg-l','ok',''); afMsg('amsg-r','ok','');
 }
-function hdrAuthClick() {
-  // Called by header button — uses _showSection to avoid going through nav() auth check
-  if (KMD.loggedIn) _showSection('perfil');
-  else openAuthModal('login');
+
+// ════════════════════════════════════════════════════════════════════════════
+// GOOGLE OAUTH
+// ════════════════════════════════════════════════════════════════════════════
+async function doGoogleAuth() {
+  const sb = getSB();
+  if (!sb) { toast('🌐 Google OAuth requiere Supabase configurado'); return; }
+
+  // Show loading overlay
+  const gl = document.getElementById('google-loading');
+  if (gl) gl.classList.add('open');
+
+  try {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.href,
+        queryParams: { access_type: 'offline', prompt: 'consent' }
+      }
+    });
+    if (error) throw error;
+    // Page will redirect to Google — loading overlay stays visible
+  } catch(e) {
+    if (gl) gl.classList.remove('open');
+    afMsg('amsg-l', 'err', authErrMsg(e.message));
+  }
+}
+
+// Handle OAuth redirect — detect ?code= or #access_token in URL on load
+function handleOAuthRedirect() {
+  const hash = window.location.hash;
+  const search = window.location.search;
+  const isOAuthCallback = hash.includes('access_token') || search.includes('code=');
+  if (!isOAuthCallback) return;
+
+  const gl = document.getElementById('google-loading');
+  if (gl) gl.classList.add('open');
+
+  // Supabase JS SDK auto-handles the token — onAuthStateChange will fire
+  // Clean up the URL without reloading
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -2736,28 +2969,27 @@ function hdrAuthClick() {
 // ════════════════════════════════════════════════════════════════════════════
 async function doRegister() {
   const email   = (document.getElementById('rg-email')?.value || '').trim();
-  const pw      = document.getElementById('rg-pw')?.value || '';
-  const fn      = (document.getElementById('rg-fn')?.value || '').trim();
-  const ln      = (document.getElementById('rg-ln')?.value || '').trim();
-  const country = document.getElementById('rg-country')?.value || 'UY';
-  if (!email)           { afMsg('amsg-r','err','Ingresá tu email.'); return; }
+  const pw      =  document.getElementById('rg-pw')?.value || '';
+  const fn      = (document.getElementById('rg-fn')?.value   || '').trim();
+  const ln      = (document.getElementById('rg-ln')?.value   || '').trim();
+  const country =  document.getElementById('rg-country')?.value || 'UY';
+  if (!email)         { afMsg('amsg-r','err','Ingresá tu email.'); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { afMsg('amsg-r','err','Email inválido.'); return; }
-  if (pw.length < 8)    { afMsg('amsg-r','err','La contraseña debe tener al menos 8 caracteres.'); return; }
+  if (pw.length < 8)  { afMsg('amsg-r','err','Mínimo 8 caracteres.'); return; }
   afBtnLoad('btn-r', true, '');
   const init = { email, country, firstName:fn, lastName:ln, username:'', avatar:'🦁',
                  bio:'', location:'', phone:'', role:'BUYER', storeName:'',
-                 instagram:'', tiktok:'', profileComplete:false,
+                 instagram:'', tiktok:'', profileComplete:false, photoUrl:'',
                  createdAt: new Date().toISOString() };
   const sb = getSB();
   if (sb) {
     try {
       const { data, error } = await sb.auth.signUp({ email, password:pw, options:{data:init} });
       if (error) throw error;
-      if (data.session) { await onSignedIn(data.session, init); }
-      else { afMsg('amsg-r','ok','¡Cuenta creada! Revisá tu email para confirmar.'); }
+      if (data.session) await onSignedIn(data.session, init);
+      else afMsg('amsg-r','ok','¡Cuenta creada! Revisá tu email para confirmar.');
     } catch(e) { afMsg('amsg-r','err', authErrMsg(e.message)); }
   } else {
-    // Demo mode
     await onSignedIn({ user:{id:'demo-'+Date.now(), email} }, init);
   }
   afBtnLoad('btn-r', false, '🚀 Crear cuenta gratis');
@@ -2768,7 +3000,7 @@ async function doRegister() {
 // ════════════════════════════════════════════════════════════════════════════
 async function doLogin() {
   const email = (document.getElementById('al-email')?.value || '').trim();
-  const pw    = document.getElementById('al-pw')?.value || '';
+  const pw    =  document.getElementById('al-pw')?.value || '';
   if (!email) { afMsg('amsg-l','err','Ingresá tu email.'); return; }
   if (!pw)    { afMsg('amsg-l','err','Ingresá tu contraseña.'); return; }
   afBtnLoad('btn-l', true, '');
@@ -2782,7 +3014,7 @@ async function doLogin() {
       await onSignedIn(data.session, profile);
     } catch(e) { afMsg('amsg-l','err', authErrMsg(e.message)); }
   } else {
-    // Demo mode: any credentials work
+    // Demo: any credentials work
     const stored = loadUser();
     const profile = (stored?.email === email) ? stored : mkDefault(email, {});
     await onSignedIn({ user:{id:'demo-user', email} }, profile);
@@ -2793,16 +3025,12 @@ async function doLogin() {
 function mkDefault(email, meta) {
   return { email, firstName:meta.firstName||'', lastName:meta.lastName||'',
            username:meta.username||'', country:meta.country||'UY', avatar:meta.avatar||'🦁',
-           bio:meta.bio||'', location:meta.location||'', phone:meta.phone||'', role:meta.role||'BUYER',
-           storeName:meta.storeName||'', instagram:meta.instagram||'', tiktok:meta.tiktok||'',
+           photoUrl:meta.photoUrl||'', bio:meta.bio||'', location:meta.location||'',
+           phone:meta.phone||'', role:meta.role||'BUYER', storeName:meta.storeName||'',
+           instagram:meta.instagram||'', tiktok:meta.tiktok||'',
            profileComplete:meta.profileComplete||false, createdAt:new Date().toISOString() };
 }
 
-async function doGoogleAuth() {
-  const sb = getSB();
-  if (sb) { const{error}=await sb.auth.signInWithOAuth({provider:'google'}); if(error)afMsg('amsg-l','err',error.message); }
-  else toast('🌐 Google OAuth requiere Supabase configurado');
-}
 async function doForgotPw() {
   const email = (document.getElementById('al-email')?.value||'').trim();
   if (!email) { afMsg('amsg-l','err','Ingresá tu email primero.'); return; }
@@ -2815,34 +3043,37 @@ async function doForgotPw() {
 // LOGOUT
 // ════════════════════════════════════════════════════════════════════════════
 async function doLogout() {
+  closeDd(); closeEditModal();
   const sb = getSB();
   if (sb) { try { await sb.auth.signOut(); } catch {} }
   KMD.session = null; KMD.user = null; KMD.loggedIn = false;
-  saveUser(null); closeEditModal();
-  hdrGuest();
-  // Use _showSection directly — no auth check needed here
+  saveUser(null); hdrGuest();
   _showSection('home');
   toast('👋 Sesión cerrada. ¡Hasta pronto!');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// POST-LOGIN: decide which flow
+// POST-LOGIN: decide flow based on profile completeness
 // ════════════════════════════════════════════════════════════════════════════
 async function onSignedIn(session, profile) {
+  const gl = document.getElementById('google-loading');
+  if (gl) gl.classList.remove('open');
+
   KMD.session  = session;
   KMD.user     = { ...profile, email: session?.user?.email || profile.email };
   KMD.loggedIn = true;
   saveUser(KMD.user);
   closeAuthModal();
   hdrLoggedIn(KMD.user);
+
   if (!profileDone(KMD.user)) {
-    // CASE A — new user, needs to complete profile
+    // CASE A: new user — show complete-profile screen
     openCompleteProfile();
   } else {
-    // CASE B — returning user, stay in app
+    // CASE B: returning user — stay in app, go to profile
     toast('👋 ¡Bienvenido, ' + (KMD.user.firstName || KMD.user.email.split('@')[0]) + '!');
-    _showSection('perfil'); // direct, no auth check needed (we just logged in)
-    renderProfile();
+    _showSection('perfil');
+    renderProfilePage();
   }
 }
 
@@ -2854,6 +3085,15 @@ function openCompleteProfile() {
   scr.classList.add('open');
   if (KMD.user?.firstName) document.getElementById('cp-fn').value = KMD.user.firstName;
   if (KMD.user?.lastName)  document.getElementById('cp-ln').value = KMD.user.lastName;
+  // Pre-fill from Google profile
+  if (KMD.user?.email && !document.getElementById('cp-fn').value) {
+    const gName = KMD.session?.user?.user_metadata?.full_name || '';
+    if (gName) {
+      const parts = gName.split(' ');
+      document.getElementById('cp-fn').value = parts[0] || '';
+      document.getElementById('cp-ln').value = parts.slice(1).join(' ') || '';
+    }
+  }
   curAv = KMD.user?.avatar || '🦁';
   drawAvGrid('cp-av-grid', curAv, 'cpPick');
   document.querySelectorAll('#cp-roles .role-opt').forEach(e =>
@@ -2873,30 +3113,26 @@ async function saveCompleteProfile() {
   const fn   = (document.getElementById('cp-fn')?.value   || '').trim();
   const user = (document.getElementById('cp-user')?.value || '').trim();
   if (!fn)           { afMsg('cp-msg','err','El nombre es requerido.'); return; }
-  if (!user)         { afMsg('cp-msg','err','El nombre de usuario es requerido.'); return; }
-  if (user.length<3) { afMsg('cp-msg','err','El usuario debe tener al menos 3 caracteres.'); return; }
+  if (!user)         { afMsg('cp-msg','err','El usuario es requerido.'); return; }
+  if (user.length<3) { afMsg('cp-msg','err','El usuario debe tener mínimo 3 caracteres.'); return; }
   afBtnLoad('cp-save-btn', true, '');
   const updated = { ...KMD.user,
     firstName: fn, lastName: (document.getElementById('cp-ln')?.value||'').trim(),
-    username: user,
-    location: (document.getElementById('cp-loc')?.value||'').trim(),
-    bio:      (document.getElementById('cp-bio')?.value||'').trim(),
-    role:     document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role || 'BUYER',
-    avatar:   curAv, profileComplete:true, updatedAt:new Date().toISOString() };
+    username: user, location: (document.getElementById('cp-loc')?.value||'').trim(),
+    bio: (document.getElementById('cp-bio')?.value||'').trim(),
+    role: document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role || 'BUYER',
+    avatar: curAv, profileComplete: true, updatedAt: new Date().toISOString() };
   const sb = getSB();
   if (sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')) {
-    try { await sb.auth.updateUser({ data:updated }); } catch(e) { console.warn('SB update:', e.message); }
+    try { await sb.auth.updateUser({ data: updated }); } catch(e) { console.warn('SB update:', e.message); }
   }
   KMD.user = updated; saveUser(updated);
-  hdrLoggedIn(updated); closeCompleteProfile(); renderProfile();
-  _showSection('perfil');
+  hdrLoggedIn(updated); closeCompleteProfile();
+  _showSection('perfil'); renderProfilePage();
   toast('✅ ¡Perfil completado! Bienvenido a KOOMODOO 🎉');
-  afBtnLoad('cp-save-btn', false, '✅ Guardar y entrar a KOOMODOO');
+  afBtnLoad('cp-save-btn', false, '✅ Guardar y entrar');
 }
-function skipCP() {
-  closeCompleteProfile(); _showSection('home');
-  toast('💡 Completá tu perfil más tarde desde "Mi Perfil"');
-}
+function skipCP() { closeCompleteProfile(); _showSection('home'); toast('💡 Completá tu perfil más tarde'); }
 
 // ════════════════════════════════════════════════════════════════════════════
 // EDIT PROFILE MODAL
@@ -2913,10 +3149,13 @@ function openEditModal() {
   const fullName = [u.firstName,u.lastName].filter(Boolean).join(' ') || 'Usuario';
   const nm = document.getElementById('ep-name-big');
   const em = document.getElementById('ep-email-big');
-  const av = document.getElementById('ep-av-big');
+  const avBig = document.getElementById('ep-av-big');
   if (nm) nm.textContent = fullName;
   if (em) em.textContent = u.email || '';
-  if (av) av.textContent = u.avatar || '🦁';
+  if (avBig) {
+    if (u.photoUrl) avBig.innerHTML = `<img src="${u.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    else avBig.textContent = u.avatar || '🦁';
+  }
   curAv = u.avatar || '🦁';
   drawAvGrid('ep-av-grid', curAv, 'epPick');
   afMsg('ep-msg','ok','');
@@ -2927,49 +3166,344 @@ function epPick(em) {
   curAv = em; drawAvGrid('ep-av-grid', em, 'epPick');
   const av = document.getElementById('ep-av-big'); if (av) av.textContent = em;
 }
+
 async function saveEditProfile() {
-  const pw1 = document.getElementById('ep-pw1')?.value || '';
-  const pw2 = document.getElementById('ep-pw2')?.value || '';
-  if (pw1 && pw1 !== pw2)   { afMsg('ep-msg','err','Las contraseñas no coinciden.'); return; }
-  if (pw1 && pw1.length < 8){ afMsg('ep-msg','err','Mínimo 8 caracteres.'); return; }
+  const pw1 = document.getElementById('ep-pw1')?.value||'';
+  const pw2 = document.getElementById('ep-pw2')?.value||'';
+  if (pw1 && pw1 !== pw2)    { afMsg('ep-msg','err','Las contraseñas no coinciden.'); return; }
+  if (pw1 && pw1.length < 8) { afMsg('ep-msg','err','Mínimo 8 caracteres.'); return; }
   afBtnLoad('ep-save-btn', true, '');
   const get = id => (document.getElementById(id)?.value||'').trim();
   const updated = { ...KMD.user,
-    firstName: get('ep-fn')||KMD.user.firstName, lastName:get('ep-ln'),
-    username:  get('ep-user')||KMD.user.username, bio:get('ep-bio'),
-    location:  get('ep-loc'), phone:get('ep-phone'),
-    country:   get('ep-country')||'UY', role:get('ep-role')||'BUYER',
-    storeName: get('ep-store'), instagram:get('ep-ig'), tiktok:get('ep-tt'),
-    avatar: curAv, profileComplete:true, updatedAt:new Date().toISOString() };
+    firstName: get('ep-fn')||KMD.user.firstName, lastName: get('ep-ln'),
+    username: get('ep-user')||KMD.user.username, bio: get('ep-bio'),
+    location: get('ep-loc'), phone: get('ep-phone'),
+    country: get('ep-country')||'UY', role: get('ep-role')||'BUYER',
+    storeName: get('ep-store'), instagram: get('ep-ig'), tiktok: get('ep-tt'),
+    avatar: curAv, profileComplete: true, updatedAt: new Date().toISOString() };
   const sb = getSB();
   if (sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')) {
     try {
-      const payload = { data:updated }; if (pw1) payload.password = pw1;
+      const payload = { data: updated }; if (pw1) payload.password = pw1;
       const { error } = await sb.auth.updateUser(payload);
       if (error) throw error;
     } catch(e) { afMsg('ep-msg','err',authErrMsg(e.message)); afBtnLoad('ep-save-btn',false,'💾 Guardar cambios'); return; }
   }
   KMD.user = updated; saveUser(updated);
-  hdrLoggedIn(updated); renderProfile();
+  hdrLoggedIn(updated); renderProfilePage();
   afMsg('ep-msg','ok','✅ Perfil actualizado'); toast('✅ Cambios guardados');
   afBtnLoad('ep-save-btn', false, '💾 Guardar cambios');
   setTimeout(closeEditModal, 1400);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// PROFILE RENDER
+// PHOTO UPLOAD
 // ════════════════════════════════════════════════════════════════════════════
-function renderProfile() {
-  const u = KMD.user; if (!u) return;
-  const name   = [u.firstName,u.lastName].filter(Boolean).join(' ') || u.email?.split('@')[0] || 'Usuario';
-  const handle = '@' + (u.username || u.email?.split('@')[0] || 'usuario');
-  const role   = {BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role] || 'Miembro';
-  const bio    = u.bio || ('📍 ' + (u.location||'Uruguay') + ' · KOOMODOO member');
-  const set = (id,v) => { const e=document.getElementById(id); if(e) e.innerHTML=v; };
-  set('prof-hero-av', u.avatar||'🦁');
-  set('prof-nm-el',   name + (u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
-  set('prof-hndl-el', handle + ' · ' + role);
-  set('prof-bio-el',  bio);
+function pickProfilePhoto() {
+  if (!KMD.loggedIn) { openAuthModal('login'); return; }
+  pendingPhotoDataUrl = null;
+  // Reset preview to current
+  const prev = document.getElementById('photo-preview');
+  if (prev) {
+    if (KMD.user?.photoUrl) prev.innerHTML = `<img src="${KMD.user.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    else prev.textContent = KMD.user?.avatar || '🦁';
+  }
+  afMsg('photo-msg','ok','');
+  document.getElementById('photo-modal').classList.add('open');
+}
+function closePhotoModal() { document.getElementById('photo-modal').classList.remove('open'); }
+
+function handlePhotoFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { afMsg('photo-msg','err','La imagen debe ser menor a 2MB.'); return; }
+  if (!file.type.startsWith('image/')) { afMsg('photo-msg','err','Seleccioná una imagen válida.'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    pendingPhotoDataUrl = e.target.result;
+    const prev = document.getElementById('photo-preview');
+    if (prev) prev.innerHTML = `<img src="${pendingPhotoDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    afMsg('photo-msg','ok','Imagen cargada. Hacé clic en Guardar para confirmar.');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveProfilePhoto() {
+  if (!pendingPhotoDataUrl) { afMsg('photo-msg','warn','Seleccioná una foto primero.'); return; }
+  afBtnLoad('photo-save-btn', true, '');
+
+  let finalUrl = pendingPhotoDataUrl; // Default: store as base64 (demo)
+
+  const sb = getSB();
+  // If Supabase is configured and it's a real session, upload to Storage
+  if (sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')) {
+    try {
+      const blob = await (await fetch(pendingPhotoDataUrl)).blob();
+      const ext = blob.type.split('/')[1] || 'jpg';
+      const path = `avatars/${KMD.session.user.id}.${ext}`;
+      const { error: upErr } = await sb.storage.from('avatars').upload(path, blob, { upsert: true });
+      if (!upErr) {
+        const { data } = sb.storage.from('avatars').getPublicUrl(path);
+        finalUrl = data.publicUrl + '?t=' + Date.now();
+      }
+    } catch(e) { console.warn('Storage upload failed, using base64:', e.message); }
+  }
+
+  // Update user profile with photo URL
+  const updated = { ...KMD.user, photoUrl: finalUrl, updatedAt: new Date().toISOString() };
+  if (sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')) {
+    try { await sb.auth.updateUser({ data: updated }); } catch {}
+  }
+  KMD.user = updated; saveUser(updated);
+  hdrLoggedIn(updated);
+  renderProfilePage();
+  pendingPhotoDataUrl = null;
+  closePhotoModal();
+  toast('✅ Foto de perfil actualizada');
+  afBtnLoad('photo-save-btn', false, '✅ Guardar foto');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// HEADER STATE
+// ════════════════════════════════════════════════════════════════════════════
+function hdrLoggedIn(u) {
+  const av  = document.getElementById('hdr-av');
+  const lbl = document.getElementById('hdr-auth-label');
+  const arr = document.getElementById('hdr-dd-arrow');
+  if (av) {
+    if (u.photoUrl) av.innerHTML = `<img src="${u.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    else av.innerHTML = (u.avatar||'🦁') + '<div class="hdr-online-dot"></div>';
+  }
+  if (lbl) lbl.textContent = u.firstName || u.email?.split('@')[0] || 'Perfil';
+  if (arr) arr.style.display = 'inline';
+  // Update dropdown header
+  const ddAv   = document.getElementById('dd-av');
+  const ddName = document.getElementById('dd-name');
+  const ddEmail= document.getElementById('dd-email');
+  if (ddAv) {
+    if (u.photoUrl) ddAv.innerHTML = `<img src="${u.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    else ddAv.textContent = u.avatar || '🦁';
+  }
+  if (ddName)  ddName.textContent  = [u.firstName,u.lastName].filter(Boolean).join(' ') || 'Usuario';
+  if (ddEmail) ddEmail.textContent = u.email || '';
+}
+function hdrGuest() {
+  const av  = document.getElementById('hdr-av');
+  const lbl = document.getElementById('hdr-auth-label');
+  const arr = document.getElementById('hdr-dd-arrow');
+  if (av)  av.innerHTML  = '👤';
+  if (lbl) lbl.textContent = 'Ingresar';
+  if (arr) arr.style.display = 'none';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// POSTS SYSTEM (mock — ready for Supabase backend)
+// ════════════════════════════════════════════════════════════════════════════
+// In-memory posts store (replace with Supabase calls)
+const POSTS_STORE = [];
+const LIKED_POSTS = new Set();
+
+function renderPostsTab() {
+  return `
+    <div id="post-compose-wrap">
+      ${KMD.loggedIn ? `
+      <div class="post-compose">
+        <textarea class="post-compose-input" id="post-text-inp" placeholder="¿Qué querés compartir hoy?"></textarea>
+        <div id="post-image-preview" style="display:none;margin-bottom:10px">
+          <img id="post-img-prev" style="max-height:200px;border-radius:10px;max-width:100%">
+          <button onclick="clearPostImage()" style="background:rgba(251,113,133,.15);border:1px solid rgba(251,113,133,.3);color:var(--rose);padding:4px 10px;border-radius:7px;font-size:11px;cursor:pointer;margin-top:6px">✕ Quitar imagen</button>
+        </div>
+        <input type="file" id="post-img-inp" accept="image/*" style="display:none" onchange="previewPostImg(this)">
+        <div class="post-compose-actions">
+          <button class="pc-btn primary" onclick="submitPost()">📤 Publicar</button>
+          <button class="pc-btn ghost" onclick="document.getElementById('post-img-inp').click()">📷 Imagen</button>
+          <button class="pc-btn ghost" onclick="toast('🎥 Video próximamente')">🎥 Video</button>
+        </div>
+      </div>` : `
+      <div style="text-align:center;padding:20px;background:var(--surf);border-radius:14px;border:1px solid var(--b);margin-bottom:16px">
+        <div style="font-size:28px;margin-bottom:8px">✍️</div>
+        <div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px">Iniciá sesión para publicar</div>
+        <button onclick="openAuthModal('login')" style="padding:8px 18px;border-radius:10px;background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22;font-size:12px;font-weight:800;border:none;cursor:pointer">Iniciar sesión</button>
+      </div>`}
+    </div>
+    <div id="posts-feed"></div>`;
+}
+
+function initPostTab() {
+  renderPostsFeed();
+}
+
+function previewPostImg(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('post-img-prev').src = e.target.result;
+    document.getElementById('post-image-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function clearPostImage() {
+  document.getElementById('post-img-inp').value = '';
+  document.getElementById('post-image-preview').style.display = 'none';
+  document.getElementById('post-img-prev').src = '';
+}
+
+async function submitPost() {
+  if (!KMD.loggedIn) { openAuthModal('login'); return; }
+  const text = (document.getElementById('post-text-inp')?.value || '').trim();
+  const imgEl = document.getElementById('post-img-prev');
+  const imgSrc = imgEl?.src && imgEl.src !== window.location.href ? imgEl.src : '';
+  if (!text && !imgSrc) { toast('⚠️ Escribí algo o agregá una imagen'); return; }
+
+  const post = {
+    id: 'p_' + Date.now(),
+    userId: KMD.session?.user?.id || 'local',
+    authorName: [KMD.user.firstName, KMD.user.lastName].filter(Boolean).join(' ') || KMD.user.email?.split('@')[0],
+    authorAvatar: KMD.user.photoUrl || KMD.user.avatar || '🦁',
+    authorHandle: '@' + (KMD.user.username || KMD.user.email?.split('@')[0]),
+    text,
+    imageUrl: imgSrc,
+    likes: 0,
+    comments: [],
+    createdAt: new Date().toISOString(),
+    timeAgo: 'ahora mismo',
+  };
+
+  // In production: await sb.from('posts').insert(post)
+  POSTS_STORE.unshift(post);
+
+  // Clear form
+  document.getElementById('post-text-inp').value = '';
+  clearPostImage();
+  renderPostsFeed();
+  toast('✅ ¡Post publicado!');
+}
+
+function renderPostsFeed() {
+  const feed = document.getElementById('posts-feed'); if (!feed) return;
+  const allPosts = [...POSTS_STORE, ...getMockPosts()];
+  if (!allPosts.length) {
+    feed.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--t3)"><div style="font-size:36px;margin-bottom:10px">✍️</div><div style="font-size:14px;font-weight:700;color:var(--t2)">Sin posts aún</div><div style="font-size:12px;margin-top:4px">¡Sé el primero en publicar!</div></div>`;
+    return;
+  }
+  feed.innerHTML = allPosts.map(p => buildPostCard(p)).join('');
+}
+
+function getMockPosts() {
+  const u = KMD.user;
+  const name = u ? ([u.firstName,u.lastName].filter(Boolean).join(' ') || 'Carlos') : 'Carlos';
+  const av = u?.photoUrl || u?.avatar || '🦁';
+  return [
+    { id:'mp1', authorName:name, authorAvatar:av, authorHandle:'@'+(u?.username||'carlosm'),
+      text:'¡Acabo de publicar nuevos productos en mi tienda! 🔥 Mirá las ofertas de esta semana.', imageUrl:'', likes:12, comments:[{user:'@sofia_uy',text:'¡Me encantan! 😍'},{user:'@pedro_tech',text:'¿Hacen envíos a Canelones?'}], timeAgo:'hace 2h' },
+    { id:'mp2', authorName:name, authorAvatar:av, authorHandle:'@'+(u?.username||'carlosm'),
+      text:'Nueva colección disponible 🛍️ Tecnología y moda al mejor precio en Uruguay.', imageUrl:'', likes:28, comments:[], timeAgo:'hace 1 día' },
+  ];
+}
+
+function buildPostCard(post) {
+  const isLiked = LIKED_POSTS.has(post.id);
+  const avHtml = post.authorAvatar && post.authorAvatar.startsWith('http')
+    ? `<img src="${post.authorAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    : post.authorAvatar || '👤';
+  return `
+  <div class="post-card" id="post-${post.id}">
+    <div class="post-card-hdr">
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;overflow:hidden">${avHtml}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--t)">${post.authorName}</div>
+        <div style="font-size:11px;color:var(--t3)">${post.authorHandle} · ${post.timeAgo}</div>
+      </div>
+      ${KMD.loggedIn && post.userId === (KMD.session?.user?.id||'local') ? `<button onclick="deletePost('${post.id}')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;padding:4px 7px" title="Eliminar">🗑</button>` : ''}
+    </div>
+    <div class="post-card-body">
+      ${post.text ? `<div class="post-card-text">${escHtml(post.text)}</div>` : ''}
+      ${post.imageUrl ? `<img class="post-card-img" src="${post.imageUrl}" alt="Post image" loading="lazy">` : ''}
+    </div>
+    <div class="post-card-actions">
+      <button class="pca-btn ${isLiked?'liked':''}" onclick="togglePostLike('${post.id}',this)">
+        ${isLiked?'❤️':'🤍'} <span class="like-count-${post.id}">${post.likes}</span>
+      </button>
+      <button class="pca-btn" onclick="toggleComments('${post.id}')">💬 ${post.comments.length}</button>
+      <button class="pca-btn" onclick="sharePost('${post.id}')">↗️ Compartir</button>
+    </div>
+    <div id="comments-${post.id}" style="display:none">
+      <div class="comment-thread">
+        ${post.comments.map(c=>`
+          <div class="comment-item">
+            <div class="comment-av">💬</div>
+            <div class="comment-body"><div class="comment-user">${c.user}</div>${escHtml(c.text)}</div>
+          </div>`).join('')}
+        ${KMD.loggedIn ? `
+        <div class="comment-inp-row">
+          <div class="comment-av" style="font-size:13px">${KMD.user?.avatar||'🦁'}</div>
+          <input class="comment-field" id="cinp-${post.id}" placeholder="Escribí un comentario..." onkeydown="if(event.key==='Enter')addComment('${post.id}')">
+          <button class="comment-send" onclick="addComment('${post.id}')">➤</button>
+        </div>` : `<div style="font-size:11px;color:var(--t3);text-align:center;padding:6px 0">
+          <span style="cursor:pointer;color:var(--g)" onclick="openAuthModal('login')">Iniciá sesión</span> para comentar</div>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function togglePostLike(postId, btn) {
+  if (!KMD.loggedIn) { openAuthModal('login'); return; }
+  const allPosts = [...POSTS_STORE, ...getMockPosts()];
+  const post = allPosts.find(p => p.id === postId); if (!post) return;
+  if (LIKED_POSTS.has(postId)) {
+    LIKED_POSTS.delete(postId); post.likes = Math.max(0, post.likes - 1);
+    btn.classList.remove('liked');
+    btn.innerHTML = `🤍 <span class="like-count-${postId}">${post.likes}</span>`;
+  } else {
+    LIKED_POSTS.add(postId); post.likes++;
+    btn.classList.add('liked');
+    btn.innerHTML = `❤️ <span class="like-count-${postId}">${post.likes}</span>`;
+  }
+  // In production: await sb.from('likes').upsert({ post_id: postId, user_id: KMD.session.user.id })
+}
+
+function toggleComments(postId) {
+  const el = document.getElementById('comments-'+postId); if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function addComment(postId) {
+  if (!KMD.loggedIn) { openAuthModal('login'); return; }
+  const inp = document.getElementById('cinp-'+postId); if (!inp) return;
+  const text = inp.value.trim(); if (!text) return;
+  const allPosts = [...POSTS_STORE, ...getMockPosts()];
+  const post = allPosts.find(p => p.id === postId); if (!post) return;
+  const newComment = { user: '@'+(KMD.user.username||KMD.user.email?.split('@')[0]), text };
+  post.comments.push(newComment);
+  // In production: await sb.from('comments').insert({ post_id: postId, user_id: KMD.session.user.id, text })
+  inp.value = '';
+  // Re-render comment thread
+  const thread = document.querySelector(`#comments-${postId} .comment-thread`);
+  if (thread) {
+    const newDiv = document.createElement('div');
+    newDiv.className = 'comment-item';
+    newDiv.innerHTML = `<div class="comment-av">💬</div><div class="comment-body"><div class="comment-user">${newComment.user}</div>${escHtml(text)}</div>`;
+    thread.insertBefore(newDiv, thread.querySelector('.comment-inp-row'));
+  }
+}
+
+function deletePost(postId) {
+  const idx = POSTS_STORE.findIndex(p => p.id === postId);
+  if (idx > -1) { POSTS_STORE.splice(idx, 1); }
+  const el = document.getElementById('post-'+postId);
+  if (el) el.style.animation = 'none', el.style.opacity = '0', el.style.transition = 'opacity .3s', setTimeout(()=>el.remove(), 300);
+  toast('🗑 Post eliminado');
+  // In production: await sb.from('posts').delete().eq('id', postId)
+}
+
+function sharePost(postId) {
+  const url = window.location.href.split('?')[0] + '?post=' + postId;
+  if (navigator.clipboard) navigator.clipboard.writeText(url).catch(()=>{});
+  toast('🔗 Link copiado');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -2983,37 +3517,33 @@ function drawAvGrid(containerId, active, onClickFn) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// HEADER STATE
-// ════════════════════════════════════════════════════════════════════════════
-function hdrLoggedIn(u) {
-  const av  = document.getElementById('hdr-av');
-  const lbl = document.getElementById('hdr-auth-label');
-  if (av)  av.innerHTML  = (u.avatar||'🦁') + '<div class="hdr-online-dot"></div>';
-  if (lbl) lbl.textContent = u.firstName || u.email?.split('@')[0] || 'Perfil';
-}
-function hdrGuest() {
-  const av  = document.getElementById('hdr-av');
-  const lbl = document.getElementById('hdr-auth-label');
-  if (av)  av.innerHTML  = '👤';
-  if (lbl) lbl.textContent = 'Ingresar';
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// SUPABASE STATE LISTENER
+// SUPABASE AUTH STATE LISTENER
 // ════════════════════════════════════════════════════════════════════════════
 function listenAuth() {
   const sb = getSB(); if (!sb) return;
   sb.auth.onAuthStateChange(async (event, session) => {
+    const gl = document.getElementById('google-loading');
     if (event === 'SIGNED_IN' && session) {
+      if (gl) gl.classList.remove('open');
       const stored  = loadUser();
       const meta    = session.user?.user_metadata || {};
       const profile = (stored?.email === session.user.email) ? stored : mkDefault(session.user.email, meta);
+      // Enrich from Google metadata if available
+      if (!profile.firstName && meta.full_name) {
+        const parts = meta.full_name.split(' ');
+        profile.firstName = parts[0] || '';
+        profile.lastName  = parts.slice(1).join(' ') || '';
+      }
+      if (!profile.photoUrl && meta.avatar_url) {
+        profile.photoUrl = meta.avatar_url;
+      }
       KMD.session  = session;
       KMD.user     = { ...profile, email: session.user.email };
       KMD.loggedIn = true;
       saveUser(KMD.user); closeAuthModal(); hdrLoggedIn(KMD.user);
-      if (!profileDone(KMD.user)) openCompleteProfile(); else renderProfile();
+      if (!profileDone(KMD.user)) openCompleteProfile(); else renderProfilePage();
     } else if (event === 'SIGNED_OUT') {
+      if (gl) gl.classList.remove('open');
       KMD.session = null; KMD.user = null; KMD.loggedIn = false;
       saveUser(null); hdrGuest();
     }
@@ -3021,11 +3551,12 @@ function listenAuth() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// INIT — runs once at startup. App always opens normally.
+// INIT
 // ════════════════════════════════════════════════════════════════════════════
 async function initAuth() {
+  handleOAuthRedirect(); // Check for OAuth callback params in URL
   listenAuth();
-  // 1. Try Supabase session
+
   const sb = getSB();
   if (sb) {
     try {
@@ -3034,27 +3565,28 @@ async function initAuth() {
         const stored  = loadUser();
         const meta    = session.user?.user_metadata || {};
         const profile = (stored?.email === session.user.email) ? stored : mkDefault(session.user.email, meta);
-        KMD.session  = session;
-        KMD.user     = { ...profile, email: session.user.email };
-        KMD.loggedIn = true;
+        if (!profile.firstName && meta.full_name) {
+          const parts = meta.full_name.split(' ');
+          profile.firstName = parts[0] || '';
+          profile.lastName  = parts.slice(1).join(' ') || '';
+        }
+        if (!profile.photoUrl && meta.avatar_url) profile.photoUrl = meta.avatar_url;
+        KMD.session  = session; KMD.user = { ...profile, email: session.user.email }; KMD.loggedIn = true;
         saveUser(KMD.user); hdrLoggedIn(KMD.user);
         if (!profileDone(KMD.user)) openCompleteProfile();
         return;
       }
     } catch(e) { console.warn('[KMD] Session restore:', e.message); }
   }
-  // 2. Fallback: localStorage (demo mode / offline)
+  // Fallback: localStorage
   const stored = loadUser();
   if (stored?.email) {
-    KMD.user     = stored;
-    KMD.session  = { user: { id:'local', email:stored.email } };
-    KMD.loggedIn = true;
+    KMD.user = stored; KMD.session = { user:{ id:'local', email:stored.email } }; KMD.loggedIn = true;
     hdrLoggedIn(stored);
     if (!profileDone(stored)) openCompleteProfile();
     return;
   }
-  // 3. No session — exploration mode, no overlay shown
-  hdrGuest();
+  hdrGuest(); // No session — exploration mode
 }
 
 
