@@ -2846,35 +2846,160 @@ async function doRegister(){
   afBtnLoad('btn-r',false,'🚀 Crear cuenta gratis');
 }
 
-// ── Login ─────────────────────────────────────────────────────────────────────
+// ── INIT AUTH (detecta sesión al cargar) ───────────────────────────────
+async function initAuth(){
+  const sb = getSB();
+  if(!sb) return;
+
+  try{
+    const { data } = await sb.auth.getSession();
+
+    if(data?.session){
+      const user = data.session.user;
+
+      const stored = loadUser();
+      const profile = (stored?.email === user.email)
+        ? stored
+        : mkDefault(user.email, user.user_metadata || {});
+
+      await onSignedIn(data.session, profile);
+    }
+  }catch(e){
+    console.error('initAuth error:', e.message);
+  }
+}
+
+// ── LISTENER AUTH (detecta login con Google) ───────────────────────────
+function listenAuth(){
+  const sb = getSB();
+  if(!sb) return;
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if(event === 'SIGNED_IN' && session){
+      const user = session.user;
+
+      const stored = loadUser();
+      const profile = (stored?.email === user.email)
+        ? stored
+        : mkDefault(user.email, user.user_metadata || {});
+
+      await onSignedIn(session, profile);
+    }
+  });
+}
+
+// ── FIX PARA REDIRECCIÓN OAUTH (Google) ───────────────────────────────
+function fixOAuthRedirect(){
+  if(window.location.hash.includes('access_token')){
+    window.location.href = window.location.origin;
+  }
+}
+
+// ── LOGIN EMAIL ───────────────────────────────────────────────────────
 async function doLogin(){
-  const email=(document.getElementById('al-email')?.value||'').trim();
-  const pw=document.getElementById('al-pw')?.value||'';
-  if(!email){afMsg('amsg-l','err','Ingresá tu email.');return;}
-  if(!pw){afMsg('amsg-l','err','Ingresá tu contraseña.');return;}
-  afBtnLoad('btn-l',true,'');
-  const sb=getSB();
+  const email = (document.getElementById('al-email')?.value || '').trim();
+  const pw = document.getElementById('al-pw')?.value || '';
+
+  if(!email){ afMsg('amsg-l','err','Ingresá tu email.'); return; }
+  if(!pw){ afMsg('amsg-l','err','Ingresá tu contraseña.'); return; }
+
+  afBtnLoad('btn-l', true, '');
+
+  const sb = getSB();
+
   if(sb){
-    try{const{data,error}=await sb.auth.signInWithPassword({email,password:pw});if(error)throw error;
-      const stored=loadUser();const profile=(stored?.email===email)?stored:mkDefault(email,data.user?.user_metadata||{});
-      await onSignedIn(data.session,profile);}
-    catch(e){afMsg('amsg-l','err',authErrMsg(e.message));}
-  }else{const stored=loadUser();const profile=(stored?.email===email)?stored:mkDefault(email,{});await onSignedIn({user:{id:'demo-user',email}},profile);}
-  afBtnLoad('btn-l',false,'→ Iniciar sesión');
+    try{
+      const { data, error } = await sb.auth.signInWithPassword({
+        email,
+        password: pw
+      });
+
+      if(error) throw error;
+
+      const stored = loadUser();
+      const profile = (stored?.email === email)
+        ? stored
+        : mkDefault(email, data.user?.user_metadata || {});
+
+      await onSignedIn(data.session, profile);
+
+    }catch(e){
+      afMsg('amsg-l','err', authErrMsg(e.message));
+    }
+  }else{
+    // modo demo
+    const stored = loadUser();
+    const profile = (stored?.email === email)
+      ? stored
+      : mkDefault(email, {});
+
+    await onSignedIn({ user:{ id:'demo-user', email } }, profile);
+  }
+
+  afBtnLoad('btn-l', false, '→ Iniciar sesión');
 }
-function mkDefault(email,meta){
-  return{email,firstName:meta.firstName||'',lastName:meta.lastName||'',username:meta.username||'',
-    country:meta.country||'UY',avatar:meta.avatar||'🦁',photoUrl:meta.photoUrl||'',
-    bio:meta.bio||'',location:meta.location||'',phone:meta.phone||'',role:meta.role||'BUYER',
-    storeName:meta.storeName||'',instagram:meta.instagram||'',tiktok:meta.tiktok||'',
-    avatar_type:meta.avatar_type||'emoji',avatar_value:meta.avatar_value||meta.avatar||'🦁',
-    profileComplete:meta.profileComplete||false,createdAt:new Date().toISOString()};}
+
+// ── LOGIN GOOGLE ──────────────────────────────────────────────────────
+async function loginWithGoogle(){
+  const sb = getSB();
+  if(!sb) return;
+
+  await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options:{
+      redirectTo: window.location.origin
+    }
+  });
+}
+
+// ── CREAR PERFIL DEFAULT ──────────────────────────────────────────────
+function mkDefault(email, meta){
+  return {
+    email,
+    firstName: meta.firstName || '',
+    lastName: meta.lastName || '',
+    username: meta.username || '',
+    country: meta.country || 'UY',
+    avatar: meta.avatar || '🦁',
+    photoUrl: meta.photoUrl || '',
+    bio: meta.bio || '',
+    location: meta.location || '',
+    phone: meta.phone || '',
+    role: meta.role || 'BUYER',
+    storeName: meta.storeName || '',
+    instagram: meta.instagram || '',
+    tiktok: meta.tiktok || '',
+    avatar_type: meta.avatar_type || 'emoji',
+    avatar_value: meta.avatar_value || meta.avatar || '🦁',
+    profileComplete: meta.profileComplete || false,
+    createdAt: new Date().toISOString()
+  };
+}
+
+// ── RECUPERAR PASSWORD ────────────────────────────────────────────────
 async function doForgotPw(){
-  const email=(document.getElementById('al-email')?.value||'').trim();
-  if(!email){afMsg('amsg-l','err','Ingresá tu email primero.');return;}
-  const sb=getSB();if(sb)await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
-  afMsg('amsg-l','ok',`📧 Email de recuperación enviado a ${email}`);
+  const email = (document.getElementById('al-email')?.value || '').trim();
+
+  if(!email){
+    afMsg('amsg-l','err','Ingresá tu email primero.');
+    return;
+  }
+
+  const sb = getSB();
+
+  if(sb){
+    await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.href
+    });
+  }
+
+  afMsg('amsg-l','ok', `📧 Email de recuperación enviado a ${email}`);
 }
+
+// ── INICIALIZACIÓN GLOBAL ─────────────────────────────────────────────
+fixOAuthRedirect();
+initAuth();
+listenAuth();
 
 // ── Logout ────────────────────────────────────────────────────────────────────
 async function doLogout(){
