@@ -2971,7 +2971,7 @@ function mkDefault(email, meta){
     tiktok: meta.tiktok || '',
     avatar_type: meta.avatar_type || 'emoji',
     avatar_value: meta.avatar_value || meta.avatar || '🦁',
-    profileComplete: meta.profileComplete ?? false,
+    profileComplete: meta.profileComplete || false,
     createdAt: new Date().toISOString()
   };
 }
@@ -3015,10 +3015,10 @@ async function onSignedIn(session,profile){
   KMD.session=session;KMD.user={...profile,email:session?.user?.email||profile.email};KMD.loggedIn=true;
   saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
   // Redirect to onboarding if profile is not yet complete, otherwise go to app root
-  KMD.user.profileComplete = true;
-saveUser(KMD.user);
+  if(!KMD.user.profileComplete){
+    window.location.href='/onboarding.html';
   }else{
-    window.location.href = '/perfil.html'; // o home;
+    window.location.href='/';
   }
 }
 
@@ -3520,11 +3520,7 @@ function listenAuth(){
       if(!profile.photoUrl&&meta.avatar_url){profile.photoUrl=meta.avatar_url;profile.avatar_type='image';profile.avatar_value=meta.avatar_url;}
       KMD.session=session;KMD.user={...profile,email:session.user.email};KMD.loggedIn=true;
       saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
-      if(!KMD.user.profileComplete){
-  openCompleteProfile(); // o redirect si querés usar página aparte
-}else{
-  renderProfilePage();
-}
+      if(!profileDone(KMD.user))openCompleteProfile();else renderProfilePage();
     }else if(event==='SIGNED_OUT'){if(gl)gl.classList.remove('open');KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();}
   });}
 
@@ -3538,10 +3534,10 @@ async function initAuth(){
     if(!profile.firstName&&meta.full_name){const pts=meta.full_name.split(' ');profile.firstName=pts[0]||'';profile.lastName=pts.slice(1).join(' ')||'';}
     if(!profile.photoUrl&&meta.avatar_url){profile.photoUrl=meta.avatar_url;profile.avatar_type='image';profile.avatar_value=meta.avatar_url;}
     KMD.session=session;KMD.user={...profile,email:session.user.email};KMD.loggedIn=true;
-    saveUser(KMD.user);hdrLoggedIn(KMD.user);if(!KMD.user.profileComplete) openCompleteProfile();return;}
+    saveUser(KMD.user);hdrLoggedIn(KMD.user);if(!profileDone(KMD.user))openCompleteProfile();return;}
   }catch(e){console.warn('[KMD] Session restore:',e.message);}}
   const stored=loadUser();
-  if(stored?.email){KMD.user=stored;KMD.session={user:{id:'local',email:stored.email}};KMD.loggedIn=true;hdrLoggedIn(stored);if(!stored.profileComplete) openCompleteProfile();return;}
+  if(stored?.email){KMD.user=stored;KMD.session={user:{id:'local',email:stored.email}};KMD.loggedIn=true;hdrLoggedIn(stored);if(!profileDone(stored))openCompleteProfile();return;}
   hdrGuest();
 }
 
