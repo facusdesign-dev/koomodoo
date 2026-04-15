@@ -3014,8 +3014,55 @@ async function onSignedIn(session,profile){
   const gl=document.getElementById('google-loading');if(gl)gl.classList.remove('open');
   KMD.session=session;KMD.user={...profile,email:session?.user?.email||profile.email};KMD.loggedIn=true;
   saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
-  if(!profileDone(KMD.user)){openCompleteProfile();}
-  else{toast('👋 ¡Bienvenido, '+(KMD.user.firstName||KMD.user.email.split('@')[0])+'!');_showSection('perfil');renderProfilePage();}
+  // Redirect to onboarding if profile is not yet complete, otherwise go to app root
+  if(!KMD.user.profileComplete){
+    window.location.href='/onboarding.html';
+  }else{
+    window.location.href='/';
+  }
+}
+
+// ── completeProfile ───────────────────────────────────────────────────────────
+// Called from onboarding.html after the user fills in name + username.
+// Reads values from DOM inputs #onboarding-name and #onboarding-username,
+// sets profileComplete = true, persists with saveUser() and redirects to "/".
+async function completeProfile(){
+  const nameEl     = document.getElementById('onboarding-name');
+  const usernameEl = document.getElementById('onboarding-username');
+  const name     = (nameEl?.value     || '').trim();
+  const username = (usernameEl?.value || '').trim();
+
+  if(!name)                { console.warn('completeProfile: name is required');     return; }
+  if(!username)            { console.warn('completeProfile: username is required'); return; }
+  if(username.length < 3)  { console.warn('completeProfile: username too short');   return; }
+
+  // Split name into firstName / lastName (last word becomes lastName)
+  const parts     = name.split(/\s+/);
+  const firstName = parts[0] || name;
+  const lastName  = parts.length > 1 ? parts.slice(1).join(' ') : '';
+
+  const updated = {
+    ...KMD.user,
+    firstName,
+    lastName,
+    username,
+    profileComplete: true,
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Persist to Supabase if a real session exists
+  const sb = getSB();
+  if(sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')){
+    try{ await sb.auth.updateUser({ data: updated }); }
+    catch(e){ console.warn('completeProfile: Supabase update failed —', e.message); }
+  }
+
+  // Always update local state
+  KMD.user = updated;
+  saveUser(updated);
+
+  // Navigate to the main app
+  window.location.href = '/';
 }
 
 // ── Complete profile ──────────────────────────────────────────────────────────
