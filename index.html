@@ -1,3 +1,5 @@
+index.html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1182,7 +1184,7 @@ button,select,input{font-family:inherit}
   <div class="sb-sec">
     <span class="sb-sec-lbl sb-label">Vender</span>
     <div class="si" id="si-publicar"  onclick="nav('publicar')">  <span class="si-icon">🏷️</span><span class="si-txt">Publicar</span></div>
-    <div class="si" id="si-live"      onclick="nav('live')">       <span class="si-icon">📡</span><span class="si-txt">Iniciar Live</span><span class="si-dot"></span></div>
+    <div class="si" id="si-live"      onclick="openLiveModal()">   <span class="si-icon">📡</span><span class="si-txt">Iniciar Live</span><span class="si-dot"></span></div>
     <div class="si" id="si-analytics" onclick="nav('analytics')"> <span class="si-icon">📊</span><span class="si-txt">Métricas</span></div>
   </div>
 
@@ -1320,7 +1322,7 @@ button,select,input{font-family:inherit}
           <div class="prof-location" id="prof-location-el"><span>📍</span><span>Montevideo, Uruguay</span></div>
           <div class="prof-bio" id="prof-bio-el">Emprendedor digital · Tech &amp; Moda</div>
           <div class="prof-acts" id="prof-acts-el" style="margin-top:10px">
-            <button class="btn-p btn-pri" onclick="nav('live')">📡 Live</button>
+            <button class="btn-p btn-pri" onclick="openLiveModal()">📡 Live</button>
             <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
             <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
             <button id="follow-btn" class="btn-p btn-sec" onclick="toggleFollow()" style="display:none">➕ Seguir</button>
@@ -1688,7 +1690,7 @@ function _showSection(page){
   if(page==='favoritos')renderFavs();if(page==='pedidos')renderOrders();
   if(page==='mensajes')renderMessages();
   if(page==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfilePage();
-  if(page==='live')startLive();if(page==='analytics')renderAnalytics();
+  if(page==='live')renderLivePage();if(page==='analytics')renderAnalytics();
 }
 const PROTECTED_PAGES=new Set(['mensajes','carrito','pedidos','publicar','analytics']);
 function nav(page){
@@ -2089,7 +2091,7 @@ const LIVE_BOTS=[
   {av:'🐺',u:'@martin22',msgs:['¿Cuántas cuotas?','¡Los mejores!','También tienen rebajas en moda']},
   {av:'🦅',u:'@ana_d',msgs:['¡Ya pedí el mío!','Calidad increíble','Llegó en 2 días ⚡']},
 ];
-function startLive(){
+function renderLivePage(){
   document.getElementById('lv-prods').innerHTML=products.slice(0,5).map(p=>`
     <div class="lv-prod" onclick="addToCart('${p.id}');toast('🛒 Añadido')">
       <span class="lv-pe">${p.em}</span>
@@ -2205,95 +2207,9 @@ function addFromStory(){
   closeSV();
 }
 
-<!-- CLEANED AUTH FLOW VERSION -->
-<script>
-// =========================
+// ═══════════════════════════════════════
 // INIT
-// =========================
-async function initAuth() {
-  await handleOAuthRedirect();
-  listenAuth();
-}
-
-// =========================
-// LISTENER (UNIFIED)
-// =========================
-function listenAuth() {
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-
-      await onSignedIn(session, profile);
-    }
-  });
-}
-
-// =========================
-// SINGLE SOURCE OF TRUTH
-// =========================
-async function onSignedIn(session, profile) {
-  KMD.session = session;
-  KMD.user = {
-    id: session.user.id,
-    email: session.user.email
-  };
-
-  // if profile does not exist → create
-  if (!profile) {
-    await supabase.from('profiles').insert({
-      id: session.user.id,
-      email: session.user.email,
-      profile_complete: false
-    });
-
-    window.location.href = '/onboarding.html';
-    return;
-  }
-
-  // if profile incomplete → onboarding
-  if (!profile.profile_complete) {
-    window.location.href = '/onboarding.html';
-    return;
-  }
-
-  // if complete → home
-  window.location.href = '/';
-}
-
-// =========================
-// GOOGLE AUTH
-// =========================
-async function doGoogleAuth() {
-  await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin + window.location.pathname
-    }
-  });
-}
-
-// =========================
-// OAUTH REDIRECT HANDLER
-// =========================
-async function handleOAuthRedirect() {
-  const hash = window.location.hash;
-
-  if (!hash) return;
-
-  // let supabase handle session automatically
-  // just clean URL AFTER
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
-
-// =========================
-// START
-// =========================
-initAuth();
-</script>
+// ═══════════════════════════════════════
 
 // ═══════════════════════════════════════
 // AFFILIATE DATA & LOGIC
@@ -3066,21 +2982,19 @@ async function onSignedIn(session,profile){
   const gl=document.getElementById('google-loading');if(gl)gl.classList.remove('open');
   KMD.session=session;KMD.user={...profile,email:session?.user?.email||profile.email};KMD.loggedIn=true;
   saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
-  // Redirect to onboarding if profile is not yet complete, otherwise go to app root
+  // Keep the flow inside this page so local-file usage does not break navigation.
   if(!KMD.user.profileComplete){
-    window.location.href='/onboarding.html';
+    openCompleteProfile();
   }else{
-    window.location.href='/';
+    _showSection('home');
   }
 }
 
 // ── completeProfile ───────────────────────────────────────────────────────────
-// Called from onboarding.html after the user fills in name + username.
-// Reads values from DOM inputs #onboarding-name and #onboarding-username,
-// sets profileComplete = true, persists with saveUser() and redirects to "/".
+// Supports both the old onboarding inputs and the in-page complete-profile modal.
 async function completeProfile(){
-  const nameEl     = document.getElementById('onboarding-name');
-  const usernameEl = document.getElementById('onboarding-username');
+  const nameEl     = document.getElementById('onboarding-name') || document.getElementById('cp-fn');
+  const usernameEl = document.getElementById('onboarding-username') || document.getElementById('cp-user');
   const name     = (nameEl?.value     || '').trim();
   const username = (usernameEl?.value || '').trim();
 
@@ -3112,9 +3026,12 @@ async function completeProfile(){
   // Always update local state
   KMD.user = updated;
   saveUser(updated);
+  hdrLoggedIn(updated);
 
-  // Navigate to the main app
-  window.location.href = '/';
+  const cpScreen = document.getElementById('complete-profile-screen');
+  if(cpScreen)cpScreen.classList.remove('open');
+  _showSection('perfil');
+  if(typeof renderProfilePage==='function')renderProfilePage();
 }
 
 // ── Complete profile ──────────────────────────────────────────────────────────
@@ -3516,9 +3433,8 @@ async function startLiveSession(){
   toast('🔴 ¡Estás en vivo! Tu audiencia ya puede verte.');
 }
 
-// Patch the existing startLive function to show the modal first when coming from nav
-const _origStartLive = typeof startLive !== 'undefined' ? startLive : null;
-function startLive(){
+// Legacy helper kept separate so it no longer overrides the main live renderer.
+function syncLiveSessionPreview(){
   // Show the main live player (existing logic)
   const lp = document.getElementById('lv-prods');
   if(lp)lp.innerHTML=products.slice(0,5).map(p=>`<div class="lv-prod" onclick="addToCart('${p.id}');toast('🛒 Añadido')"><span class="lv-pe">${p.em}</span><div><div class="lv-pn">${p.title}</div><div class="lv-pp">${fmt(p.price)}</div><span class="lv-pb">🛒 Comprar</span></div></div>`).join('');
