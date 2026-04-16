@@ -1,3 +1,33 @@
+ desde ese esquema; y si la abrís por http:// o https://, el retorno de Google ya intercambia el code con Supabase antes de limpiar la URL, que era una de las causas del bloqueo.
+index
+HTML
+ También unifiqué el manejo del spinner para que se cierre al iniciar sesión, al cerrar sesión o cuando falla la restauración de sesión.
+index
+HTML
+
+Verifiqué que el JavaScript siga compilando.
+
+Lo más importante: si estás abriendo index.html directo desde Descargas, Google no va a iniciar sesión de verdad aunque el código esté mejor, porque OAuth necesita correr desde una URL http(s) registrada en Supabase/Google. Si querés, en el siguiente paso te lo dejo listo para probar localmente con un servidor simple, por ejemplo http://localhost:8000, y te digo exactamente qué poner también en Supabase.
+
+
+12:41 p.m.
+1 archivo modificado
+Deshacer
+index.html
+
+
+
+
+GPT-5.4
+
+Medio
+
+
+
+
+
+index.html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -2798,6 +2828,10 @@ function hdrAuthClick(){KMD.loggedIn?toggleDd():openAuthModal('login');}
 // ── Auth modal ────────────────────────────────────────────────────────────────
 function openAuthModal(tab){document.getElementById('auth-modal').classList.add('open');switchTab(tab||'login');}
 function closeAuthModal(){document.getElementById('auth-modal').classList.remove('open');}
+function setGoogleLoading(open){
+  const gl=document.getElementById('google-loading');
+  if(gl)gl.classList.toggle('open',!!open);
+}
 function switchTab(tab){
   const isL=tab==='login';
   document.getElementById('aform-l').style.display=isL?'':'none';
@@ -2810,7 +2844,13 @@ function switchTab(tab){
 // ── Google OAuth ──────────────────────────────────────────────────────────────
 async function doGoogleAuth() {
   const sb=getSB(); if(!sb){toast('🌐 Google OAuth requiere Supabase configurado');return;}
-  const gl=document.getElementById('google-loading'); if(gl)gl.classList.add('open');
+  if(!/^https?:$/i.test(window.location.protocol)){
+    afMsg('amsg-l','err','Google requiere abrir la app desde http:// o https://. Si abrís este archivo como file://, OAuth no puede volver correctamente.');
+    afMsg('amsg-r','err','Google requiere abrir la app desde http:// o https://. Si abrís este archivo como file://, OAuth no puede volver correctamente.');
+    toast('🌐 Abrí la app desde un servidor local para usar Google');
+    return;
+  }
+  setGoogleLoading(true);
   try {
     // redirectTo must be the clean origin — Supabase will append the token fragment.
     // Using window.location.href risks sending existing query params that confuse the flow.
@@ -2824,15 +2864,35 @@ async function doGoogleAuth() {
     if(error)throw error;
     // Browser will redirect to Google — no further code runs here.
   }catch(e){
-    if(gl)gl.classList.remove('open');
+    setGoogleLoading(false);
     afMsg('amsg-l','err',authErrMsg(e.message));
+    afMsg('amsg-r','err',authErrMsg(e.message));
   }
 }
-function handleOAuthRedirect(){
+async function handleOAuthRedirect(){
   const hash=window.location.hash,search=window.location.search;
-  if(!hash.includes('access_token')&&!search.includes('code='))return;
-  const gl=document.getElementById('google-loading');if(gl)gl.classList.add('open');
-  if(window.history?.replaceState)window.history.replaceState({},'',window.location.pathname);
+  const hasOAuthParams=hash.includes('access_token')||search.includes('code=');
+  if(!hasOAuthParams)return false;
+  setGoogleLoading(true);
+  const sb=getSB();
+  try{
+    const params=new URLSearchParams(search);
+    const code=params.get('code');
+    if(code&&sb?.auth?.exchangeCodeForSession){
+      const { error } = await sb.auth.exchangeCodeForSession(code);
+      if(error)throw error;
+    }
+    if(window.history?.replaceState){
+      window.history.replaceState({},'',window.location.pathname);
+    }
+    return true;
+  }catch(e){
+    console.warn('[KMD] OAuth redirect:',e.message);
+    setGoogleLoading(false);
+    afMsg('amsg-l','err',authErrMsg(e.message));
+    afMsg('amsg-r','err',authErrMsg(e.message));
+    return false;
+  }
 }
 
 // ── Register ──────────────────────────────────────────────────────────────────
@@ -3477,9 +3537,8 @@ function hdrGuest(){const av=document.getElementById('hdr-av');const lbl=documen
 function listenAuth(){
   const sb=getSB();if(!sb)return;
   sb.auth.onAuthStateChange(async(event,session)=>{
-    const gl=document.getElementById('google-loading');
     if(event==='SIGNED_IN'&&session){
-      if(gl)gl.classList.remove('open');
+      setGoogleLoading(false);
       const stored=loadUser();
       const meta=session.user?.user_metadata||{};
       // Build or reuse profile
@@ -3498,7 +3557,7 @@ function listenAuth(){
       // Delegate to onSignedIn — handles save, header update, and redirect
       await onSignedIn(session,profile);
     }else if(event==='SIGNED_OUT'){
-      if(gl)gl.classList.remove('open');
+      setGoogleLoading(false);
       KMD.session=null;KMD.user=null;KMD.loggedIn=false;
       saveUser(null);hdrGuest();
     }
@@ -3509,8 +3568,8 @@ function listenAuth(){
 async function initAuth(){
   // 1. Start the OAuth flow listener FIRST so SIGNED_IN fires for Google redirects
   listenAuth();
-  // 2. Clean up OAuth hash/code from URL (after Supabase SDK has already consumed it)
-  handleOAuthRedirect();
+  // 2. Process OAuth redirects before restoring a persisted session.
+  const handledOAuthRedirect = await handleOAuthRedirect();
   // 3. Restore an existing session (email login, persisted token)
   const sb=getSB();
   if(sb){
@@ -3535,7 +3594,14 @@ async function initAuth(){
         await onSignedIn(session,profile);
         return;
       }
-    }catch(e){console.warn('[KMD] Session restore:',e.message);}
+    }catch(e){
+      console.warn('[KMD] Session restore:',e.message);
+      if(handledOAuthRedirect){
+        setGoogleLoading(false);
+        afMsg('amsg-l','err',authErrMsg(e.message));
+        afMsg('amsg-r','err',authErrMsg(e.message));
+      }
+    }
   }
   // 4. Fallback: localStorage-only session (demo mode)
   const stored=loadUser();
@@ -3544,9 +3610,11 @@ async function initAuth(){
     KMD.session={user:{id:'local',email:stored.email}};
     KMD.loggedIn=true;
     hdrLoggedIn(stored);
+    setGoogleLoading(false);
     return;
   }
   // 5. No session at all — show guest header
+  setGoogleLoading(false);
   hdrGuest();
 }
 
