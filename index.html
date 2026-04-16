@@ -1114,7 +1114,7 @@ button,select,input{font-family:inherit}
 
     <!-- Currency switcher -->
     <div class="cur-sw">
-      <button class="cur-btn on" id="cur-uyu" onclick="setCurrency('UYU')">UYU</button>
+      <button class="cur-btn on" id="cur-local" onclick="setCurrency(localCurrency)">UYU</button>
       <button class="cur-btn" id="cur-usd" onclick="setCurrency('USD')">USD</button>
     </div>
 
@@ -1563,6 +1563,41 @@ const CATS=[
   {slug:'cocina',name:'Cocina',em:'🍳'},
 ];
 const USD_RATE=40; // 1 USD ≈ 40 UYU (mock)
+const CURRENCY_RATES_IN_UYU={
+  UYU:1,
+  USD:40,
+  ARS:0.04,
+  CLP:0.043,
+  BRL:7.3,
+  PYG:0.0051,
+  PEN:10.7,
+  COP:0.01,
+  MXN:2.35,
+  EUR:43.5,
+  GBP:50.5,
+  JPY:0.27,
+  CNY:5.5
+};
+const COUNTRY_CURRENCY={
+  UY:'UYU',AR:'ARS',CL:'CLP',BR:'BRL',PY:'PYG',PE:'PEN',CO:'COP',MX:'MXN',
+  US:'USD',CA:'USD',ES:'EUR',FR:'EUR',DE:'EUR',IT:'EUR',PT:'EUR',NL:'EUR',
+  GB:'GBP',JP:'JPY',CN:'CNY'
+};
+const CURRENCY_META={
+  UYU:{symbol:'$U',locale:'es-UY',label:'Pesos uruguayos'},
+  USD:{symbol:'US$',locale:'en-US',label:'Dólares'},
+  ARS:{symbol:'AR$',locale:'es-AR',label:'Pesos argentinos'},
+  CLP:{symbol:'CLP$',locale:'es-CL',label:'Pesos chilenos'},
+  BRL:{symbol:'R$',locale:'pt-BR',label:'Reales brasileños'},
+  PYG:{symbol:'Gs.',locale:'es-PY',label:'Guaraníes'},
+  PEN:{symbol:'S/',locale:'es-PE',label:'Soles'},
+  COP:{symbol:'COP$',locale:'es-CO',label:'Pesos colombianos'},
+  MXN:{symbol:'MX$',locale:'es-MX',label:'Pesos mexicanos'},
+  EUR:{symbol:'€',locale:'es-ES',label:'Euros'},
+  GBP:{symbol:'£',locale:'en-GB',label:'Libras'},
+  JPY:{symbol:'¥',locale:'ja-JP',label:'Yenes'},
+  CNY:{symbol:'¥',locale:'zh-CN',label:'Yuanes'}
+};
 
 // ═══════════════════════════════════════
 // STATE
@@ -1570,6 +1605,7 @@ const USD_RATE=40; // 1 USD ≈ 40 UYU (mock)
 let cart=[{pid:'p1',qty:1},{pid:'p3',qty:2}];
 let favs=new Set(['p2','p4','p8']);
 let currency='UYU';
+let localCurrency='UYU';
 let currentPage='home';
 let activeMsgId=null;
 let activeCat='all';
@@ -1594,12 +1630,53 @@ let likes=new Set();
 const getSeller=id=>sellers.find(s=>s.id===id)||sellers[0];
 const getProduct=id=>products.find(p=>p.id===id)||products[0];
 
-function fmt(n){
-  if(currency==='USD'){
-    const usd=(n/USD_RATE);
-    return 'US$ '+(usd>=1000?usd.toLocaleString('es-UY',{maximumFractionDigits:0}):usd.toFixed(0));
+function getCurrencyMeta(code){return CURRENCY_META[code]||CURRENCY_META.USD;}
+function getCountryCurrency(countryCode){return COUNTRY_CURRENCY[(countryCode||'').toUpperCase()]||'USD';}
+function inferCountryCode(){
+  try{
+    const locale=navigator.language||'';
+    const locMatch=locale.match(/-([A-Z]{2})\b/i);
+    if(locMatch)return locMatch[1].toUpperCase();
+    const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+    if(tz.includes('Montevideo'))return 'UY';
+    if(tz.includes('Buenos_Aires'))return 'AR';
+    if(tz.includes('Santiago'))return 'CL';
+    if(tz.includes('Sao_Paulo'))return 'BR';
+    if(tz.includes('Asuncion'))return 'PY';
+    if(tz.includes('Lima'))return 'PE';
+    if(tz.includes('Bogota'))return 'CO';
+    if(tz.includes('Mexico_City'))return 'MX';
+    if(tz.includes('Madrid')||tz.includes('Canary'))return 'ES';
+  }catch{}
+  return 'UY';
+}
+function setLocalCurrencyByCountry(countryCode){
+  localCurrency=getCountryCurrency(countryCode||inferCountryCode());
+  if(currency!=='USD')currency=localCurrency;
+  renderCurrencySwitcher();
+}
+function renderCurrencySwitcher(){
+  const localBtn=document.getElementById('cur-local');
+  const usdBtn=document.getElementById('cur-usd');
+  if(localBtn){
+    localBtn.textContent=localCurrency;
+    localBtn.classList.toggle('on',currency===localCurrency);
+    localBtn.onclick=()=>setCurrency(localCurrency);
+    localBtn.title=getCurrencyMeta(localCurrency).label;
   }
-  return '$'+n.toLocaleString('es-UY');
+  if(usdBtn){
+    usdBtn.classList.toggle('on',currency==='USD');
+    usdBtn.title=getCurrencyMeta('USD').label;
+  }
+}
+
+function fmt(n){
+  const meta=getCurrencyMeta(currency);
+  const rate=CURRENCY_RATES_IN_UYU[currency]||USD_RATE;
+  const amount=n/rate;
+  const decimals=currency==='JPY'||currency==='CLP'||currency==='PYG'?0:2;
+  const formatted=amount.toLocaleString(meta.locale,{minimumFractionDigits:amount>=1000?0:decimals,maximumFractionDigits:decimals});
+  return `${meta.symbol} ${formatted}`;
 }
 const disc=(p,o)=>o?Math.round((1-p/o)*100):0;
 const fmtN=n=>n>=1000?(n/1000).toFixed(1)+'k':String(n);
@@ -1658,8 +1735,7 @@ function toggleStories(){
 // ═══════════════════════════════════════
 function setCurrency(c){
   currency=c;
-  document.getElementById('cur-uyu').classList.toggle('on',c==='UYU');
-  document.getElementById('cur-usd').classList.toggle('on',c==='USD');
+  renderCurrencySwitcher();
   // Re-render current page prices
   if(currentPage==='home')renderFeed(currentFeedPosts||posts);
   if(currentPage==='marketplace')renderProdGrid();
@@ -1667,7 +1743,8 @@ function setCurrency(c){
   if(currentPage==='favoritos')renderFavs();
   if(currentPage==='perfil')renderProfile();
   if(currentPage==='pedidos')renderOrders();
-  toast(c==='USD'?'💵 Precios en dólares (USD)':'🇺🇾 Precios en pesos (UYU)');
+  const meta=getCurrencyMeta(c);
+  toast(c==='USD'?'💵 Precios en dólares (USD)':`💱 Precios en ${meta.label} (${c})`);
 }
 
 // ═══════════════════════════════════════
@@ -2945,12 +3022,13 @@ async function loginWithGoogle(){ return doGoogleAuth(); }
 
 // ── CREAR PERFIL DEFAULT ──────────────────────────────────────────────
 function mkDefault(email, meta){
+  const country=(meta.country||inferCountryCode()).toUpperCase();
   return {
     email,
     firstName: meta.firstName || '',
     lastName: meta.lastName || '',
     username: meta.username || '',
-    country: meta.country || 'UY',
+    country,
     avatar: meta.avatar || '🦁',
     photoUrl: meta.photoUrl || '',
     bio: meta.bio || '',
@@ -3013,6 +3091,7 @@ async function onSignedIn(session,profile){
     pendingOAuthCleanup=false;
   }
   KMD.session=session;KMD.user={...profile,email:session?.user?.email||profile.email};KMD.loggedIn=true;
+  setLocalCurrencyByCountry(KMD.user.country||inferCountryCode());
   saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
   // Keep the flow inside this page so local-file usage does not break navigation.
   if(!profileDone(KMD.user)){
@@ -3044,6 +3123,7 @@ async function completeProfile(){
     firstName,
     lastName,
     username,
+    country:(KMD.user?.country||inferCountryCode()).toUpperCase(),
     profileComplete: true,
     updatedAt: new Date().toISOString(),
   };
@@ -3057,6 +3137,7 @@ async function completeProfile(){
 
   // Always update local state
   KMD.user = updated;
+  setLocalCurrencyByCountry(updated.country);
   saveUser(updated);
   hdrLoggedIn(updated);
 
@@ -3095,9 +3176,11 @@ async function saveCompleteProfile(){
   const updated={...KMD.user,firstName:fn,lastName:(document.getElementById('cp-ln')?.value||'').trim(),
     username:user,location:(document.getElementById('cp-loc')?.value||'').trim(),
     bio:(document.getElementById('cp-bio')?.value||'').trim(),
+    country:(KMD.user?.country||inferCountryCode()).toUpperCase(),
     role:document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role||'BUYER',
     avatar:curAv,avatar_type:'emoji',avatar_value:curAv,profileComplete:true,updatedAt:new Date().toISOString()};
   const sb=getSB();if(sb&&hasRealSession(KMD.session)){try{await sb.auth.updateUser({data:updated});}catch(e){console.warn('SB:',e.message);}}
+  setLocalCurrencyByCountry(updated.country);
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);closeCompleteProfile();
   _showSection('perfil');renderProfilePage();toast('✅ ¡Perfil completado! Bienvenido a KOOMODOO 🎉');
   afBtnLoad('cp-save-btn',false,'✅ Guardar y entrar');
@@ -3137,6 +3220,7 @@ async function saveEditProfile(){
     try{const payload={data:updated};if(pw1)payload.password=pw1;const{error}=await sb.auth.updateUser(payload);if(error)throw error;}
     catch(e){afMsg('ep-msg','err',authErrMsg(e.message));afBtnLoad('ep-save-btn',false,'💾 Guardar cambios');return;}
   }
+  setLocalCurrencyByCountry(updated.country);
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);renderProfilePage();
   afMsg('ep-msg','ok','✅ Perfil actualizado');toast('✅ Cambios guardados');
   afBtnLoad('ep-save-btn',false,'💾 Guardar cambios');setTimeout(closeEditModal,1400);
@@ -3586,6 +3670,7 @@ async function initAuth(){
     KMD.user=stored;
     KMD.session={user:{id:'local',email:stored.email}};
     KMD.loggedIn=true;
+    setLocalCurrencyByCountry(stored.country||inferCountryCode());
     hdrLoggedIn(stored);
     setGoogleLoading(false);
     return;
@@ -3594,6 +3679,7 @@ async function initAuth(){
     saveUser(null);
   }
   // 5. No session at all — show guest header
+  setLocalCurrencyByCountry(inferCountryCode());
   setGoogleLoading(false);
   hdrGuest();
 }
@@ -3601,6 +3687,7 @@ async function initAuth(){
 
 // ── App startup ──
 initAuth();
+renderCurrencySwitcher();
 renderHome();
 updateBadges();
 </script>
