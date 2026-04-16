@@ -1,33 +1,3 @@
- desde ese esquema; y si la abrís por http:// o https://, el retorno de Google ya intercambia el code con Supabase antes de limpiar la URL, que era una de las causas del bloqueo.
-index
-HTML
- También unifiqué el manejo del spinner para que se cierre al iniciar sesión, al cerrar sesión o cuando falla la restauración de sesión.
-index
-HTML
-
-Verifiqué que el JavaScript siga compilando.
-
-Lo más importante: si estás abriendo index.html directo desde Descargas, Google no va a iniciar sesión de verdad aunque el código esté mejor, porque OAuth necesita correr desde una URL http(s) registrada en Supabase/Google. Si querés, en el siguiente paso te lo dejo listo para probar localmente con un servidor simple, por ejemplo http://localhost:8000, y te digo exactamente qué poner también en Supabase.
-
-
-12:41 p.m.
-1 archivo modificado
-Deshacer
-index.html
-
-
-
-
-GPT-5.4
-
-Medio
-
-
-
-
-
-index.html
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
