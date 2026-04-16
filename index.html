@@ -1,3 +1,5 @@
+index-modificado.html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -2730,9 +2732,19 @@ const SB_URL = 'https://qbpvrfouhsycbzgzltih.supabase.co';
 const SB_KEY = 'sb_publishable_WuXm4DcjX4r4ZCLeAuBBbw__2OlJl4C';
 
 let _sb = null;
+let pendingOAuthCleanup = false;
 function getSB() {
   if (_sb) return _sb;
-  try { _sb = window.supabase?.createClient(SB_URL, SB_KEY) || null; }
+  try {
+    _sb = window.supabase?.createClient(SB_URL, SB_KEY, {
+      auth:{
+        flowType:'pkce',
+        detectSessionInUrl:true,
+        persistSession:true,
+        autoRefreshToken:true
+      }
+    }) || null;
+  }
   catch(e) { console.info('[KMD] Demo mode:', e.message); }
   return _sb;
 }
@@ -2845,25 +2857,8 @@ async function handleOAuthRedirect(){
   const hasOAuthParams=hash.includes('access_token')||search.includes('code=');
   if(!hasOAuthParams)return false;
   setGoogleLoading(true);
-  const sb=getSB();
-  try{
-    const params=new URLSearchParams(search);
-    const code=params.get('code');
-    if(code&&sb?.auth?.exchangeCodeForSession){
-      const { error } = await sb.auth.exchangeCodeForSession(code);
-      if(error)throw error;
-    }
-    if(window.history?.replaceState){
-      window.history.replaceState({},'',window.location.pathname);
-    }
-    return true;
-  }catch(e){
-    console.warn('[KMD] OAuth redirect:',e.message);
-    setGoogleLoading(false);
-    afMsg('amsg-l','err',authErrMsg(e.message));
-    afMsg('amsg-r','err',authErrMsg(e.message));
-    return false;
-  }
+  pendingOAuthCleanup = true;
+  return true;
 }
 
 // ── Register ──────────────────────────────────────────────────────────────────
@@ -3015,6 +3010,10 @@ async function doLogout(){
 // ── Post-login flow ───────────────────────────────────────────────────────────
 async function onSignedIn(session,profile){
   const gl=document.getElementById('google-loading');if(gl)gl.classList.remove('open');
+  if(pendingOAuthCleanup&&window.history?.replaceState){
+    window.history.replaceState({},'',window.location.pathname);
+    pendingOAuthCleanup=false;
+  }
   KMD.session=session;KMD.user={...profile,email:session?.user?.email||profile.email};KMD.loggedIn=true;
   saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
   // Keep the flow inside this page so local-file usage does not break navigation.
