@@ -2205,9 +2205,95 @@ function addFromStory(){
   closeSV();
 }
 
-// ═══════════════════════════════════════
+<!-- CLEANED AUTH FLOW VERSION -->
+<script>
+// =========================
 // INIT
-// ═══════════════════════════════════════
+// =========================
+async function initAuth() {
+  await handleOAuthRedirect();
+  listenAuth();
+}
+
+// =========================
+// LISTENER (UNIFIED)
+// =========================
+function listenAuth() {
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      await onSignedIn(session, profile);
+    }
+  });
+}
+
+// =========================
+// SINGLE SOURCE OF TRUTH
+// =========================
+async function onSignedIn(session, profile) {
+  KMD.session = session;
+  KMD.user = {
+    id: session.user.id,
+    email: session.user.email
+  };
+
+  // if profile does not exist → create
+  if (!profile) {
+    await supabase.from('profiles').insert({
+      id: session.user.id,
+      email: session.user.email,
+      profile_complete: false
+    });
+
+    window.location.href = '/onboarding.html';
+    return;
+  }
+
+  // if profile incomplete → onboarding
+  if (!profile.profile_complete) {
+    window.location.href = '/onboarding.html';
+    return;
+  }
+
+  // if complete → home
+  window.location.href = '/';
+}
+
+// =========================
+// GOOGLE AUTH
+// =========================
+async function doGoogleAuth() {
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin + window.location.pathname
+    }
+  });
+}
+
+// =========================
+// OAUTH REDIRECT HANDLER
+// =========================
+async function handleOAuthRedirect() {
+  const hash = window.location.hash;
+
+  if (!hash) return;
+
+  // let supabase handle session automatically
+  // just clean URL AFTER
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+// =========================
+// START
+// =========================
+initAuth();
+</script>
 
 // ═══════════════════════════════════════
 // AFFILIATE DATA & LOGIC
