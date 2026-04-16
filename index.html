@@ -2812,9 +2812,21 @@ async function doGoogleAuth() {
   const sb=getSB(); if(!sb){toast('🌐 Google OAuth requiere Supabase configurado');return;}
   const gl=document.getElementById('google-loading'); if(gl)gl.classList.add('open');
   try {
-    const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href,queryParams:{access_type:'offline',prompt:'consent'}}});
+    // redirectTo must be the clean origin — Supabase will append the token fragment.
+    // Using window.location.href risks sending existing query params that confuse the flow.
+    const{error}=await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{
+        redirectTo: window.location.origin + window.location.pathname,
+        queryParams:{ access_type:'offline', prompt:'consent' }
+      }
+    });
     if(error)throw error;
-  }catch(e){if(gl)gl.classList.remove('open');afMsg('amsg-l','err',authErrMsg(e.message));}
+    // Browser will redirect to Google — no further code runs here.
+  }catch(e){
+    if(gl)gl.classList.remove('open');
+    afMsg('amsg-l','err',authErrMsg(e.message));
+  }
 }
 function handleOAuthRedirect(){
   const hash=window.location.hash,search=window.location.search;
@@ -2846,54 +2858,18 @@ async function doRegister(){
   afBtnLoad('btn-r',false,'🚀 Crear cuenta gratis');
 }
 
-// ── INIT AUTH (detecta sesión al cargar) ───────────────────────────────
-async function initAuth(){
-  const sb = getSB();
-  if(!sb) return;
+// ── INIT AUTH — definición real está al final del archivo ────────────────
+// (función consolidada, ver "// ── Init ──" más abajo)
+// Esta declaración fue reemplazada para evitar duplicados.
 
-  try{
-    const { data } = await sb.auth.getSession();
+// ── LISTENER AUTH — definición real está al final del archivo ────────────
+// (función consolidada, ver "// ── Supabase state listener ──" más abajo)
+// Esta declaración fue reemplazada para evitar duplicados.
 
-    if(data?.session){
-      const user = data.session.user;
-
-      const stored = loadUser();
-      const profile = (stored?.email === user.email)
-        ? stored
-        : mkDefault(user.email, user.user_metadata || {});
-
-      await onSignedIn(data.session, profile);
-    }
-  }catch(e){
-    console.error('initAuth error:', e.message);
-  }
-}
-
-// ── LISTENER AUTH (detecta login con Google) ───────────────────────────
-function listenAuth(){
-  const sb = getSB();
-  if(!sb) return;
-
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if(event === 'SIGNED_IN' && session){
-      const user = session.user;
-
-      const stored = loadUser();
-      const profile = (stored?.email === user.email)
-        ? stored
-        : mkDefault(user.email, user.user_metadata || {});
-
-      await onSignedIn(session, profile);
-    }
-  });
-}
-
-// ── FIX PARA REDIRECCIÓN OAUTH (Google) ───────────────────────────────
-function fixOAuthRedirect(){
-  if(window.location.hash.includes('access_token')){
-    window.location.href = window.location.origin;
-  }
-}
+// ── fixOAuthRedirect — desactivada ────────────────────────────────────────
+// No borrar el hash manualmente: Supabase JS SDK lo consume internamente.
+// handleOAuthRedirect() en initAuth() ya maneja el redirect limpio.
+function fixOAuthRedirect(){ /* no-op — ver handleOAuthRedirect() */ }
 
 // ── LOGIN EMAIL ───────────────────────────────────────────────────────
 async function doLogin(){
@@ -2939,18 +2915,9 @@ async function doLogin(){
   afBtnLoad('btn-l', false, '→ Iniciar sesión');
 }
 
-// ── LOGIN GOOGLE ──────────────────────────────────────────────────────
-async function loginWithGoogle(){
-  const sb = getSB();
-  if(!sb) return;
-
-  await sb.auth.signInWithOAuth({
-    provider: 'google',
-    options:{
-      redirectTo: window.location.origin
-    }
-  });
-}
+// ── loginWithGoogle — alias de doGoogleAuth() ────────────────────────────────
+// Mantenida por compatibilidad con cualquier llamada existente.
+async function loginWithGoogle(){ return doGoogleAuth(); }
 
 // ── CREAR PERFIL DEFAULT ──────────────────────────────────────────────
 function mkDefault(email, meta){
@@ -2997,9 +2964,8 @@ async function doForgotPw(){
 }
 
 // ── INICIALIZACIÓN GLOBAL ─────────────────────────────────────────────
-fixOAuthRedirect();
-initAuth();
-listenAuth();
+// Las llamadas reales están al final del archivo ("// ── App startup ──")
+// después de que todas las funciones estén definidas. No llamar aquí.
 
 // ── Logout ────────────────────────────────────────────────────────────────────
 async function doLogout(){
@@ -3514,30 +3480,73 @@ function listenAuth(){
     const gl=document.getElementById('google-loading');
     if(event==='SIGNED_IN'&&session){
       if(gl)gl.classList.remove('open');
-      const stored=loadUser();const meta=session.user?.user_metadata||{};
+      const stored=loadUser();
+      const meta=session.user?.user_metadata||{};
+      // Build or reuse profile
       const profile=(stored?.email===session.user.email)?stored:mkDefault(session.user.email,meta);
-      if(!profile.firstName&&meta.full_name){const pts=meta.full_name.split(' ');profile.firstName=pts[0]||'';profile.lastName=pts.slice(1).join(' ')||'';}
-      if(!profile.photoUrl&&meta.avatar_url){profile.photoUrl=meta.avatar_url;profile.avatar_type='image';profile.avatar_value=meta.avatar_url;}
-      KMD.session=session;KMD.user={...profile,email:session.user.email};KMD.loggedIn=true;
-      saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
-      if(!profileDone(KMD.user))openCompleteProfile();else renderProfilePage();
-    }else if(event==='SIGNED_OUT'){if(gl)gl.classList.remove('open');KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();}
-  });}
+      // Enrich with Google data when available
+      if(!profile.firstName&&meta.full_name){
+        const pts=meta.full_name.split(' ');
+        profile.firstName=pts[0]||'';
+        profile.lastName=pts.slice(1).join(' ')||'';
+      }
+      if(!profile.photoUrl&&meta.avatar_url){
+        profile.photoUrl=meta.avatar_url;
+        profile.avatar_type='image';
+        profile.avatar_value=meta.avatar_url;
+      }
+      // Delegate to onSignedIn — handles save, header update, and redirect
+      await onSignedIn(session,profile);
+    }else if(event==='SIGNED_OUT'){
+      if(gl)gl.classList.remove('open');
+      KMD.session=null;KMD.user=null;KMD.loggedIn=false;
+      saveUser(null);hdrGuest();
+    }
+  });
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function initAuth(){
-  handleOAuthRedirect();listenAuth();
+  // 1. Start the OAuth flow listener FIRST so SIGNED_IN fires for Google redirects
+  listenAuth();
+  // 2. Clean up OAuth hash/code from URL (after Supabase SDK has already consumed it)
+  handleOAuthRedirect();
+  // 3. Restore an existing session (email login, persisted token)
   const sb=getSB();
-  if(sb){try{const{data:{session}}=await sb.auth.getSession();if(session){
-    const stored=loadUser();const meta=session.user?.user_metadata||{};
-    const profile=(stored?.email===session.user.email)?stored:mkDefault(session.user.email,meta);
-    if(!profile.firstName&&meta.full_name){const pts=meta.full_name.split(' ');profile.firstName=pts[0]||'';profile.lastName=pts.slice(1).join(' ')||'';}
-    if(!profile.photoUrl&&meta.avatar_url){profile.photoUrl=meta.avatar_url;profile.avatar_type='image';profile.avatar_value=meta.avatar_url;}
-    KMD.session=session;KMD.user={...profile,email:session.user.email};KMD.loggedIn=true;
-    saveUser(KMD.user);hdrLoggedIn(KMD.user);if(!profileDone(KMD.user))openCompleteProfile();return;}
-  }catch(e){console.warn('[KMD] Session restore:',e.message);}}
+  if(sb){
+    try{
+      const{data:{session}}=await sb.auth.getSession();
+      if(session){
+        const stored=loadUser();
+        const meta=session.user?.user_metadata||{};
+        const profile=(stored?.email===session.user.email)?stored:mkDefault(session.user.email,meta);
+        // Enrich with Google data when available
+        if(!profile.firstName&&meta.full_name){
+          const pts=meta.full_name.split(' ');
+          profile.firstName=pts[0]||'';
+          profile.lastName=pts.slice(1).join(' ')||'';
+        }
+        if(!profile.photoUrl&&meta.avatar_url){
+          profile.photoUrl=meta.avatar_url;
+          profile.avatar_type='image';
+          profile.avatar_value=meta.avatar_url;
+        }
+        // Delegate to onSignedIn — handles save, header update, and redirect
+        await onSignedIn(session,profile);
+        return;
+      }
+    }catch(e){console.warn('[KMD] Session restore:',e.message);}
+  }
+  // 4. Fallback: localStorage-only session (demo mode)
   const stored=loadUser();
-  if(stored?.email){KMD.user=stored;KMD.session={user:{id:'local',email:stored.email}};KMD.loggedIn=true;hdrLoggedIn(stored);if(!profileDone(stored))openCompleteProfile();return;}
+  if(stored?.email){
+    KMD.user=stored;
+    KMD.session={user:{id:'local',email:stored.email}};
+    KMD.loggedIn=true;
+    hdrLoggedIn(stored);
+    return;
+  }
+  // 5. No session at all — show guest header
   hdrGuest();
 }
 
