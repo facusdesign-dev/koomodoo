@@ -2744,6 +2744,7 @@ function saveUser(u) { u ? localStorage.setItem(KSTORE, JSON.stringify(u)) : loc
 const KMD = { session:null, user:null, loggedIn:false };
 
 function profileDone(u) { return !!(u && u.firstName?.trim() && u.username?.trim()); }
+function hasRealSession(session){ return !!(session?.user?.id && !String(session.user.id).startsWith('local') && !String(session.user.id).startsWith('demo')); }
 
 const AVLIST = ['🦁','🐯','🦊','🐺','🦋','🦅','🐱','🦈','🐬','🦝','🦄','🐸','🦭','🐧','🦉','🐮'];
 let curAv = '🦁';
@@ -2972,6 +2973,12 @@ function mkDefault(email, meta){
     createdAt: new Date().toISOString()
   };
 }
+function mergeProfile(email, meta, stored){
+  const base=mkDefault(email,meta);
+  const merged=(stored?.email===email)?{...base,...stored,email}:{...base,email};
+  merged.profileComplete=profileDone(merged);
+  return merged;
+}
 
 // ── RECUPERAR PASSWORD ────────────────────────────────────────────────
 async function doForgotPw(){
@@ -3011,7 +3018,7 @@ async function onSignedIn(session,profile){
   KMD.session=session;KMD.user={...profile,email:session?.user?.email||profile.email};KMD.loggedIn=true;
   saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
   // Keep the flow inside this page so local-file usage does not break navigation.
-  if(!KMD.user.profileComplete){
+  if(!profileDone(KMD.user)){
     openCompleteProfile();
   }else{
     _showSection('home');
@@ -3046,7 +3053,7 @@ async function completeProfile(){
 
   // Persist to Supabase if a real session exists
   const sb = getSB();
-  if(sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')){
+  if(sb && hasRealSession(KMD.session)){
     try{ await sb.auth.updateUser({ data: updated }); }
     catch(e){ console.warn('completeProfile: Supabase update failed —', e.message); }
   }
@@ -3067,6 +3074,9 @@ function openCompleteProfile(){
   const scr=document.getElementById('complete-profile-screen');scr.classList.add('open');
   if(KMD.user?.firstName)document.getElementById('cp-fn').value=KMD.user.firstName;
   if(KMD.user?.lastName)document.getElementById('cp-ln').value=KMD.user.lastName;
+  if(KMD.user?.username)document.getElementById('cp-user').value=KMD.user.username;
+  if(KMD.user?.location)document.getElementById('cp-loc').value=KMD.user.location;
+  if(KMD.user?.bio)document.getElementById('cp-bio').value=KMD.user.bio;
   if(!document.getElementById('cp-fn').value){
     const gName=KMD.session?.user?.user_metadata?.full_name||'';
     if(gName){const pts=gName.split(' ');document.getElementById('cp-fn').value=pts[0]||'';document.getElementById('cp-ln').value=pts.slice(1).join(' ')||'';}
@@ -3090,7 +3100,7 @@ async function saveCompleteProfile(){
     bio:(document.getElementById('cp-bio')?.value||'').trim(),
     role:document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role||'BUYER',
     avatar:curAv,avatar_type:'emoji',avatar_value:curAv,profileComplete:true,updatedAt:new Date().toISOString()};
-  const sb=getSB();if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){try{await sb.auth.updateUser({data:updated});}catch(e){console.warn('SB:',e.message);}}
+  const sb=getSB();if(sb&&hasRealSession(KMD.session)){try{await sb.auth.updateUser({data:updated});}catch(e){console.warn('SB:',e.message);}}
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);closeCompleteProfile();
   _showSection('perfil');renderProfilePage();toast('✅ ¡Perfil completado! Bienvenido a KOOMODOO 🎉');
   afBtnLoad('cp-save-btn',false,'✅ Guardar y entrar');
@@ -3512,7 +3522,7 @@ function listenAuth(){
       const stored=loadUser();
       const meta=session.user?.user_metadata||{};
       // Build or reuse profile
-      const profile=(stored?.email===session.user.email)?stored:mkDefault(session.user.email,meta);
+      const profile=mergeProfile(session.user.email,meta,stored);
       // Enrich with Google data when available
       if(!profile.firstName&&meta.full_name){
         const pts=meta.full_name.split(' ');
@@ -3548,7 +3558,7 @@ async function initAuth(){
       if(session){
         const stored=loadUser();
         const meta=session.user?.user_metadata||{};
-        const profile=(stored?.email===session.user.email)?stored:mkDefault(session.user.email,meta);
+        const profile=mergeProfile(session.user.email,meta,stored);
         // Enrich with Google data when available
         if(!profile.firstName&&meta.full_name){
           const pts=meta.full_name.split(' ');
@@ -3573,15 +3583,18 @@ async function initAuth(){
       }
     }
   }
-  // 4. Fallback: localStorage-only session (demo mode)
+  // 4. Fallback: localStorage-only session (demo mode only, when Supabase is unavailable)
   const stored=loadUser();
-  if(stored?.email){
+  if(!sb && stored?.email){
     KMD.user=stored;
     KMD.session={user:{id:'local',email:stored.email}};
     KMD.loggedIn=true;
     hdrLoggedIn(stored);
     setGoogleLoading(false);
     return;
+  }
+  if(sb && stored?.email){
+    saveUser(null);
   }
   // 5. No session at all — show guest header
   setGoogleLoading(false);
