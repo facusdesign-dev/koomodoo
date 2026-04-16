@@ -1075,6 +1075,8 @@ button,select,input{font-family:inherit}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:800;color:var(--t)">⭕ Nueva historia</div><button onclick="closeStoryModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button></div>
     <div id="story-msg"></div>
     <div id="story-preview" style="width:100%;aspect-ratio:9/16;max-height:280px;border-radius:14px;background:var(--surf2);border:2px dashed rgba(52,211,153,.3);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden;margin-bottom:12px;cursor:pointer" onclick="document.getElementById('story-file-inp').click()">📷<input type="file" id="story-file-inp" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)"></div>
+    <input type="text" class="af-inp" id="story-caption-inp" placeholder="Texto opcional para tu historia" style="margin-bottom:10px">
+    <select class="af-inp" id="story-product-sel" style="margin-bottom:12px"><option value="">Sin producto destacado</option></select>
     <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px">La historia dura 24 horas · JPG, PNG, MP4</div>
     <button id="story-publish-btn" onclick="publishStory()" class="af-btn"><span>📤 Publicar historia</span></button>
   </div>
@@ -1465,6 +1467,7 @@ button,select,input{font-family:inherit}
         <div id="pub-story-preview" style="width:100%;aspect-ratio:9/16;max-height:360px;border-radius:16px;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center"></div>
       </div>
       <div class="fg"><label>Texto opcional</label><input class="fi" id="pub-story-caption" placeholder="Ej: Nuevo ingreso, últimas unidades"></div>
+      <div class="fg"><label>Producto destacado (opcional)</label><select class="fi" id="pub-story-product"><option value="">Sin producto</option></select></div>
       <button class="pub-btn" id="pub-story-submit-btn" onclick="publishStory()">⭕ Publicar historia</button>
     </div>
   </div></div>
@@ -1517,9 +1520,13 @@ button,select,input{font-family:inherit}
     <div id="sv-prod-area" style="display:none;position:absolute;bottom:0;left:0;right:0;padding:14px;background:linear-gradient(to top,rgba(0,0,0,.92),transparent);z-index:10">
       <div style="display:flex;align-items:center;gap:11px;padding:11px;border-radius:12px;margin-bottom:10px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18)">
         <span id="sv-pemoji" style="font-size:26px"></span>
-        <div><div id="sv-pname" style="font-size:12px;font-weight:700;color:#fff"></div><div id="sv-pprice" style="font-size:15px;font-weight:900;color:var(--amber)"></div></div>
+        <div><div id="sv-pname" style="font-size:12px;font-weight:700;color:#fff"></div><div id="sv-pprice" style="font-size:15px;font-weight:900;color:var(--amber)"></div><div id="sv-pdesc" style="font-size:10px;color:rgba(255,255,255,.72);margin-top:3px;line-height:1.4"></div></div>
       </div>
       <button onclick="addFromStory()" style="width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22;font-size:13px;font-weight:900;border:none;cursor:pointer">🛒 Comprar ahora</button>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input id="sv-reply" placeholder="Responder historia..." style="flex:1;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;outline:none">
+        <button onclick="replyToStory()" style="padding:0 14px;border-radius:12px;border:none;background:#fff;color:#051a0e;font-weight:800;cursor:pointer">Enviar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1770,12 +1777,13 @@ function getStoryList(){
   const now=Date.now();
   const activeCustom=STORY_STORE.filter(s=>new Date(s.expiresAt||0).getTime()>now);
   const ownStory=activeCustom.find(s=>s.uid==='me');
-  const ownBase={id:'st0',uid:'me',isOwn:true,isLive:!!currentLiveSession&&currentLiveSession.userId===(KMD.session?.user?.id||'local'),em:KMD.user?.avatar||'🦁',mediaUrl:KMD.user?.photoUrl||'',mediaType:KMD.user?.photoUrl?'image':'emoji',time:ownStory?'Activa':(currentLiveSession?'EN VIVO':'Tu historia'),seen:false};
+  const ownBase={id:'st0',uid:'me',isOwn:true,isLive:!!currentLiveSession&&currentLiveSession.userId===(KMD.session?.user?.id||'local'),em:'＋',mediaUrl:'',mediaType:'emoji',time:ownStory?'Activa':(currentLiveSession?'EN VIVO':'Agregar historia'),seen:false};
   if(ownStory){
     ownBase.mediaUrl=ownStory.mediaUrl;
     ownBase.mediaType=ownStory.mediaType;
     ownBase.caption=ownStory.caption||'';
-    ownBase.em=KMD.user?.photoUrl?'' :(KMD.user?.avatar||'🦁');
+    ownBase.em=KMD.user?.avatar||'🦁';
+    ownBase.pid=ownStory.pid||null;
   }
   return [ownBase,...activeCustom.filter(s=>s.uid!=='me'),...stories.filter(s=>!s.isOwn)];
 }
@@ -1814,6 +1822,13 @@ function updateProductCategoryFields(){
   if(inp1)inp1.placeholder=`Ej: ${cfg[0]}`;
   if(inp2)inp2.placeholder=`Ej: ${cfg[1]}`;
   if(text)text.placeholder=cfg[2];
+}
+function populateStoryProductOptions(){
+  const options=['<option value=\"\">Sin producto</option>',...getAllProducts().slice(0,40).map(p=>`<option value="${p.id}">${p.title}</option>`)];
+  const pubSel=document.getElementById('pub-story-product');
+  const modalSel=document.getElementById('story-product-sel');
+  if(pubSel)pubSel.innerHTML=options.join('');
+  if(modalSel)modalSel.innerHTML=options.join('');
 }
 
 function getCurrencyMeta(code){return CURRENCY_META[code]||CURRENCY_META.USD;}
@@ -2016,7 +2031,7 @@ function renderStories(){
         <div class="st-in">${s.mediaType==='image'&&s.mediaUrl?`<img src="${s.mediaUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:s.em}</div>
         ${s.isLive?'<div class="st-live">● VIVO</div>':''}
       </div>
-      <div class="st-nm">${s.isOwn?'Tú':getSeller(s.uid)?.name?.split(' ')[0]||KMD.user?.firstName||''}</div>
+      <div class="st-nm">${s.isOwn?(s.mediaUrl?'Tu historia':'Agregar'):getSeller(s.uid)?.name?.split(' ')[0]||KMD.user?.firstName||''}</div>
     </div>`).join('');
 }
 function renderBanners(){
@@ -2674,8 +2689,9 @@ function openStory(idx){
     document.getElementById('sv-pemoji').textContent=p.em;
     document.getElementById('sv-pname').textContent=p.title;
     document.getElementById('sv-pprice').textContent=fmt(p.price);
+    document.getElementById('sv-pdesc').textContent=p.desc||'';
     document.getElementById('sv-prod-area').style.display='block';
-  } else document.getElementById('sv-prod-area').style.display='none';
+  } else {document.getElementById('sv-prod-area').style.display='none';document.getElementById('sv-pdesc').textContent='';}
   document.getElementById('sv-overlay').classList.add('show');
   if(storyTimer)clearTimeout(storyTimer);
   storyTimer=setTimeout(()=>{
@@ -2693,7 +2709,18 @@ function openOwnStoryOrModal(){
     document.getElementById('sv-av').innerHTML=KMD.user?.photoUrl?`<img src="${KMD.user.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(KMD.user?.avatar||'🦁');
     document.getElementById('sv-user').textContent=KMD.user?.firstName||'Tú';
     document.getElementById('sv-time').textContent=own.caption||own.time||'Tu historia';
-    document.getElementById('sv-prod-area').style.display='none';
+    if(own.pid){
+      const p=getProduct(own.pid);
+      currentSvPid=own.pid;
+      document.getElementById('sv-pemoji').textContent=p.em;
+      document.getElementById('sv-pname').textContent=p.title;
+      document.getElementById('sv-pprice').textContent=fmt(p.price);
+      document.getElementById('sv-pdesc').textContent=p.desc||'';
+      document.getElementById('sv-prod-area').style.display='block';
+    }else{
+      document.getElementById('sv-prod-area').style.display='none';
+      document.getElementById('sv-pdesc').textContent='';
+    }
     document.getElementById('sv-prog').innerHTML=`<div style="flex:1;height:2.5px;border-radius:2px;background:#fff"></div>`;
     document.getElementById('sv-overlay').classList.add('show');
     if(storyTimer)clearTimeout(storyTimer);
@@ -2709,6 +2736,14 @@ function closeSV(){
 function addFromStory(){
   if(currentSvPid)addToCart(currentSvPid);
   closeSV();
+}
+function replyToStory(){
+  if(!KMD.loggedIn){openAuthModal('login');return;}
+  const inp=document.getElementById('sv-reply');
+  const text=(inp?.value||'').trim();
+  if(!text)return;
+  toast('💬 Respuesta enviada a la historia');
+  if(inp)inp.value='';
 }
 
 // ═══════════════════════════════════════
@@ -3960,7 +3995,7 @@ function initStoriesTab(){
   feed.innerHTML=active.map((story,idx)=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="${story.isOwn?'openOwnStoryOrModal()':`openStory(${Math.max(0,active.filter(s=>!s.isOwn).findIndex(s=>s.id==='${story.id}'))})`}"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px;border:${story.isOwn&&story.mediaUrl?'2px solid #fb7185':'none'}">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${story.uid==='me'?'Tu historia':(getSeller(story.uid)?.name||'Historia')}</div><div style="font-size:11px;color:var(--t3)">${story.caption||story.time||'Disponible por 24 horas'}</div></div><div style="font-size:10px;color:var(--g);font-weight:800">Ver</div></div>`).join('');
 }
 
-function openStoryModal(){requireAuth(()=>{pendingStoryDataUrl=null;pendingStoryType='image';const prev=document.getElementById('story-preview');if(prev)prev.innerHTML='📷<input type="file" id="story-file-inp" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)">';const pubPrev=document.getElementById('pub-story-preview');if(pubPrev)pubPrev.innerHTML='';const pubWrap=document.getElementById('pub-story-preview-wrap');if(pubWrap)pubWrap.style.display='none';const cap=document.getElementById('pub-story-caption');if(cap)cap.value='';afMsg('story-msg','ok','');document.getElementById('story-create-modal').classList.add('open');});}
+function openStoryModal(){requireAuth(()=>{pendingStoryDataUrl=null;pendingStoryType='image';const prev=document.getElementById('story-preview');if(prev)prev.innerHTML='📷<input type="file" id="story-file-inp" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)">';const pubPrev=document.getElementById('pub-story-preview');if(pubPrev)pubPrev.innerHTML='';const pubWrap=document.getElementById('pub-story-preview-wrap');if(pubWrap)pubWrap.style.display='none';const cap=document.getElementById('pub-story-caption');if(cap)cap.value='';const capModal=document.getElementById('story-caption-inp');if(capModal)capModal.value='';const prodSel=document.getElementById('pub-story-product');if(prodSel)prodSel.value='';const prodModal=document.getElementById('story-product-sel');if(prodModal)prodModal.value='';populateStoryProductOptions();afMsg('story-msg','ok','');document.getElementById('story-create-modal').classList.add('open');});}
 function closeStoryModal(){document.getElementById('story-create-modal').classList.remove('open');}
 function handleStoryFile(input){
   const file=input.files[0];if(!file)return;
@@ -3988,18 +4023,18 @@ async function publishStory(){
     em:KMD.user?.avatar||'🦁',
     mediaUrl:pendingStoryDataUrl,
     mediaType:pendingStoryType,
-    caption:(document.getElementById('pub-story-caption')?.value||'').trim(),
+    caption:((document.getElementById('story-caption-inp')?.value||'').trim()||(document.getElementById('pub-story-caption')?.value||'').trim()),
     time:'ahora',
     createdAt:new Date().toISOString(),
     expiresAt,
-    pid:null
+    pid:(document.getElementById('story-product-sel')?.value||document.getElementById('pub-story-product')?.value||null)||null
   };
   if(hasRealSession(KMD.session)){
     story.mediaUrl=await uploadUrlToBucket(SB_BUCKETS.stories,`stories/${KMD.session.user.id}/${story.id}.${story.mediaType==='video'?'mp4':'jpg'}`,story.mediaUrl);
     const sb=getSB();
     if(sb){
       try{
-        const payload={user_id:KMD.session.user.id,media_url:story.mediaUrl,media_type:story.mediaType,caption:story.caption,author_avatar:KMD.user?.avatar_value||KMD.user?.avatar||'🦁',author_avatar_type:KMD.user?.avatar_type||'emoji',created_at:story.createdAt,expires_at:expiresAt};
+        const payload={user_id:KMD.session.user.id,media_url:story.mediaUrl,media_type:story.mediaType,caption:story.caption,product_id:story.pid,author_avatar:KMD.user?.avatar_value||KMD.user?.avatar||'🦁',author_avatar_type:KMD.user?.avatar_type||'emoji',created_at:story.createdAt,expires_at:expiresAt};
         const { data } = await sb.from('stories').insert(payload).select('*').single();
         if(data)Object.assign(story,normalizeStoryRecord(data));
       }catch(e){console.warn('[KMD] Save story:',e.message);}
@@ -4010,6 +4045,9 @@ async function publishStory(){
   const pubWrap=document.getElementById('pub-story-preview-wrap');if(pubWrap)pubWrap.style.display='none';
   const pubPrev=document.getElementById('pub-story-preview');if(pubPrev)pubPrev.innerHTML='';
   const cap=document.getElementById('pub-story-caption');if(cap)cap.value='';
+  const capModal=document.getElementById('story-caption-inp');if(capModal)capModal.value='';
+  const prodSel=document.getElementById('pub-story-product');if(prodSel)prodSel.value='';
+  const prodModal=document.getElementById('story-product-sel');if(prodModal)prodModal.value='';
   toast('✅ ¡Historia publicada! Dura 24 horas.');
   afBtnLoad('story-publish-btn',false,'📤 Publicar historia');
   if(pubBtn){pubBtn.disabled=false;pubBtn.textContent='⭕ Publicar historia';}
