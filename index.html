@@ -220,6 +220,7 @@ button,select,input{font-family:inherit}
 .st-ring:hover{transform:scale(1.06)}
 .st-ring.seen{background:var(--surf3)}
 .st-ring.add{background:none;border:2px dashed rgba(52,211,153,.4)}
+.st-ring.own-active{background:linear-gradient(135deg,#fb7185,#fbbf24)}
 .st-in{width:100%;height:100%;border-radius:50%;background:var(--surf2);border:2.5px solid var(--bg2);display:flex;align-items:center;justify-content:center;font-size:19px}
 .st-live{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);background:var(--rose);color:#fff;font-size:7px;font-weight:900;padding:1px 5px;border-radius:50px;border:1.5px solid var(--bg2);white-space:nowrap;animation:live-pulse 2s infinite}
 @keyframes live-pulse{0%,100%{box-shadow:0 0 0 0 rgba(251,113,133,.5)}50%{box-shadow:0 0 0 5px rgba(251,113,133,0)}}
@@ -1570,6 +1571,90 @@ const stories=[
 ];
 const PRODUCT_STORE = [];
 const STORY_STORE = [];
+function normalizeProductRecord(row){
+  return {
+    id:String(row.id),
+    sid:row.user_id||'local',
+    title:row.title||'Producto',
+    price:Number(row.price||0),
+    orig:row.orig_price?Number(row.orig_price):null,
+    cat:row.category||'tecnologia',
+    em:categoryEmoji(row.category||'tecnologia'),
+    stock:Number(row.stock||0),
+    rating:Number(row.rating||5),
+    reviews:Number(row.reviews_count||0),
+    free:!!row.free_shipping,
+    desc:row.description||'',
+    condition:row.condition||'Nuevo',
+    sellerName:row.seller_name||'Mi tienda',
+    media:Array.isArray(row.media_urls)?row.media_urls:[],
+    variants:row.variants||{},
+  };
+}
+function normalizePostRecord(row){
+  return {
+    id:String(row.id),
+    userId:row.user_id||'local',
+    authorName:row.author_name||'Usuario',
+    authorAvatar:row.author_avatar||'🦁',
+    authorAvatarType:row.author_avatar_type||'emoji',
+    authorHandle:row.author_handle||'@usuario',
+    text:row.content||'',
+    imageUrl:row.media_type==='image'?row.media_url||'':'',
+    videoUrl:row.media_type==='video'?row.media_url||'':'',
+    likes:Number(row.likes_count||0),
+    comments:Array.isArray(row.comments_data)?row.comments_data:[],
+    timeAgo:'recién publicado',
+    createdAt:row.created_at||new Date().toISOString(),
+  };
+}
+function normalizeStoryRecord(row){
+  return {
+    id:String(row.id),
+    uid:row.user_id===KMD.session?.user?.id?'me':(row.user_id||'local'),
+    isOwn:row.user_id===KMD.session?.user?.id,
+    em:row.author_avatar_type==='emoji'?(row.author_avatar||'🦁'):'🦁',
+    mediaUrl:row.media_url||'',
+    mediaType:row.media_type||'image',
+    caption:row.caption||'',
+    time:'activa',
+    createdAt:row.created_at||new Date().toISOString(),
+    expiresAt:row.expires_at||new Date(Date.now()+24*60*60*1000).toISOString(),
+    pid:row.product_id||null
+  };
+}
+function normalizeLiveRecord(row){
+  return {
+    id:String(row.id),
+    userId:row.user_id||'local',
+    title:row.title||'Live',
+    status:row.status||'live',
+    startedAt:row.started_at||new Date().toISOString(),
+    viewerCount:Number(row.viewer_count||liveViewers),
+    sellerName:row.seller_name||'Live',
+    sellerAvatar:row.seller_avatar||'📡'
+  };
+}
+async function loadSupabaseContent(){
+  const sb=getSB(); if(!sb) return;
+  try{
+    const { data } = await sb.from('products').select('*').order('created_at',{ascending:false}).limit(40);
+    if(Array.isArray(data)){ PRODUCT_STORE.splice(0,PRODUCT_STORE.length,...data.map(normalizeProductRecord)); }
+  }catch(e){ console.warn('[KMD] Load products:',e.message); }
+  try{
+    const { data } = await sb.from('posts').select('*').order('created_at',{ascending:false}).limit(40);
+    if(Array.isArray(data)){ POSTS_STORE.splice(0,POSTS_STORE.length,...data.map(normalizePostRecord)); }
+  }catch(e){ console.warn('[KMD] Load posts:',e.message); }
+  try{
+    const now=new Date().toISOString();
+    const { data } = await sb.from('stories').select('*').gt('expires_at',now).order('created_at',{ascending:false}).limit(30);
+    if(Array.isArray(data)){ STORY_STORE.splice(0,STORY_STORE.length,...data.map(normalizeStoryRecord)); }
+  }catch(e){ console.warn('[KMD] Load stories:',e.message); }
+  try{
+    const { data } = await sb.from('live_sessions').select('*').eq('status','live').order('started_at',{ascending:false}).limit(1).maybeSingle();
+    if(data)currentLiveSession=normalizeLiveRecord(data);
+  }catch(e){ console.warn('[KMD] Load live:',e.message); }
+}
 const banners=[
   {t:'Semana Tech 🔥',s:'Hasta 40% OFF en electrónica',b:'⏰ SOLO HOY',em:'💻',bg:'linear-gradient(135deg,#064E3B,#065f46)'},
   {t:'Nueva Colección 2026',s:'Primavera-Verano disponible',b:'✨ NUEVO',em:'👗',bg:'linear-gradient(135deg,#4a044e,#701a75)'},
@@ -1685,7 +1770,7 @@ function getStoryList(){
   const now=Date.now();
   const activeCustom=STORY_STORE.filter(s=>new Date(s.expiresAt||0).getTime()>now);
   const ownStory=activeCustom.find(s=>s.uid==='me');
-  const ownBase={id:'st0',uid:'me',isOwn:true,em:KMD.user?.avatar||'🦁',mediaUrl:KMD.user?.photoUrl||'',mediaType:KMD.user?.photoUrl?'image':'emoji',time:ownStory?'Activa':'Tu historia',seen:false};
+  const ownBase={id:'st0',uid:'me',isOwn:true,isLive:!!currentLiveSession&&currentLiveSession.userId===(KMD.session?.user?.id||'local'),em:KMD.user?.avatar||'🦁',mediaUrl:KMD.user?.photoUrl||'',mediaType:KMD.user?.photoUrl?'image':'emoji',time:ownStory?'Activa':(currentLiveSession?'EN VIVO':'Tu historia'),seen:false};
   if(ownStory){
     ownBase.mediaUrl=ownStory.mediaUrl;
     ownBase.mediaType=ownStory.mediaType;
@@ -1893,11 +1978,41 @@ function renderHome(){
   renderFeed(posts);
   renderRP();
 }
+function getHomeSocialPosts(){
+  return POSTS_STORE.slice(0,12);
+}
+function buildHomeSocialCard(post){
+  const avHtml=post.authorAvatarType==='image'&&post.authorAvatar?`<img src="${post.authorAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:post.authorAvatar||'👤';
+  return `<div class="pc">
+    <div class="ph">
+      <div class="pav">${avHtml}</div>
+      <div style="flex:1;min-width:0">
+        <div class="pa">${post.authorName}</div>
+        <div class="pt2">${post.authorHandle} · ${post.timeAgo||'ahora'}</div>
+      </div>
+      <button class="pab" onclick="sharePost('${post.id}')">📤</button>
+    </div>
+    <div class="ptxt">${escHtml(post.text||'')}</div>
+    ${post.imageUrl?`<div style="padding:0 14px 12px"><img src="${post.imageUrl}" style="width:100%;border-radius:14px;max-height:420px;object-fit:cover;display:block"></div>`:''}
+    ${post.videoUrl?`<div style="padding:0 14px 12px"><video src="${post.videoUrl}" style="width:100%;border-radius:14px;max-height:420px;display:block" controls></video></div>`:''}
+    <div class="pacts">
+      <button class="pab ${LIKED_POSTS.has(post.id)?'liked':''}" onclick="togglePostLike('${post.id}',this)">${LIKED_POSTS.has(post.id)?'❤️':'🤍'} <span id="lc-home-${post.id}">${post.likes||0}</span></button>
+      <button class="pab" onclick="toggleComments('${post.id}')">💬 ${(post.comments||[]).length}</button>
+      <button class="pab" onclick="sharePost('${post.id}')">↗️</button>
+    </div>
+    <div id="comments-${post.id}" style="display:none;padding:0 14px 14px">
+      <div class="comment-thread">
+        ${(post.comments||[]).map(c=>`<div class="comment-item"><div class="comment-av">${c.av||'💬'}</div><div class="comment-body"><div class="comment-user">${c.user}</div>${escHtml(c.text)}</div></div>`).join('')}
+        ${KMD.loggedIn?`<div class="comment-inp-row"><div class="comment-av" style="overflow:hidden">${KMD.user?.photoUrl?`<img src="${KMD.user.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:KMD.user?.avatar||'🦁'}</div><input class="comment-field" id="cinp-${post.id}" placeholder="Escribí un comentario..." onkeydown="if(event.key==='Enter')addComment('${post.id}')"><button class="comment-send" onclick="addComment('${post.id}')">➤</button></div>`:''}
+      </div>
+    </div>
+  </div>`;
+}
 function renderStories(){
   const activeStories=getStoryList();
   document.getElementById('story-row').innerHTML=activeStories.map((s,i)=>`
-    <div class="st" onclick="${s.isOwn?"openStoryModal()":s.isLive?"nav('live')":"openStory("+i+")"}">
-      <div class="st-ring ${s.seen?'seen':s.isOwn?'add':''}">
+    <div class="st" onclick="${s.isOwn?"openOwnStoryOrModal()":s.isLive?"nav('live')":"openStory("+i+")"}">
+      <div class="st-ring ${s.seen?'seen':s.isOwn&&!s.caption&&!s.mediaUrl?'add':s.isOwn?'own-active':''}">
         <div class="st-in">${s.mediaType==='image'&&s.mediaUrl?`<img src="${s.mediaUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:s.em}</div>
         ${s.isLive?'<div class="st-live">● VIVO</div>':''}
       </div>
@@ -1920,7 +2035,7 @@ function setFTab(el,idx){
 }
 function renderFeed(pts){
   currentFeedPosts=pts;
-  document.getElementById('feed-center').innerHTML=pts.map(buildPost).join('');
+  document.getElementById('feed-center').innerHTML=[...getHomeSocialPosts().map(buildHomeSocialCard),...pts.map(buildPost)].join('');
 }
 function buildPost(post){
   const s=getSeller(post.sid);
@@ -1940,13 +2055,13 @@ function buildPost(post){
     <div class="ptxt">${post.text}</div>
     ${(post.tags||[]).length?`<div class="ptags">${post.tags.map(t=>`<span class="ptag">${t}</span>`).join('')}</div>`:''}
     <div class="pmedia" style="background:${bg}">
-      <span style="font-size:60px">${post.em}</span>
+      ${post.mediaUrl&&post.mediaType==='image'?`<img src="${post.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:60px">${post.em}</span>`}
       ${isLive?`<div class="live-badge2">● VIVO</div><div class="vcount2">👁 ${fmtN(post.viewers||0)} viendo</div>`:''}
       ${prods[0]?`<button class="buy-pill" onclick="${isLive?"nav('live')":`addToCart('${prods[0].id}')`}">${isLive?'📡 Ver directo':'🛒 '+fmt(prods[0].price)}</button>`:''}
     </div>
     ${prods.length?`<div class="pprods">${prods.map(p=>`
       <div class="pchip">
-        <div class="pchip-img" style="background:${catBg(p.cat)}">${p.em}${disc(p.price,p.orig)?`<span class="pchip-d">−${disc(p.price,p.orig)}%</span>`:''}</div>
+        <div class="pchip-img" style="background:${catBg(p.cat)}">${p.media?.[0]?`<img src="${p.media[0]}" style="width:100%;height:100%;object-fit:cover">`:p.em}${disc(p.price,p.orig)?`<span class="pchip-d">−${disc(p.price,p.orig)}%</span>`:''}</div>
         <div class="pchip-body">
           <div class="pchip-nm">${p.title}</div>
           <div class="pchip-pr">${fmt(p.price)}</div>
@@ -1966,7 +2081,8 @@ function toggleLike(btn,id){
   else{likes.add(id);btn.classList.add('liked');btn.innerHTML=btn.innerHTML.replace('🤍','❤️');toast('❤️ ¡Te gustó!');}
 }
 function renderRP(){
-  document.getElementById('rp-live').innerHTML=sellers.filter(s=>s.isLive).map(s=>`
+  const liveCards=[...(currentLiveSession?[{name:currentLiveSession.sellerName||'Tu live',av:currentLiveSession.sellerAvatar||'📡'}]:[]),...sellers.filter(s=>s.isLive)].slice(0,4);
+  document.getElementById('rp-live').innerHTML=liveCards.map(s=>`
     <div class="lcard" onclick="nav('live')">
       <div class="lcard-top">
         <div class="lcard-av">${s.av}</div>
@@ -2019,18 +2135,19 @@ function renderProdGrid(){
 }
 function buildProdCard(p){
   const s=getSeller(p.sid);
+  const sellerName=p.sellerName||s.name;
   const d=disc(p.price,p.orig);
   const isFav=favs.has(p.id);
   return `<div class="pcd" onclick="toast('🛍️ ${p.title}')">
     <div class="pcd-img" style="background:${catBg(p.cat)}">
-      ${p.em}
+      ${p.media?.[0]?`<img src="${p.media[0]}" style="width:100%;height:100%;object-fit:cover">`:p.em}
       ${d?`<span style="position:absolute;top:7px;left:7px;background:var(--g2);color:#022C22;font-size:8px;font-weight:900;padding:2px 5px;border-radius:4px">−${d}%</span>`:''}
       <button class="pcd-wish ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav(this,'${p.id}')">${isFav?'❤️':'🤍'}</button>
     </div>
     <div class="pcd-body">
       <div class="pcd-cat">${p.cat}</div>
       <div class="pcd-nm">${p.title}</div>
-      <div class="pcd-sl">por ${s.name}</div>
+      <div class="pcd-sl">por ${sellerName}</div>
       <div class="pcd-pr-row"><span class="pcd-price">${fmt(p.price)}</span>${p.orig?`<span class="pcd-old">${fmt(p.orig)}</span>`:''}</div>
       <div class="pcd-rat">${'★'.repeat(Math.floor(p.rating))}${'☆'.repeat(5-Math.floor(p.rating))} <span>(${p.reviews})</span></div>
       <button class="pcd-btn" onclick="event.stopPropagation();addToCart('${p.id}')">🛒 Agregar al carrito</button>
@@ -2274,6 +2391,10 @@ function renderLivePage(){
       <span class="lv-pe">${p.em}</span>
       <div><div class="lv-pn">${p.title}</div><div class="lv-pp">${fmt(p.price)}</div><span class="lv-pb">🛒 Comprar</span></div>
     </div>`).join('');
+  const liveName=currentLiveSession?.sellerName||'TechStore UY';
+  const liveTitle=currentLiveSession?.title||'Directo en Vivo';
+  const nameEl=document.querySelector('.lv-snm'); if(nameEl)nameEl.textContent=liveName;
+  const heroLabel=document.querySelector('#pg-live [style*="font-size:14px;font-weight:700"]'); if(heroLabel)heroLabel.textContent=`${liveName} — ${liveTitle}`;
   const msgs=document.getElementById('lc-msgs');
   msgs.innerHTML=`
     <div class="lcm"><span class="lcm-av">🐱</span><div><div class="lcm-u">@laura_uy</div><div class="lcm-t">¡Hola! 👋</div></div></div>
@@ -2349,7 +2470,7 @@ function resetProductComposer(){
   renderProductMediaPreview();
   updateProductCategoryFields();
 }
-function publishProduct(){
+async function publishProduct(){
   if(!KMD.loggedIn){openAuthModal('login');return;}
   const title=(document.getElementById('pub-title')?.value||'').trim();
   const price=Number(document.getElementById('pub-price')?.value||0);
@@ -2374,6 +2495,7 @@ function publishProduct(){
     rating:5,
     reviews:0,
     free:false,
+    sellerName:[KMD.user?.firstName,KMD.user?.lastName].filter(Boolean).join(' ')||KMD.user?.email?.split('@')[0]||'Mi tienda',
     desc:[(document.getElementById('pub-desc')?.value||'').trim(),variantSummary].filter(Boolean).join(' · '),
     condition:document.getElementById('pub-condition')?.value||'Nuevo',
     media:pendingProductMedia.map(item=>item.url),
@@ -2389,6 +2511,22 @@ function publishProduct(){
       notes:(document.getElementById('pub-category-notes')?.value||'').trim(),
     }
   };
+  const btn=document.querySelector('#pub-panel-product .pub-btn'); if(btn){btn.disabled=true;btn.textContent='Publicando...';}
+  if(hasRealSession(KMD.session)){
+    product.media=await Promise.all(product.media.map((url,idx)=>uploadUrlToBucket(SB_BUCKETS.products,`products/${KMD.session.user.id}/${product.id}-${idx}.jpg`,url)));
+    const sb=getSB();
+    if(sb){
+      try{
+        const payload={
+          user_id:KMD.session.user.id,title:product.title,price:product.price,category:product.cat,
+          description:product.desc,stock:product.stock,condition:product.condition,media_urls:product.media,
+          variants:product.variants,seller_name:product.sellerName,created_at:new Date().toISOString()
+        };
+        const { data } = await sb.from('products').insert(payload).select('*').single();
+        if(data)Object.assign(product,normalizeProductRecord(data));
+      }catch(e){console.warn('[KMD] Save product:',e.message);}
+    }
+  }
   PRODUCT_STORE.unshift(product);
   POSTS_STORE.unshift({
     id:'prod_post_'+Date.now(),
@@ -2409,6 +2547,7 @@ function publishProduct(){
   renderPostsFeed();
   renderHome();
   toast('🚀 ¡Producto publicado con variantes y detalles!');
+  if(btn){btn.disabled=false;btn.textContent='🚀 Publicar producto';}
   setTimeout(()=>nav('perfil'),900);
 }
 function previewPublishPostImg(input){
@@ -2431,12 +2570,12 @@ function previewPublishPostVid(input){
   const img=document.getElementById('pub-post-img-prev');if(img)img.src='';
 }
 function clearPublishPostVideo(){pendingPostMedia.video='';const inp=document.getElementById('pub-post-vid-inp');if(inp)inp.value='';document.getElementById('pub-post-video-preview').style.display='none';document.getElementById('pub-post-vid-prev').src='';}
-function publishPostFromComposer(){
+async function publishPostFromComposer(){
   if(!KMD.loggedIn){openAuthModal('login');return;}
   const text=(document.getElementById('pub-post-text')?.value||'').trim();
   if(!text&&!pendingPostMedia.image&&!pendingPostMedia.video){toast('⚠️ Agregá texto, foto o video');return;}
   const btn=document.getElementById('pub-post-submit-btn');if(btn){btn.disabled=true;btn.textContent='Publicando...';}
-  POSTS_STORE.unshift({
+  const post={
     id:'p_'+Date.now(),
     userId:KMD.session?.user?.id||'local',
     authorName:[KMD.user.firstName,KMD.user.lastName].filter(Boolean).join(' ')||KMD.user.email?.split('@')[0],
@@ -2449,12 +2588,34 @@ function publishPostFromComposer(){
     likes:0,
     comments:[],
     timeAgo:'ahora mismo',
-  });
+  };
+  if(hasRealSession(KMD.session)){
+    const mediaSrc=post.imageUrl||post.videoUrl;
+    const mediaType=post.videoUrl?'video':post.imageUrl?'image':'';
+    const ext=mediaType==='video'?'mp4':'jpg';
+    const uploaded=mediaSrc?await uploadUrlToBucket(SB_BUCKETS.posts,`posts/${KMD.session.user.id}/${post.id}.${ext}`,mediaSrc):'';
+    if(mediaType==='image')post.imageUrl=uploaded;
+    if(mediaType==='video')post.videoUrl=uploaded;
+    const sb=getSB();
+    if(sb){
+      try{
+        const payload={
+          user_id:KMD.session.user.id,content:text,media_url:uploaded,media_type:mediaType,
+          author_name:post.authorName,author_handle:post.authorHandle,author_avatar:post.authorAvatar,
+          author_avatar_type:post.authorAvatarType,created_at:new Date().toISOString()
+        };
+        const { data } = await sb.from('posts').insert(payload).select('*').single();
+        if(data)Object.assign(post,normalizePostRecord(data));
+      }catch(e){console.warn('[KMD] Save post:',e.message);}
+    }
+  }
+  POSTS_STORE.unshift(post);
   document.getElementById('pub-post-text').value='';
   clearPublishPostImage();
   clearPublishPostVideo();
   if(btn){btn.disabled=false;btn.textContent='📤 Publicar post';}
   renderPostsFeed();
+  renderHome();
   toast('📸 ¡Post publicado!');
 }
 
@@ -2521,6 +2682,25 @@ function openStory(idx){
     const no=getStoryList().filter(s=>!s.isOwn);
     if(idx+1<no.length)openStory(idx+1);else closeSV();
   },5100);
+}
+function openOwnStoryOrModal(){
+  const own=getStoryList()[0];
+  if(own?.isLive&&!(own.mediaUrl&&own.mediaType)){ nav('live'); return; }
+  if(own&&((own.mediaType==='image'&&own.mediaUrl)||(own.mediaType==='video'&&own.mediaUrl))){
+    const all=getStoryList();
+    const syntheticIdx=Math.max(0,all.filter(s=>!s.isOwn).findIndex(s=>s.id===own.id));
+    document.getElementById('sv-content').innerHTML=own.mediaType==='video'?`<video src="${own.mediaUrl}" style="width:100%;height:100%;object-fit:cover" autoplay muted controls></video>`:`<img src="${own.mediaUrl}" style="width:100%;height:100%;object-fit:cover" alt="">`;
+    document.getElementById('sv-av').innerHTML=KMD.user?.photoUrl?`<img src="${KMD.user.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(KMD.user?.avatar||'🦁');
+    document.getElementById('sv-user').textContent=KMD.user?.firstName||'Tú';
+    document.getElementById('sv-time').textContent=own.caption||own.time||'Tu historia';
+    document.getElementById('sv-prod-area').style.display='none';
+    document.getElementById('sv-prog').innerHTML=`<div style="flex:1;height:2.5px;border-radius:2px;background:#fff"></div>`;
+    document.getElementById('sv-overlay').classList.add('show');
+    if(storyTimer)clearTimeout(storyTimer);
+    storyTimer=setTimeout(closeSV,5100);
+    return;
+  }
+  openStoryModal();
 }
 function closeSV(){
   document.getElementById('sv-overlay').classList.remove('show');
@@ -3057,6 +3237,7 @@ const SB_KEY = 'sb_publishable_WuXm4DcjX4r4ZCLeAuBBbw__2OlJl4C';
 
 let _sb = null;
 let pendingOAuthCleanup = false;
+const SB_BUCKETS={avatars:'avatars',products:'product-media',posts:'post-media',stories:'story-media'};
 function getSB() {
   if (_sb) return _sb;
   try {
@@ -3071,6 +3252,20 @@ function getSB() {
   }
   catch(e) { console.info('[KMD] Demo mode:', e.message); }
   return _sb;
+}
+async function uploadUrlToBucket(bucketName, path, sourceUrl){
+  const sb=getSB();
+  if(!sb||!sourceUrl||!hasRealSession(KMD.session))return sourceUrl;
+  try{
+    const blob=await (await fetch(sourceUrl)).blob();
+    const { error } = await sb.storage.from(bucketName).upload(path,blob,{upsert:true});
+    if(error)throw error;
+    const { data } = sb.storage.from(bucketName).getPublicUrl(path);
+    return data.publicUrl+'?t='+Date.now();
+  }catch(e){
+    console.warn(`[KMD] Upload ${bucketName}:`,e.message);
+    return sourceUrl;
+  }
 }
 
 const KSTORE = 'kmd_user_v1';
@@ -3649,10 +3844,21 @@ async function submitPost(){
     text,imageUrl:imgSrc,videoUrl:vidSrc,likes:0,comments:[],
     createdAt:new Date().toISOString(),timeAgo:'ahora mismo',
   };
-  // In production: await getSB().from('posts').insert({ user_id: post.userId, content: text, media_url: imgSrc||vidSrc, media_type: post.mediaType })
+  if(hasRealSession(KMD.session)){
+    const uploaded=post.mediaUrl?await uploadUrlToBucket(SB_BUCKETS.posts,`posts/${KMD.session.user.id}/${post.id}.${post.mediaType==='video'?'mp4':'jpg'}`,post.mediaUrl):'';
+    post.mediaUrl=uploaded; if(post.mediaType==='image')post.imageUrl=uploaded; if(post.mediaType==='video')post.videoUrl=uploaded;
+    const sb=getSB();
+    if(sb){
+      try{
+        const payload={user_id:post.userId,content:text,media_url:uploaded,media_type:post.mediaType,author_name:post.authorName,author_handle:post.authorHandle,author_avatar:post.authorAvatar,author_avatar_type:post.authorAvatarType,created_at:new Date().toISOString()};
+        const { data } = await sb.from('posts').insert(payload).select('*').single();
+        if(data)Object.assign(post,normalizePostRecord(data));
+      }catch(e){console.warn('[KMD] Save post:',e.message);}
+    }
+  }
   POSTS_STORE.unshift(post);
   document.getElementById('post-text-inp').value='';clearPostImage();clearPostVideo();
-  renderPostsFeed();toast('✅ ¡Post publicado!');
+  renderPostsFeed();renderHome();toast('✅ ¡Post publicado!');
   if(btn){btn.disabled=false;btn.textContent='📤 Publicar';}
 }
 
@@ -3746,12 +3952,12 @@ function renderStoriesTab(){
 }
 function initStoriesTab(){
   const feed=document.getElementById('stories-tab-feed');if(!feed)return;
-  const active=getStoryList().filter(s=>!s.isOwn);
+  const active=getStoryList();
   if(!active.length){
     feed.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--t3)"><div style="font-size:40px;margin-bottom:12px">⭕</div><div style="font-size:14px;font-weight:700;color:var(--t2);margin-bottom:4px">Historias activas</div><div style="font-size:12px;line-height:1.6">Las historias aparecen en la barra superior<br>y duran 24 horas.</div></div>`;
     return;
   }
-  feed.innerHTML=active.map((story,idx)=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="openStory(${idx})"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${story.uid==='me'?'Tu historia':(getSeller(story.uid)?.name||'Historia')}</div><div style="font-size:11px;color:var(--t3)">${story.caption||story.time||'Disponible por 24 horas'}</div></div><div style="font-size:10px;color:var(--g);font-weight:800">Ver</div></div>`).join('');
+  feed.innerHTML=active.map((story,idx)=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="${story.isOwn?'openOwnStoryOrModal()':`openStory(${Math.max(0,active.filter(s=>!s.isOwn).findIndex(s=>s.id==='${story.id}'))})`}"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px;border:${story.isOwn&&story.mediaUrl?'2px solid #fb7185':'none'}">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${story.uid==='me'?'Tu historia':(getSeller(story.uid)?.name||'Historia')}</div><div style="font-size:11px;color:var(--t3)">${story.caption||story.time||'Disponible por 24 horas'}</div></div><div style="font-size:10px;color:var(--g);font-weight:800">Ver</div></div>`).join('');
 }
 
 function openStoryModal(){requireAuth(()=>{pendingStoryDataUrl=null;pendingStoryType='image';const prev=document.getElementById('story-preview');if(prev)prev.innerHTML='📷<input type="file" id="story-file-inp" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)">';const pubPrev=document.getElementById('pub-story-preview');if(pubPrev)pubPrev.innerHTML='';const pubWrap=document.getElementById('pub-story-preview-wrap');if(pubWrap)pubWrap.style.display='none';const cap=document.getElementById('pub-story-caption');if(cap)cap.value='';afMsg('story-msg','ok','');document.getElementById('story-create-modal').classList.add('open');});}
@@ -3775,7 +3981,7 @@ async function publishStory(){
   afBtnLoad('story-publish-btn',true,'');
   const pubBtn=document.getElementById('pub-story-submit-btn');if(pubBtn){pubBtn.disabled=true;pubBtn.textContent='Publicando...';}
   const expiresAt=new Date(Date.now()+24*60*60*1000).toISOString();
-  STORY_STORE.unshift({
+  const story={
     id:'story_'+Date.now(),
     uid:'me',
     isOwn:true,
@@ -3787,10 +3993,19 @@ async function publishStory(){
     createdAt:new Date().toISOString(),
     expiresAt,
     pid:null
-  });
-  // In production:
-  // const sb = getSB();
-  // await sb.from('stories').insert({ user_id: KMD.session.user.id, media_url: pendingStoryDataUrl, media_type: 'image', created_at: new Date().toISOString(), expires_at: expiresAt });
+  };
+  if(hasRealSession(KMD.session)){
+    story.mediaUrl=await uploadUrlToBucket(SB_BUCKETS.stories,`stories/${KMD.session.user.id}/${story.id}.${story.mediaType==='video'?'mp4':'jpg'}`,story.mediaUrl);
+    const sb=getSB();
+    if(sb){
+      try{
+        const payload={user_id:KMD.session.user.id,media_url:story.mediaUrl,media_type:story.mediaType,caption:story.caption,author_avatar:KMD.user?.avatar_value||KMD.user?.avatar||'🦁',author_avatar_type:KMD.user?.avatar_type||'emoji',created_at:story.createdAt,expires_at:expiresAt};
+        const { data } = await sb.from('stories').insert(payload).select('*').single();
+        if(data)Object.assign(story,normalizeStoryRecord(data));
+      }catch(e){console.warn('[KMD] Save story:',e.message);}
+    }
+  }
+  STORY_STORE.unshift(story);
   pendingStoryDataUrl=null;closeStoryModal();renderStories();initStoriesTab();
   const pubWrap=document.getElementById('pub-story-preview-wrap');if(pubWrap)pubWrap.style.display='none';
   const pubPrev=document.getElementById('pub-story-preview');if(pubPrev)pubPrev.innerHTML='';
@@ -3814,13 +4029,20 @@ async function startLiveSession(){
   const title=(document.getElementById('live-title-inp')?.value||'').trim()||'Live de '+KMD.user.firstName;
   closeLiveModal();
   // Optimistic UI: mark as live
-  currentLiveSession={ id:'live-'+Date.now(), userId:KMD.session?.user?.id||'local', title, status:'live', startedAt:new Date().toISOString() };
-  // In production:
-  // const sb = getSB();
-  // const { data } = await sb.from('live_sessions').insert({ user_id: KMD.session.user.id, title, status: 'live', started_at: new Date().toISOString() }).select().single();
-  // currentLiveSession = data;
+  currentLiveSession={ id:'live-'+Date.now(), userId:KMD.session?.user?.id||'local', title, status:'live', startedAt:new Date().toISOString(), sellerName:[KMD.user?.firstName,KMD.user?.lastName].filter(Boolean).join(' ')||KMD.user?.email?.split('@')[0]||'Tu live', sellerAvatar:KMD.user?.avatar_value||KMD.user?.avatar||'📡', viewerCount:liveViewers };
+  if(hasRealSession(KMD.session)){
+    const sb=getSB();
+    if(sb){
+      try{
+        const payload={user_id:KMD.session.user.id,title,status:'live',started_at:currentLiveSession.startedAt,seller_name:currentLiveSession.sellerName,seller_avatar:currentLiveSession.sellerAvatar,viewer_count:liveViewers};
+        const { data } = await sb.from('live_sessions').insert(payload).select('*').single();
+        if(data)currentLiveSession=normalizeLiveRecord(data);
+      }catch(e){console.warn('[KMD] Save live:',e.message);}
+    }
+  }
   // Update stories bar to show LIVE badge
   renderStories();
+  renderRP();
   _showSection('live');
   toast('🔴 ¡Estás en vivo! Tu audiencia ya puede verte.');
 }
@@ -3956,14 +4178,16 @@ async function initAuth(){
   setGoogleLoading(false);
   hdrGuest();
 }
-
-
 // ── App startup ──
-initAuth();
-renderCurrencySwitcher();
-updateProductCategoryFields();
-renderHome();
-updateBadges();
+async function startApp(){
+  await initAuth();
+  await loadSupabaseContent();
+  renderCurrencySwitcher();
+  updateProductCategoryFields();
+  renderHome();
+  updateBadges();
+}
+startApp();
 </script>
 </body>
 </html>
