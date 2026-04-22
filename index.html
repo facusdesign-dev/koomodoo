@@ -3471,13 +3471,7 @@ async function doLogin(){
       });
 
       if(error) throw error;
-
-      const stored = loadUser();
-      const profile = (stored?.email === email)
-        ? stored
-        : mkDefault(email, data.user?.user_metadata || {});
-
-      await onSignedIn(data.session, profile);
+      await onSignedIn(data.session);
 
     }catch(e){
       afMsg('amsg-l','err', authErrMsg(e.message));
@@ -3529,6 +3523,138 @@ function mergeProfile(email, meta, stored){
   merged.profileComplete=profileDone(merged);
   return merged;
 }
+function makeUsername(email,id=''){
+  const base=String(email||'user')
+    .split('@')[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g,'')
+    .slice(0,18)||'user';
+  const suffix=String(id||'').replace(/-/g,'').slice(0,6)||Math.random().toString(36).slice(2,8);
+  return `${base}_${suffix}`;
+}
+function getProfileValue(obj, keys, fallback=''){
+  for(const key of keys){
+    if(obj && obj[key] !== undefined && obj[key] !== null && obj[key] !== '') return obj[key];
+  }
+  return fallback;
+}
+function getProfileBool(obj, keys){
+  for(const key of keys){
+    if(obj && typeof obj[key] === 'boolean') return obj[key];
+  }
+  return undefined;
+}
+function getNameParts(meta={}){
+  const fullName=getProfileValue(meta,['full_name','fullName'],'').trim();
+  const firstFromFull=fullName?fullName.split(/\s+/)[0]:'';
+  const lastFromFull=fullName?fullName.split(/\s+/).slice(1).join(' '):'';
+  return {
+    firstName:getProfileValue(meta,['firstName','first_name','given_name'],firstFromFull),
+    lastName:getProfileValue(meta,['lastName','last_name','family_name'],lastFromFull)
+  };
+}
+function buildProfilesPayload(user, seed={}, existingRow=null){
+  const meta=user?.user_metadata||{};
+  const names=getNameParts({...meta,...seed});
+  const avatar=getProfileValue(seed,['avatar','photoUrl','avatar_value'],getProfileValue(meta,['avatar','avatar_url','picture'],''));
+  const explicitComplete=getProfileBool(seed,['profileComplete']);
+  const existingComplete=getProfileBool(existingRow,['profileComplete','profile_complete']);
+  const profileComplete=explicitComplete!==undefined?explicitComplete:(existingComplete!==undefined?existingComplete:false);
+  return {
+    id:user.id,
+    email:user.email||seed.email||getProfileValue(existingRow,['email'],''),
+    firstName:names.firstName||getProfileValue(existingRow,['firstName','first_name'],''),
+    lastName:names.lastName||getProfileValue(existingRow,['lastName','last_name'],''),
+    username:getProfileValue(seed,['username'],getProfileValue(existingRow,['username'],makeUsername(user.email,user.id))),
+    avatar,
+    role:getProfileValue(seed,['role'],getProfileValue(existingRow,['role'],'BUYER'))||'BUYER',
+    profileComplete,
+    createdAt:getProfileValue(existingRow,['createdAt','created_at'],seed.createdAt||new Date().toISOString())
+  };
+}
+function rowToAppProfile(user, row, seed={}){
+  const stored=loadUser();
+  const meta=user?.user_metadata||{};
+  const names=getNameParts({...meta,...seed,row});
+  const dbAvatar=getProfileValue(row,['avatar'],'');
+  const avatarLooksLikeUrl=/^https?:\/\//i.test(dbAvatar)||String(dbAvatar||'').startsWith('data:image/');
+  const merged=mergeProfile(user?.email||row?.email||seed?.email||'',{
+    ...meta,
+    ...seed,
+    firstName:getProfileValue(row,['firstName','first_name'],names.firstName),
+    lastName:getProfileValue(row,['lastName','last_name'],names.lastName),
+    username:getProfileValue(row,['username'],getProfileValue(seed,['username'],makeUsername(user?.email||row?.email,user?.id))),
+    role:getProfileValue(row,['role'],getProfileValue(seed,['role'],'BUYER')),
+    avatar:avatarLooksLikeUrl?(seed.avatar||'🦁'):(dbAvatar||getProfileValue(seed,['avatar'],'🦁')),
+    photoUrl:avatarLooksLikeUrl?dbAvatar:getProfileValue(seed,['photoUrl'],getProfileValue(meta,['avatar_url','picture'],'')),
+    avatar_type:avatarLooksLikeUrl?'image':getProfileValue(seed,['avatar_type'],getProfileValue(meta,['avatar_type'],'emoji')),
+    avatar_value:avatarLooksLikeUrl?dbAvatar:getProfileValue(seed,['avatar_value'],dbAvatar||getProfileValue(seed,['avatar'],'🦁')),
+    createdAt:getProfileValue(row,['createdAt','created_at'],seed.createdAt||new Date().toISOString()),
+    profileComplete:getProfileBool(row,['profileComplete','profile_complete'])
+  },stored);
+  const explicitComplete=getProfileBool(row,['profileComplete','profile_complete']);
+  merged.id=user?.id||row?.id||merged.id;
+  merged.email=user?.email||row?.email||merged.email;
+  merged.profileComplete=explicitComplete!==undefined?explicitComplete:profileDone(merged);
+  return merged;
+}
+async function fetchProfileRow(userId){
+  const sb=getSB();
+  if(!sb||!userId)return null;
+  const {data,error}=await sb.from('profiles').select('*').eq('id',userId).maybeSingle();
+  if(error)throw error;
+  return data||null;
+}
+async function createProfileRow(user, seed={}){
+  const sb=getSB();
+  if(!sb||!user?.id)return null;
+  const payload=buildProfilesPayload(user,seed);
+  const {data,error}=await sb.from('profiles').insert(payload).select().maybeSingle();
+  if(error)throw error;
+  return data||payload;
+}
+async function ensureProfileRecord(session, seed={}){
+  if(!session?.user)return null;
+  const sb=getSB();
+  if(!sb||!hasRealSession(session)){
+    return mergeProfile(session.user.email,session.user.user_metadata||seed,loadUser());
+  }
+  let authUser=session.user;
+  try{
+    const {data:{user}}=await sb.auth.getUser();
+    if(user)authUser=user;
+  }catch(e){
+    console.warn('[KMD] getUser:',e.message);
+  }
+  let row=null;
+  try{
+    row=await fetchProfileRow(authUser.id);
+    if(!row)row=await createProfileRow(authUser,seed);
+  }catch(e){
+    console.warn('[KMD] profiles sync:',e.message);
+    try{ row=await fetchProfileRow(authUser.id); }
+    catch(refetchErr){ console.warn('[KMD] profiles refetch:',refetchErr.message); }
+  }
+  return row?rowToAppProfile(authUser,row,seed):mergeProfile(authUser.email,authUser.user_metadata||seed,loadUser());
+}
+async function persistProfileRecord(profile){
+  const sb=getSB();
+  if(!sb||!hasRealSession(KMD.session)||!KMD.session?.user?.id)return null;
+  const payload={
+    id:KMD.session.user.id,
+    email:KMD.session.user.email||profile.email||'',
+    firstName:profile.firstName||'',
+    lastName:profile.lastName||'',
+    username:profile.username||makeUsername(KMD.session.user.email,KMD.session.user.id),
+    avatar:profile.photoUrl||profile.avatar_value||profile.avatar||'',
+    role:profile.role||'BUYER',
+    profileComplete:!!profile.profileComplete,
+    createdAt:profile.createdAt||new Date().toISOString()
+  };
+  const {data,error}=await sb.from('profiles').upsert(payload,{onConflict:'id'}).select().maybeSingle();
+  if(error)throw error;
+  return data||payload;
+}
 
 // ── RECUPERAR PASSWORD ────────────────────────────────────────────────
 async function doForgotPw(){
@@ -3569,11 +3695,12 @@ async function onSignedIn(session,profile){
     window.history.replaceState({},'',window.location.pathname);
     pendingOAuthCleanup=false;
   }
-  KMD.session=session;KMD.user={...profile,email:session?.user?.email||profile.email};KMD.loggedIn=true;
+  const resolvedProfile=await ensureProfileRecord(session,profile||session?.user?.user_metadata||{});
+  KMD.session=session;KMD.user={...resolvedProfile,email:session?.user?.email||resolvedProfile?.email};KMD.loggedIn=true;
   setLocalCurrencyByCountry(KMD.user.country||inferCountryCode());
   saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
   // Keep the flow inside this page so local-file usage does not break navigation.
-  if(!profileDone(KMD.user)){
+  if(KMD.user.profileComplete!==true){
     openCompleteProfile();
   }else{
     _showSection('home');
@@ -3612,6 +3739,8 @@ async function completeProfile(){
   if(sb && hasRealSession(KMD.session)){
     try{ await sb.auth.updateUser({ data: updated }); }
     catch(e){ console.warn('completeProfile: Supabase update failed —', e.message); }
+    try{ await persistProfileRecord(updated); }
+    catch(e){ console.warn('completeProfile: profiles upsert failed —', e.message); }
   }
 
   // Always update local state
@@ -3658,7 +3787,10 @@ async function saveCompleteProfile(){
     country:(KMD.user?.country||inferCountryCode()).toUpperCase(),
     role:document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role||'BUYER',
     avatar:curAv,avatar_type:'emoji',avatar_value:curAv,profileComplete:true,updatedAt:new Date().toISOString()};
-  const sb=getSB();if(sb&&hasRealSession(KMD.session)){try{await sb.auth.updateUser({data:updated});}catch(e){console.warn('SB:',e.message);}}
+  const sb=getSB();if(sb&&hasRealSession(KMD.session)){
+    try{await sb.auth.updateUser({data:updated});}catch(e){console.warn('SB:',e.message);}
+    try{await persistProfileRecord(updated);}catch(e){console.warn('[KMD] profiles upsert:',e.message);}
+  }
   setLocalCurrencyByCountry(updated.country);
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);closeCompleteProfile();
   _showSection('perfil');renderProfilePage();toast('✅ ¡Perfil completado! Bienvenido a KOOMODOO 🎉');
@@ -3698,6 +3830,7 @@ async function saveEditProfile(){
   if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
     try{const payload={data:updated};if(pw1)payload.password=pw1;const{error}=await sb.auth.updateUser(payload);if(error)throw error;}
     catch(e){afMsg('ep-msg','err',authErrMsg(e.message));afBtnLoad('ep-save-btn',false,'💾 Guardar cambios');return;}
+    try{await persistProfileRecord(updated);}catch(e){console.warn('[KMD] profiles upsert:',e.message);}
   }
   setLocalCurrencyByCountry(updated.country);
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);renderProfilePage();
@@ -3724,7 +3857,10 @@ async function saveProfilePhoto(){
       if(!upErr){const{data}=sb.storage.from('avatars').getPublicUrl(path);finalUrl=data.publicUrl+'?t='+Date.now();}}catch(e){console.warn('Storage:',e.message);}
   }
   const updated={...KMD.user,photoUrl:finalUrl,avatar_type:'image',avatar_value:finalUrl,updatedAt:new Date().toISOString()};
-  if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){try{await sb.auth.updateUser({data:updated});}catch{}}
+  if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
+    try{await sb.auth.updateUser({data:updated});}catch{}
+    try{await persistProfileRecord(updated);}catch(e){console.warn('[KMD] profiles upsert:',e.message);}
+  }
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);renderProfilePage();
   pendingPhotoDataUrl=null;closePhotoModal();toast('✅ Foto de perfil actualizada');afBtnLoad('photo-save-btn',false,'✅ Guardar foto');}
 
@@ -4132,24 +4268,7 @@ function listenAuth(){
   const sb=getSB();if(!sb)return;
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(event==='SIGNED_IN'&&session){
-      setGoogleLoading(false);
-      const stored=loadUser();
-      const meta=session.user?.user_metadata||{};
-      // Build or reuse profile
-      const profile=mergeProfile(session.user.email,meta,stored);
-      // Enrich with Google data when available
-      if(!profile.firstName&&meta.full_name){
-        const pts=meta.full_name.split(' ');
-        profile.firstName=pts[0]||'';
-        profile.lastName=pts.slice(1).join(' ')||'';
-      }
-      if(!profile.photoUrl&&meta.avatar_url){
-        profile.photoUrl=meta.avatar_url;
-        profile.avatar_type='image';
-        profile.avatar_value=meta.avatar_url;
-      }
-      // Delegate to onSignedIn — handles save, header update, and redirect
-      await onSignedIn(session,profile);
+      setTimeout(()=>{ onSignedIn(session).catch(e=>console.warn('[KMD] SIGNED_IN:',e.message)); },0);
     }else if(event==='SIGNED_OUT'){
       setGoogleLoading(false);
       KMD.session=null;KMD.user=null;KMD.loggedIn=false;
@@ -4170,22 +4289,7 @@ async function initAuth(){
     try{
       const{data:{session}}=await sb.auth.getSession();
       if(session){
-        const stored=loadUser();
-        const meta=session.user?.user_metadata||{};
-        const profile=mergeProfile(session.user.email,meta,stored);
-        // Enrich with Google data when available
-        if(!profile.firstName&&meta.full_name){
-          const pts=meta.full_name.split(' ');
-          profile.firstName=pts[0]||'';
-          profile.lastName=pts.slice(1).join(' ')||'';
-        }
-        if(!profile.photoUrl&&meta.avatar_url){
-          profile.photoUrl=meta.avatar_url;
-          profile.avatar_type='image';
-          profile.avatar_value=meta.avatar_url;
-        }
-        // Delegate to onSignedIn — handles save, header update, and redirect
-        await onSignedIn(session,profile);
+        await onSignedIn(session);
         return;
       }
     }catch(e){
