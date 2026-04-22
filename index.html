@@ -69,11 +69,21 @@ button,select,input{font-family:inherit}
   display:flex;align-items:center;gap:8px;
   padding:0 13px;border-radius:50px;
   background:var(--surf);border:1px solid var(--b2);
-  transition:all .2s;
+  transition:all .2s;position:relative;
 }
 .hsearch:focus-within{border-color:var(--g2);box-shadow:0 0 0 3px rgba(16,185,129,.1)}
 .hsearch input{background:none;border:none;outline:none;color:var(--t);font-size:13px;width:100%}
 .hsearch input::placeholder{color:var(--t3)}
+.gs-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--bg2);border:1px solid var(--b2);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.45);overflow:hidden;z-index:650}
+.gs-dropdown.open{display:block;animation:ddIn .18s ease}
+.gs-item{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;background:none;border:none;border-bottom:1px solid var(--b);cursor:pointer;color:var(--t);text-align:left}
+.gs-item:last-child{border-bottom:none}
+.gs-item:hover{background:var(--surf)}
+.gs-emoji{width:38px;height:38px;border-radius:12px;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0}
+.gs-body{min-width:0}
+.gs-title{font-size:12px;font-weight:800;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gs-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.gs-empty{padding:14px 12px;font-size:12px;color:var(--t3)}
 .hactions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 
 /* currency switcher */
@@ -547,6 +557,17 @@ button,select,input{font-family:inherit}
 /* Follow button */
 #follow-btn.following{background:rgba(52,211,153,.1)!important;border-color:rgba(52,211,153,.3)!important;color:var(--g)!important}
 #follow-btn.following:hover{background:rgba(251,113,133,.1)!important;border-color:rgba(251,113,133,.3)!important;color:var(--rose)!important}
+.btn-p.following{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);color:var(--g)}
+.is-loading{opacity:.72;pointer-events:none}
+.soft-loader{display:inline-flex;align-items:center;gap:8px;font-size:11px;color:var(--t3)}
+.soft-loader::before{content:'';width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.16);border-top-color:var(--g);animation:af-spin .7s linear infinite}
+.svc-wrap{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);gap:18px;padding:20px}
+.svc-card{background:var(--bg2);border:1px solid var(--b);border-radius:18px;padding:16px}
+.svc-list{display:grid;gap:12px}
+.svc-item{padding:14px;border-radius:15px;background:var(--surf);border:1px solid var(--b)}
+.svc-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:11px;color:var(--t2)}
+.svc-filter{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.svc-filter .fi{margin:0}
 /* Dropdown */
 .dd-item{padding:8px 10px;border-radius:8px;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:8px}
 .dd-item:hover{background:var(--surf2);color:var(--t)}
@@ -815,6 +836,7 @@ button,select,input{font-family:inherit}
   .ftabs{padding:0 12px}
   .feed-center{max-width:100%;padding:10px}
   .pmedia{max-height:240px}
+  .svc-wrap{grid-template-columns:1fr;padding:14px}
 }
 @media(max-width:500px){
   .logo{font-size:16px}
@@ -1106,7 +1128,8 @@ button,select,input{font-family:inherit}
 
   <div class="hsearch">
     <span style="color:var(--t3);font-size:13px">🔍</span>
-    <input type="text" id="hq" placeholder="Buscar productos, vendedores..." oninput="doSearch(this.value)">
+    <input type="text" id="hq" placeholder="Buscar productos, vendedores..." oninput="handleGlobalSearch(this.value)">
+    <div id="global-search-dd" class="gs-dropdown"></div>
   </div>
 
   <div class="hactions">
@@ -1180,6 +1203,7 @@ button,select,input{font-family:inherit}
     <div class="si"    id="si-pedidos"   onclick="nav('pedidos')">     <span class="si-icon">📦</span><span class="si-txt">Pedidos</span><span class="si-badge sb-label">4</span></div>
     <div class="si"    id="si-mensajes"  onclick="nav('mensajes')">    <span class="si-icon">💬</span><span class="si-txt">Mensajes</span><span class="si-badge sb-label">3</span></div>
     <div class="si"    id="si-perfil"    onclick="nav('perfil')">      <span class="si-icon">👤</span><span class="si-txt">Mi Perfil</span></div>
+    <div class="si"    id="si-servicios" onclick="nav('servicios')">   <span class="si-icon">🛠️</span><span class="si-txt">Servicios</span></div>
   </div>
 
   <div class="sb-sec">
@@ -1295,6 +1319,52 @@ button,select,input{font-family:inherit}
         <div class="empty-ic">💬</div>
         <div class="empty-t">Seleccioná una conversación</div>
         <div class="empty-s">Tus mensajes con vendedores y compradores</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SERVICIOS ── -->
+<div class="pg" id="pg-servicios">
+  <div style="overflow-y:auto;flex:1">
+    <div class="svc-wrap">
+      <div class="svc-card">
+        <div class="pg-h1" style="margin-bottom:8px">🛠️ Publicar servicio</div>
+        <div class="pg-sub" style="margin-bottom:16px">Directorio tipo páginas amarillas conectado a Supabase</div>
+        <div id="svc-msg"></div>
+        <div class="fg"><label>Título</label><input class="fi" id="svc-title" placeholder="Ej: Reparación de iPhone a domicilio"></div>
+        <div class="fg"><label>Descripción</label><textarea class="fi" id="svc-desc" rows="4" style="resize:none" placeholder="Describí el servicio, cobertura y horarios"></textarea></div>
+        <div class="fg2">
+          <div class="fg"><label>Teléfono</label><input class="fi" id="svc-phone" placeholder="+598 99 000 000"></div>
+          <div class="fg"><label>Ubicación</label><input class="fi" id="svc-location" placeholder="Montevideo"></div>
+        </div>
+        <div class="fg"><label>Categoría</label>
+          <select class="fi" id="svc-category">
+            <option value="tecnologia">Tecnología</option>
+            <option value="hogar">Hogar</option>
+            <option value="belleza">Belleza</option>
+            <option value="salud">Salud</option>
+            <option value="educacion">Educación</option>
+            <option value="logistica">Logística</option>
+          </select>
+        </div>
+        <button class="pub-btn" id="svc-submit-btn" onclick="publishService()">📤 Publicar servicio</button>
+      </div>
+      <div class="svc-card">
+        <div class="svc-filter">
+          <input class="fi" id="svc-search" placeholder="Buscar servicios..." oninput="renderServicesPage()">
+          <select class="fi" id="svc-filter-category" onchange="renderServicesPage()">
+            <option value="all">Todas las categorías</option>
+            <option value="tecnologia">Tecnología</option>
+            <option value="hogar">Hogar</option>
+            <option value="belleza">Belleza</option>
+            <option value="salud">Salud</option>
+            <option value="educacion">Educación</option>
+            <option value="logistica">Logística</option>
+          </select>
+        </div>
+        <div id="svc-loader" class="soft-loader" style="display:none;margin-bottom:12px">Cargando servicios...</div>
+        <div id="svc-list" class="svc-list"></div>
       </div>
     </div>
   </div>
@@ -1533,6 +1603,11 @@ button,select,input{font-family:inherit}
 
 <div id="toast"></div>
 
+<script src="./auth.js"></script>
+<script src="./profile.js"></script>
+<script src="./followers.js"></script>
+<script src="./search.js"></script>
+<script src="./services.js"></script>
 <script>
 // ═══════════════════════════════════════
 // DATA
@@ -1578,23 +1653,24 @@ const stories=[
 ];
 const PRODUCT_STORE = [];
 const STORY_STORE = [];
+const SERVICE_STORE = [];
 function normalizeProductRecord(row){
   return {
     id:String(row.id),
     sid:row.user_id||'local',
     title:row.title||'Producto',
     price:Number(row.price||0),
-    orig:row.orig_price?Number(row.orig_price):null,
+    orig:null,
     cat:row.category||'tecnologia',
     em:categoryEmoji(row.category||'tecnologia'),
     stock:Number(row.stock||0),
     rating:Number(row.rating||5),
     reviews:Number(row.reviews_count||0),
-    free:!!row.free_shipping,
+    free:false,
     desc:row.description||'',
-    condition:row.condition||'Nuevo',
+    condition:'Nuevo',
     sellerName:row.seller_name||'Mi tienda',
-    media:Array.isArray(row.media_urls)?row.media_urls:[],
+    media:Array.isArray(row.media_urls)?row.media_urls:(row.image_url?[row.image_url]:[]),
     variants:row.variants||{},
   };
 }
@@ -1661,6 +1737,10 @@ async function loadSupabaseContent(){
     const { data } = await sb.from('live_sessions').select('*').eq('status','live').order('started_at',{ascending:false}).limit(1).maybeSingle();
     if(data)currentLiveSession=normalizeLiveRecord(data);
   }catch(e){ console.warn('[KMD] Load live:',e.message); }
+  try{
+    const services = await ServicesModule.list();
+    SERVICE_STORE.splice(0,SERVICE_STORE.length,...services);
+  }catch(e){ console.warn('[KMD] Load services:',e.message); }
 }
 const banners=[
   {t:'Semana Tech 🔥',s:'Hasta 40% OFF en electrónica',b:'⏰ SOLO HOY',em:'💻',bg:'linear-gradient(135deg,#064E3B,#065f46)'},
@@ -1674,7 +1754,7 @@ const orders=[
   {id:'o3',num:'KMD-2026-00798',date:'10 mar 2026',status:'delivered',total:415000,items:[{pid:'p4',qty:1,price:320000},{pid:'p8',qty:1,price:95000}]},
   {id:'o4',num:'KMD-2026-00901',date:'27 mar 2026',status:'pending',total:1099000,items:[{pid:'p7',qty:1,price:1099000}]},
 ];
-const msgData=[
+let msgData=[
   {id:'m1',wid:'s1',preview:'¿Tenés garantía oficial Apple?',time:'10:24',unread:2,msgs:[
     {from:'me',text:'¡Hola! ¿Tenés stock del MacBook Pro M3?',t:'10:20'},
     {from:'them',text:'¡Hola! Sí, tenemos 5 unidades disponibles 😊',t:'10:21'},
@@ -1762,6 +1842,9 @@ let storiesVisible=true;
 let sbCollapsed=false;
 let sbMobileOpen=false;
 let currentSvPid=null;
+let currentStoryOwnerId=null;
+let currentStoryRecordId=null;
+let activeProfileId=null;
 let likes=new Set();
 let pendingProductMedia=[];
 let pendingPostMedia={image:'',video:''};
@@ -1966,10 +2049,13 @@ function _showSection(page){
   if(page==='favoritos')renderFavs();if(page==='pedidos')renderOrders();
   if(page==='mensajes')renderMessages();
   if(page==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfilePage();
+  if(page==='servicios')renderServicesPage();
   if(page==='live')renderLivePage();if(page==='analytics')renderAnalytics();
 }
 const PROTECTED_PAGES=new Set(['mensajes','carrito','pedidos','publicar','analytics']);
 function nav(page){
+  if(page==='perfil'&&!window.__keepActiveProfile)activeProfileId=null;
+  window.__keepActiveProfile=false;
   if(typeof KMD!=='undefined'){
     if(PROTECTED_PAGES.has(page)&&!KMD.loggedIn){toast('🔒 Iniciá sesión para continuar');if(typeof openAuthModal==='function')openAuthModal('login');return;}
     if(page==='perfil'&&!KMD.loggedIn){if(typeof openAuthModal==='function')openAuthModal('login');return;}
@@ -1982,6 +2068,25 @@ function requireAuth(action){
 }
 function navCat(cat){activeCat=cat;nav('marketplace');}
 function doSearch(q){if(q.trim()&&currentPage!=='marketplace')nav('marketplace');searchQ=q;if(currentPage==='marketplace')renderProdGrid();}
+function handleGlobalSearch(q){ SearchModule.queue(q); }
+function openSearchResult(kind,id){
+  SearchModule.close();
+  const hq=document.getElementById('hq'); if(hq) hq.value='';
+  if(kind==='profile'){
+    activeProfileId=id;
+    window.__keepActiveProfile=true;
+    nav('perfil');
+    return;
+  }
+  const product=getAllProducts().find(p=>String(p.id)===String(id));
+  if(product){
+    nav('marketplace');
+    activeCat=product.cat||'all';
+    searchQ=product.title||'';
+    const mq=document.getElementById('mp-q'); if(mq) mq.value=product.title||'';
+    renderProdGrid();
+  }
+}
 
 // ═══════════════════════════════════════
 // HOME
@@ -2277,28 +2382,79 @@ function renderOrders(){
 // ═══════════════════════════════════════
 // MESSAGES
 // ═══════════════════════════════════════
+let messagesHydrated=false;
+let messagesLoading=false;
+async function loadMessagesFromDB(){
+  if(!KMD.loggedIn||!hasRealSession(KMD.session))return;
+  const sb=getSB(); if(!sb) return;
+  try{
+    const { data, error } = await sb.from('messages').select('*').or(`from_user.eq.${KMD.session.user.id},to_user.eq.${KMD.session.user.id}`).order('created_at',{ascending:true}).limit(200);
+    if(error) throw error;
+    const rows=data||[];
+    const partnerIds=[...new Set(rows.map(r=>r.from_user===KMD.session.user.id?r.to_user:r.from_user).filter(Boolean))];
+    let profileMap={};
+    if(partnerIds.length){
+      const { data: profilesData } = await sb.from('profiles').select('id, first_name, username, avatar_url').in('id',partnerIds);
+      profileMap=Object.fromEntries((profilesData||[]).map(p=>[p.id,p]));
+    }
+    msgData=partnerIds.map(pid=>{
+      const msgs=rows.filter(r=>r.from_user===pid||r.to_user===pid).map(r=>({
+        from:r.from_user===KMD.session.user.id?'me':'them',
+        text:r.text,
+        t:new Date(r.created_at).toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})
+      }));
+      const last=rows.filter(r=>r.from_user===pid||r.to_user===pid).slice(-1)[0];
+      const profile=profileMap[pid]||{};
+      return {
+        id:`msg-${pid}`,
+        wid:pid,
+        preview:last?.text||'Sin mensajes',
+        time:last?.created_at?new Date(last.created_at).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'}):'',
+        unread:0,
+        partnerName:profile.first_name||profile.username||'Usuario',
+        partnerAvatar:profile.avatar_url?`<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
+        msgs
+      };
+    }).sort((a,b)=>b.time.localeCompare(a.time));
+    messagesHydrated=true;
+  }catch(e){
+    console.warn('[KMD] messages:',e.message);
+  }finally{
+    messagesLoading=false;
+  }
+}
 function renderMessages(){
+  if(KMD.loggedIn&&hasRealSession(KMD.session)&&!messagesHydrated&&!messagesLoading){
+    messagesLoading=true;
+    loadMessagesFromDB().then(()=>renderMessages());
+  }
   const c=document.getElementById('msg-threads');
+  if(!c)return;
   c.innerHTML=msgData.map(m=>{
-    const s=getSeller(m.wid);
+    const seller=getSeller(m.wid)||{};
+    const av=m.partnerAvatar||seller.av||'👤';
+    const nm=m.partnerName||seller.name||'Usuario';
     return `<div class="mt ${activeMsgId===m.id?'on':''}" onclick="openChat('${m.id}')">
-      <div class="mt-av">${s.av}</div>
-      <div style="flex:1;min-width:0"><div class="mt-nm">${s.name}</div><div class="mt-pr">${m.preview}</div></div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="mt-tm">${m.time}</div>${m.unread?`<div class="mt-un">${m.unread}</div>`:''}</div>
-    </div>`;}).join('');
+      <div class="mt-av">${av}</div>
+      <div style="flex:1;min-width:0"><div class="mt-nm">${nm}</div><div class="mt-pr">${escHtml(m.preview||'')}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="mt-tm">${m.time||''}</div>${m.unread?`<div class="mt-un">${m.unread}</div>`:''}</div>
+    </div>`;}).join('')||`<div class="empty" style="padding:18px"><div class="empty-t">Sin mensajes aún</div><div class="empty-s">Las respuestas a historias y chats van a aparecer acá</div></div>`;
 }
 function openChat(id){
   activeMsgId=id;
-  const m=msgData.find(x=>x.id===id);m.unread=0;
-  const s=getSeller(m.wid);
+  const m=msgData.find(x=>x.id===id); if(!m)return;
+  m.unread=0;
+  const seller=getSeller(m.wid)||{};
+  const nm=m.partnerName||seller.name||'Usuario';
+  const av=m.partnerAvatar||seller.av||'👤';
   renderMessages();
   document.getElementById('chat-panel').innerHTML=`
     <div class="chat-hdr">
-      <div class="chat-hav">${s.av}</div>
-      <div><div class="chat-nm">${s.name}</div><div class="chat-st">● En línea</div></div>
+      <div class="chat-hav">${av}</div>
+      <div><div class="chat-nm">${nm}</div><div class="chat-st">● En línea</div></div>
     </div>
     <div class="chat-msgs" id="cmsgs">
-      ${m.msgs.map(msg=>`<div class="cmsg ${msg.from}"><div class="cbub">${msg.text}</div><div class="ctm">${msg.t}</div></div>`).join('')}
+      ${m.msgs.map(msg=>`<div class="cmsg ${msg.from}"><div class="cbub">${escHtml(msg.text)}</div><div class="ctm">${msg.t}</div></div>`).join('')}
     </div>
     <div class="chat-inp">
       <input class="chat-field" id="chat-field" placeholder="Escribí tu mensaje..." onkeydown="if(event.key==='Enter')sendMsg('${id}')">
@@ -2306,21 +2462,78 @@ function openChat(id){
     </div>`;
   setTimeout(()=>{const b=document.getElementById('cmsgs');if(b)b.scrollTop=9999;},50);
 }
-function sendMsg(id){
+async function sendMsg(id){
   const f=document.getElementById('chat-field');
-  const v=f.value.trim();if(!v)return;
-  const now=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
-  const c=document.getElementById('cmsgs');
-  c.innerHTML+=`<div class="cmsg me"><div class="cbub">${v}</div><div class="ctm">${now}</div></div>`;
-  c.scrollTop=9999;f.value='';
-  const m=msgData.find(x=>x.id===id);if(m){m.preview=v;m.msgs.push({from:'me',text:v,t:now});}
-  setTimeout(()=>{
-    const replies=['¡Con gusto te ayudo! 😊','Sí, tenemos disponible.','El envío demora 3-5 días.','¡Gracias por escribir!','Anotado, seguimos 👍'];
-    const rep=replies[Math.floor(Math.random()*replies.length)];
-    const rt=new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
-    c.innerHTML+=`<div class="cmsg them"><div class="cbub">${rep}</div><div class="ctm">${rt}</div></div>`;
-    c.scrollTop=9999;
-  },1100);
+  const v=AuthModule.sanitizeText(f?.value||'',500);if(!v)return;
+  const m=msgData.find(x=>x.id===id); if(!m)return;
+  const now=new Date().toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'});
+  m.preview=v;m.msgs.push({from:'me',text:v,t:now});
+  openChat(id);
+  f.value='';
+  if(KMD.loggedIn&&hasRealSession(KMD.session)){
+    try{
+      const { error } = await getSB().from('messages').insert({from_user:KMD.session.user.id,to_user:m.wid,text:v,created_at:new Date().toISOString()});
+      if(error) throw error;
+    }catch(e){
+      toast('⚠️ No se pudo enviar el mensaje');
+      console.warn('[KMD] send message:',e.message);
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// SERVICES
+// ═══════════════════════════════════════
+async function renderServicesPage(){
+  const list=document.getElementById('svc-list');
+  const loader=document.getElementById('svc-loader');
+  if(!list||!loader)return;
+  loader.style.display='inline-flex';
+  try{
+    const category=document.getElementById('svc-filter-category')?.value||'all';
+    const q=(document.getElementById('svc-search')?.value||'').trim();
+    const rows=await ServicesModule.list({category,q});
+    SERVICE_STORE.splice(0,SERVICE_STORE.length,...rows);
+    list.innerHTML=rows.map(row=>`
+      <div class="svc-item">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="font-size:14px;font-weight:800;color:var(--t)">${escHtml(row.title||'Servicio')}</div>
+          <div style="font-size:10px;padding:4px 8px;border-radius:999px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:var(--g)">${escHtml(row.category||'general')}</div>
+        </div>
+        <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-top:8px">${escHtml(row.description||'')}</div>
+        <div class="svc-meta">
+          <span>📞 ${escHtml(row.phone||'Sin teléfono')}</span>
+          <span>📍 ${escHtml(row.location||'Sin ubicación')}</span>
+        </div>
+      </div>`).join('')||`<div class="empty"><div class="empty-ic">🛠️</div><div class="empty-t">Todavía no hay servicios</div><div class="empty-s">Publicá el primero desde este panel</div></div>`;
+  }catch(e){
+    list.innerHTML=`<div class="empty"><div class="empty-ic">⚠️</div><div class="empty-t">No se pudieron cargar los servicios</div><div class="empty-s">${escHtml(e.message||'Intentá de nuevo')}</div></div>`;
+  }finally{
+    loader.style.display='none';
+  }
+}
+async function publishService(){
+  if(!KMD.loggedIn){openAuthModal('login');return;}
+  const payload={
+    title:document.getElementById('svc-title')?.value||'',
+    description:document.getElementById('svc-desc')?.value||'',
+    phone:document.getElementById('svc-phone')?.value||'',
+    location:document.getElementById('svc-location')?.value||'',
+    category:document.getElementById('svc-category')?.value||'general'
+  };
+  if(AuthModule.sanitizeText(payload.title,120).length<3){afMsg('svc-msg','err','El título debe tener al menos 3 caracteres.');return;}
+  if(AuthModule.sanitizeText(payload.description,500).length<10){afMsg('svc-msg','err','La descripción debe tener al menos 10 caracteres.');return;}
+  await AuthModule.withButton('svc-submit-btn','📤 Publicar servicio',async()=>{
+    try{
+      await ServicesModule.publish(payload);
+      afMsg('svc-msg','ok','Servicio publicado correctamente.');
+      ['svc-title','svc-desc','svc-phone','svc-location'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      await renderServicesPage();
+      toast('✅ Servicio publicado');
+    }catch(e){
+      afMsg('svc-msg','err',e.message||'No se pudo publicar el servicio.');
+    }
+  });
 }
 
 // ═══════════════════════════════════════
@@ -2329,34 +2542,77 @@ function sendMsg(id){
 function renderProfile(){} // compat stub
 
 function renderProfilePage(){
-  const u=KMD&&KMD.user;if(!u)return;
-  const name=[u.firstName,u.lastName].filter(Boolean).join(' ')||u.email?.split('@')[0]||'Usuario';
-  const handle='@'+(u.username||u.email?.split('@')[0]||'usuario');
-  const roleLabel={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
-  const location=u.location||'Uruguay';
-  const bio=u.bio||'Miembro de KOOMODOO';
-  // Avatar
-  const avType=u.avatar_type||(u.photoUrl?'image':'emoji');
-  const avValue=u.avatar_value||u.photoUrl||u.avatar||'🦁';
-  const avEl=document.getElementById('prof-hero-av');
-  if(avEl){
-    if(avType==='image'&&avValue){avEl.innerHTML=`<img src="${avValue}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="foto">`;}
-    else{avEl.textContent=avValue||'🦁';}
-  }
+  const ownUser=KMD&&KMD.user;if(!ownUser)return;
   const setTxt=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   const setHtml=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
-  setHtml('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
-  const hndlEl=document.getElementById('prof-hndl-el');
-  if(hndlEl)hndlEl.innerHTML=`<span>${handle}</span><span style="color:var(--b2)">·</span><span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">${roleLabel}</span>`;
-  const locEl=document.getElementById('prof-location-el');
-  if(locEl)locEl.innerHTML=`<span>📍</span><span>${location}</span>`;
-  setTxt('prof-bio-el',bio);
-  hdrLoggedIn(u);
-  // Stats
-  setTxt('prof-stat-seguidores',fmtN(u.followerCount||1200));
-  setTxt('prof-stat-siguiendo',fmtN(u.followingCount||386));
-  setTxt('prof-stat-ventas',fmtN(u.salesCount||847));
-  setTxt('prof-stat-rating','⭐ '+(u.rating||4.9));
+  const drawProfile=(u,isOwn)=>{
+    const name=[u.firstName,u.lastName].filter(Boolean).join(' ')||u.email?.split('@')[0]||'Usuario';
+    const handle='@'+(u.username||u.email?.split('@')[0]||'usuario');
+    const roleLabel={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
+    const location=u.location||'Uruguay';
+    const bio=u.bio||'Miembro de KOOMODOO';
+    const avType=u.avatar_type||(u.photoUrl?'image':'emoji');
+    const avValue=u.avatar_value||u.photoUrl||u.avatar||'🦁';
+    const avEl=document.getElementById('prof-hero-av');
+    if(avEl){
+      if(avType==='image'&&avValue){avEl.innerHTML=`<img src="${avValue}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="foto">`;}
+      else{avEl.textContent=avValue||'🦁';}
+    }
+    setHtml('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
+    const hndlEl=document.getElementById('prof-hndl-el');
+    if(hndlEl)hndlEl.innerHTML=`<span>${handle}</span><span style="color:var(--b2)">·</span><span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">${roleLabel}</span>`;
+    const locEl=document.getElementById('prof-location-el');
+    if(locEl)locEl.innerHTML=`<span>📍</span><span>${location}</span>`;
+    setTxt('prof-bio-el',bio);
+    if(isOwn)hdrLoggedIn(ownUser);
+    const followBtn=document.getElementById('follow-btn');
+    if(followBtn){
+      followBtn.style.display=isOwn?'none':'inline-flex';
+      followBtn.textContent='➕ Seguir';
+    }
+  };
+  drawProfile(ownUser,!activeProfileId||activeProfileId===ownUser.id);
+  setTxt('prof-stat-seguidores','...');
+  setTxt('prof-stat-siguiendo','...');
+  setTxt('prof-stat-ventas','...');
+  setTxt('prof-stat-rating','⭐ ...');
+  const targetId=activeProfileId&&activeProfileId!==ownUser.id?activeProfileId:ownUser.id;
+  const isOwnTarget=targetId===ownUser.id;
+  if(!isOwnTarget&&hasRealSession(KMD.session)){
+    ProfileModule.loadPublicProfileSummary(targetId).then(row=>{
+      if(!row)return;
+      drawProfile({
+        id:row.id,
+        email:row.email||'',
+        firstName:row.first_name||'',
+        lastName:row.last_name||'',
+        username:row.username||'usuario',
+        photoUrl:row.avatar_url||'',
+        avatar_type:row.avatar_url?'image':'emoji',
+        avatar_value:row.avatar_url||'👤',
+        avatar:'👤',
+        bio:row.bio||'',
+        location:row.location||'',
+        role:'BUYER'
+      },false);
+      loadFollowState(targetId);
+    }).catch(e=>console.warn('[KMD] public profile:',e.message));
+  }
+  if(targetId&&hasRealSession(KMD.session)){
+    ProfileModule.loadProfileStats(targetId).then(stats=>{
+      if(isOwnTarget)KMD.user={...KMD.user,followerCount:stats.followers,followingCount:stats.following,salesCount:stats.sales,rating:stats.rating};
+      setTxt('prof-stat-seguidores',fmtN(stats.followers));
+      setTxt('prof-stat-siguiendo',fmtN(stats.following));
+      setTxt('prof-stat-ventas',fmtN(stats.sales));
+      setTxt('prof-stat-rating','⭐ '+stats.rating);
+    }).catch(e=>{
+      console.warn('[KMD] profile stats:',e.message);
+      setTxt('prof-stat-seguidores','0');
+      setTxt('prof-stat-siguiendo','0');
+      setTxt('prof-stat-ventas','0');
+      setTxt('prof-stat-rating','⭐ 0.0');
+    });
+  }
   // Highlights
   const hls=[{em:'➕',add:true},{em:'🔥',l:'Ofertas'},{em:'💻',l:'Tech'},{em:'👗',l:'Moda'},{em:'🎁',l:'Combos'}];
   const hlEl=document.getElementById('prof-hls');
@@ -2487,7 +2743,7 @@ function resetProductComposer(){
 }
 async function publishProduct(){
   if(!KMD.loggedIn){openAuthModal('login');return;}
-  const title=(document.getElementById('pub-title')?.value||'').trim();
+  const title=AuthModule.sanitizeText(document.getElementById('pub-title')?.value||'',120);
   const price=Number(document.getElementById('pub-price')?.value||0);
   const cat=document.getElementById('pub-cat')?.value||'tecnologia';
   if(!title||!price){toast('⚠️ Completá título y precio');return;}
@@ -2533,9 +2789,12 @@ async function publishProduct(){
     if(sb){
       try{
         const payload={
-          user_id:KMD.session.user.id,title:product.title,price:product.price,category:product.cat,
-          description:product.desc,stock:product.stock,condition:product.condition,media_urls:product.media,
-          variants:product.variants,seller_name:product.sellerName,created_at:new Date().toISOString()
+          user_id:KMD.session.user.id,
+          title:product.title,
+          description:product.desc,
+          price:product.price,
+          image_url:product.media[0]||'',
+          created_at:new Date().toISOString()
         };
         const { data } = await sb.from('products').insert(payload).select('*').single();
         if(data)Object.assign(product,normalizeProductRecord(data));
@@ -2670,6 +2929,8 @@ function openStory(idx){
   const s=nonOwn[idx];
   if(s.isLive){nav('live');return;}
   storyIdx=idx;currentSvPid=s.pid||null;
+  currentStoryOwnerId=s.uid==='me'?KMD.session?.user?.id:s.uid;
+  currentStoryRecordId=s.id||null;
   const content=document.getElementById('sv-content');
   if(s.mediaType==='video'&&s.mediaUrl){
     content.innerHTML=`<video src="${s.mediaUrl}" style="width:100%;height:100%;object-fit:cover" autoplay muted controls></video>`;
@@ -2705,6 +2966,8 @@ function openOwnStoryOrModal(){
   if(own&&((own.mediaType==='image'&&own.mediaUrl)||(own.mediaType==='video'&&own.mediaUrl))){
     const all=getStoryList();
     const syntheticIdx=Math.max(0,all.filter(s=>!s.isOwn).findIndex(s=>s.id===own.id));
+    currentStoryOwnerId=KMD.session?.user?.id||'me';
+    currentStoryRecordId=own.id||null;
     document.getElementById('sv-content').innerHTML=own.mediaType==='video'?`<video src="${own.mediaUrl}" style="width:100%;height:100%;object-fit:cover" autoplay muted controls></video>`:`<img src="${own.mediaUrl}" style="width:100%;height:100%;object-fit:cover" alt="">`;
     document.getElementById('sv-av').innerHTML=KMD.user?.photoUrl?`<img src="${KMD.user.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(KMD.user?.avatar||'🦁');
     document.getElementById('sv-user').textContent=KMD.user?.firstName||'Tú';
@@ -2732,18 +2995,37 @@ function openOwnStoryOrModal(){
 function closeSV(){
   document.getElementById('sv-overlay').classList.remove('show');
   if(storyTimer){clearTimeout(storyTimer);storyTimer=null;}
+  currentStoryOwnerId=null;
+  currentStoryRecordId=null;
 }
 function addFromStory(){
   if(currentSvPid)addToCart(currentSvPid);
   closeSV();
 }
-function replyToStory(){
+async function replyToStory(){
   if(!KMD.loggedIn){openAuthModal('login');return;}
   const inp=document.getElementById('sv-reply');
-  const text=(inp?.value||'').trim();
+  const text=AuthModule.sanitizeText(inp?.value||'',500);
   if(!text)return;
-  toast('💬 Respuesta enviada a la historia');
-  if(inp)inp.value='';
+  if(!currentStoryOwnerId||currentStoryOwnerId===KMD.session?.user?.id||!/^[0-9a-f-]{36}$/i.test(String(currentStoryOwnerId))){toast('ℹ️ Esta historia no admite respuesta directa todavía.');return;}
+  try{
+    if(hasRealSession(KMD.session)){
+      const sb=getSB();
+      const payload={from_user:KMD.session.user.id,to_user:currentStoryOwnerId,text,created_at:new Date().toISOString()};
+      const { error } = await sb.from('messages').insert(payload);
+      if(error) throw error;
+      const numericStoryId=Number(currentStoryRecordId);
+      if(Number.isFinite(numericStoryId)&&numericStoryId>0){
+        await sb.from('story_replies').insert({story_id:numericStoryId,from_user:KMD.session.user.id,text,created_at:new Date().toISOString()});
+      }
+      messagesHydrated=false;
+    }
+    toast('💬 Respuesta enviada a mensajes');
+    if(inp)inp.value='';
+  }catch(e){
+    toast('⚠️ No se pudo enviar la respuesta');
+    console.warn('[KMD] story reply:',e.message);
+  }
 }
 
 // ═══════════════════════════════════════
@@ -3303,13 +3585,13 @@ async function uploadUrlToBucket(bucketName, path, sourceUrl){
   }
 }
 
-const KSTORE = 'kmd_user_v1';
-function loadUser() { try { return JSON.parse(localStorage.getItem(KSTORE)||'null'); } catch { return null; } }
-function saveUser(u) { u ? localStorage.setItem(KSTORE, JSON.stringify(u)) : localStorage.removeItem(KSTORE); }
+const KSTORE = { current:null };
+function loadUser() { return KSTORE.current ? { ...KSTORE.current } : null; }
+function saveUser(u) { KSTORE.current = u ? { ...u } : null; }
 
 const KMD = { session:null, user:null, loggedIn:false };
 
-function profileDone(u) { return !!(u && u.firstName?.trim() && u.username?.trim()); }
+function profileDone(u) { return AuthModule.isProfileComplete(u); }
 function hasRealSession(session){ return !!(session?.user?.id && !String(session.user.id).startsWith('local') && !String(session.user.id).startsWith('demo')); }
 
 const AVLIST = ['🦁','🐯','🦊','🐺','🦋','🦅','🐱','🦈','🐬','🦝','🦄','🐸','🦭','🐧','🦉','🐮'];
@@ -3360,6 +3642,7 @@ function closeDd(){const d=document.getElementById('hdr-dropdown');if(d)d.style.
 function toggleDd(){const d=document.getElementById('hdr-dropdown');if(d)d.style.display==='block'?closeDd():openDd();}
 function ddNav(page){closeDd();nav(page);}
 document.addEventListener('click',function(e){const w=document.getElementById('hdr-auth-wrap');if(w&&!w.contains(e.target))closeDd();});
+document.addEventListener('click',function(e){const s=document.querySelector('.hsearch');if(s&&!s.contains(e.target))SearchModule.close();});
 function hdrAuthClick(){KMD.loggedIn?toggleDd():openAuthModal('login');}
 
 // ── Auth modal ────────────────────────────────────────────────────────────────
@@ -3614,46 +3897,19 @@ async function createProfileRow(user, seed={}){
   return data||payload;
 }
 async function ensureProfileRecord(session, seed={}){
-  if(!session?.user)return null;
-  const sb=getSB();
-  if(!sb||!hasRealSession(session)){
-    return mergeProfile(session.user.email,session.user.user_metadata||seed,loadUser());
-  }
-  let authUser=session.user;
   try{
-    const {data:{user}}=await sb.auth.getUser();
-    if(user)authUser=user;
-  }catch(e){
-    console.warn('[KMD] getUser:',e.message);
-  }
-  let row=null;
-  try{
-    row=await fetchProfileRow(authUser.id);
-    if(!row)row=await createProfileRow(authUser,seed);
+    const profile = await ProfileModule.ensureProfileForSession(session, seed);
+    return profile ? { ...mkDefault(session?.user?.email || '', {}), ...profile, profileComplete: profileDone(profile) } : null;
   }catch(e){
     console.warn('[KMD] profiles sync:',e.message);
-    try{ row=await fetchProfileRow(authUser.id); }
-    catch(refetchErr){ console.warn('[KMD] profiles refetch:',refetchErr.message); }
+    if(!session?.user)return null;
+    return mergeProfile(session.user.email,session.user.user_metadata||seed,loadUser());
   }
-  return row?rowToAppProfile(authUser,row,seed):mergeProfile(authUser.email,authUser.user_metadata||seed,loadUser());
 }
 async function persistProfileRecord(profile){
-  const sb=getSB();
-  if(!sb||!hasRealSession(KMD.session)||!KMD.session?.user?.id)return null;
-  const payload={
-    id:KMD.session.user.id,
-    email:KMD.session.user.email||profile.email||'',
-    firstName:profile.firstName||'',
-    lastName:profile.lastName||'',
-    username:profile.username||makeUsername(KMD.session.user.email,KMD.session.user.id),
-    avatar:profile.photoUrl||profile.avatar_value||profile.avatar||'',
-    role:profile.role||'BUYER',
-    profileComplete:!!profile.profileComplete,
-    createdAt:profile.createdAt||new Date().toISOString()
-  };
-  const {data,error}=await sb.from('profiles').upsert(payload,{onConflict:'id'}).select().maybeSingle();
-  if(error)throw error;
-  return data||payload;
+  if(!hasRealSession(KMD.session)||!KMD.session?.user?.id)return null;
+  const saved = await ProfileModule.saveProfile(profile);
+  return saved ? { ...profile, ...saved, profileComplete: profileDone(saved) } : profile;
 }
 
 // ── RECUPERAR PASSWORD ────────────────────────────────────────────────
@@ -3685,6 +3941,7 @@ async function doLogout(){
   closeDd();closeEditModal();
   const sb=getSB();if(sb){try{await sb.auth.signOut();}catch{}}
   KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();
+  messagesHydrated=false;msgData=[];
   _showSection('home');toast('👋 Sesión cerrada. ¡Hasta pronto!');
 }
 
@@ -3697,6 +3954,7 @@ async function onSignedIn(session,profile){
   }
   const resolvedProfile=await ensureProfileRecord(session,profile||session?.user?.user_metadata||{});
   KMD.session=session;KMD.user={...resolvedProfile,email:session?.user?.email||resolvedProfile?.email};KMD.loggedIn=true;
+  messagesHydrated=false;
   setLocalCurrencyByCountry(KMD.user.country||inferCountryCode());
   saveUser(KMD.user);closeAuthModal();hdrLoggedIn(KMD.user);
   // Keep the flow inside this page so local-file usage does not break navigation.
@@ -3712,12 +3970,14 @@ async function onSignedIn(session,profile){
 async function completeProfile(){
   const nameEl     = document.getElementById('onboarding-name') || document.getElementById('cp-fn');
   const usernameEl = document.getElementById('onboarding-username') || document.getElementById('cp-user');
-  const name     = (nameEl?.value     || '').trim();
-  const username = (usernameEl?.value || '').trim();
+  const name     = AuthModule.sanitizeText(nameEl?.value || '',80);
+  const username = AuthModule.sanitizeUsername(usernameEl?.value || '');
 
   if(!name)                { console.warn('completeProfile: name is required');     return; }
   if(!username)            { console.warn('completeProfile: username is required'); return; }
   if(username.length < 3)  { console.warn('completeProfile: username too short');   return; }
+  const usernameCheck=await AuthModule.validateUsername(username,KMD.session?.user?.id);
+  if(!usernameCheck.ok){ toast(usernameCheck.message); return; }
 
   // Split name into firstName / lastName (last word becomes lastName)
   const parts     = name.split(/\s+/);
@@ -3775,15 +4035,17 @@ function closeCompleteProfile(){document.getElementById('complete-profile-screen
 function pickRole(el){document.querySelectorAll('#cp-roles .role-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
 function cpPick(em){curAv=em;drawAvGrid('cp-av-grid',em,'cpPick');}
 async function saveCompleteProfile(){
-  const fn=(document.getElementById('cp-fn')?.value||'').trim();
-  const user=(document.getElementById('cp-user')?.value||'').trim();
+  const fn=AuthModule.sanitizeText(document.getElementById('cp-fn')?.value||'',80);
+  const user=AuthModule.sanitizeUsername(document.getElementById('cp-user')?.value||'');
   if(!fn){afMsg('cp-msg','err','El nombre es requerido.');return;}
   if(!user){afMsg('cp-msg','err','El usuario es requerido.');return;}
   if(user.length<3){afMsg('cp-msg','err','Mínimo 3 caracteres.');return;}
+  const usernameCheck=await AuthModule.validateUsername(user,KMD.session?.user?.id);
+  if(!usernameCheck.ok){afMsg('cp-msg','err',usernameCheck.message);return;}
   afBtnLoad('cp-save-btn',true,'');
-  const updated={...KMD.user,firstName:fn,lastName:(document.getElementById('cp-ln')?.value||'').trim(),
-    username:user,location:(document.getElementById('cp-loc')?.value||'').trim(),
-    bio:(document.getElementById('cp-bio')?.value||'').trim(),
+  const updated={...KMD.user,firstName:fn,lastName:AuthModule.sanitizeText(document.getElementById('cp-ln')?.value||'',80),
+    username:user,location:AuthModule.sanitizeText(document.getElementById('cp-loc')?.value||'',120),
+    bio:AuthModule.sanitizeText(document.getElementById('cp-bio')?.value||'',240),
     country:(KMD.user?.country||inferCountryCode()).toUpperCase(),
     role:document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role||'BUYER',
     avatar:curAv,avatar_type:'emoji',avatar_value:curAv,profileComplete:true,updatedAt:new Date().toISOString()};
@@ -3820,9 +4082,12 @@ async function saveEditProfile(){
   if(pw1&&pw1!==pw2){afMsg('ep-msg','err','Las contraseñas no coinciden.');return;}
   if(pw1&&pw1.length<8){afMsg('ep-msg','err','Mínimo 8 caracteres.');return;}
   afBtnLoad('ep-save-btn',true,'');
-  const get=id=>(document.getElementById(id)?.value||'').trim();
-  const updated={...KMD.user,firstName:get('ep-fn')||KMD.user.firstName,lastName:get('ep-ln'),
-    username:get('ep-user')||KMD.user.username,bio:get('ep-bio'),location:get('ep-loc'),phone:get('ep-phone'),
+  const get=id=>AuthModule.sanitizeText(document.getElementById(id)?.value||'',240);
+  const cleanUsername=AuthModule.sanitizeUsername(document.getElementById('ep-user')?.value||KMD.user.username||'');
+  const usernameCheck=await AuthModule.validateUsername(cleanUsername,KMD.session?.user?.id);
+  if(!usernameCheck.ok){afMsg('ep-msg','err',usernameCheck.message);afBtnLoad('ep-save-btn',false,'💾 Guardar cambios');return;}
+  const updated={...KMD.user,firstName:get('ep-fn')||KMD.user.firstName,lastName:AuthModule.sanitizeText(document.getElementById('ep-ln')?.value||'',80),
+    username:cleanUsername||KMD.user.username,bio:get('ep-bio'),location:AuthModule.sanitizeText(document.getElementById('ep-loc')?.value||'',120),phone:AuthModule.normalizePhone(document.getElementById('ep-phone')?.value||''),
     country:get('ep-country')||'UY',role:get('ep-role')||'BUYER',storeName:get('ep-store'),instagram:get('ep-ig'),tiktok:get('ep-tt'),
     avatar:curAv,avatar_type:KMD.user.avatar_type||'emoji',avatar_value:KMD.user.avatar_value||curAv,
     profileComplete:true,updatedAt:new Date().toISOString()};
@@ -3869,29 +4134,19 @@ async function saveProfilePhoto(){
 // DB: table followers (id, follower_id, following_id, created_at)
 // ════════════════════════════════════════════════════════════════════════════
 let isFollowing = false;
-const FOLLOW_COUNTS = { followers: 1200, following: 386 }; // mock, overridden by DB
+const FOLLOW_COUNTS = { followers: 0, following: 0 };
 
 async function loadFollowState(targetUserId) {
-  if (!KMD.loggedIn || !targetUserId) return;
-  const sb = getSB();
-  if (sb && !KMD.session.user?.id?.startsWith('demo')) {
-    try {
-      const { data } = await sb.from('followers')
-        .select('id')
-        .eq('follower_id', KMD.session.user.id)
-        .eq('following_id', targetUserId)
-        .maybeSingle();
-      isFollowing = !!data;
-    } catch(e) { console.warn('Follow check:', e.message); }
-    // Load counts
-    try {
-      const { count: fc } = await sb.from('followers').select('id', { count:'exact', head:true }).eq('following_id', targetUserId);
-      const { count: fg } = await sb.from('followers').select('id', { count:'exact', head:true }).eq('follower_id', targetUserId);
-      FOLLOW_COUNTS.followers = fc || 0;
-      FOLLOW_COUNTS.following = fg || 0;
-    } catch(e) {}
+  if (!KMD.loggedIn || !targetUserId || !hasRealSession(KMD.session)) return;
+  try{
+    const state=await FollowersModule.getState(KMD.session.user.id,targetUserId);
+    isFollowing=state.isFollowing;
+    FOLLOW_COUNTS.followers=state.followers;
+    FOLLOW_COUNTS.following=state.following;
+    updateFollowUI();
+  }catch(e){
+    console.warn('Follow check:', e.message);
   }
-  updateFollowUI();
 }
 
 function updateFollowUI() {
@@ -3906,38 +4161,26 @@ function updateFollowUI() {
 
 async function toggleFollow() {
   if (!KMD.loggedIn) { openAuthModal('login'); return; }
-  const targetId = KMD.user?.id || 'demo-target';
-  // Optimistic update
-  if (isFollowing) {
-    isFollowing = false;
-    FOLLOW_COUNTS.followers = Math.max(0, FOLLOW_COUNTS.followers - 1);
-  } else {
-    isFollowing = true;
-    FOLLOW_COUNTS.followers++;
-  }
+  const targetId = activeProfileId&&activeProfileId!==KMD.user?.id ? activeProfileId : KMD.user?.id;
+  if(!targetId||!hasRealSession(KMD.session)){toast('⚠️ No hay un perfil válido para seguir.');return;}
+  const nextState=!isFollowing;
+  isFollowing=nextState;
+  FOLLOW_COUNTS.followers=Math.max(0,FOLLOW_COUNTS.followers+(nextState?1:-1));
   updateFollowUI();
-  // Persist to Supabase
-  const sb = getSB();
-  if (sb && KMD.session && !KMD.session.user?.id?.startsWith('demo')) {
-    try {
-      if (!isFollowing) {
-        // Undo: we set false above, so we need to delete
-        await sb.from('followers').delete()
-          .eq('follower_id', KMD.session.user.id)
-          .eq('following_id', targetId);
-      } else {
-        await sb.from('followers').insert({ follower_id: KMD.session.user.id, following_id: targetId });
-      }
-    } catch(e) {
-      console.warn('Follow toggle:', e.message);
-      // Rollback on error
-      isFollowing = !isFollowing;
-      FOLLOW_COUNTS.followers += isFollowing ? 1 : -1;
-      updateFollowUI();
-      toast('⚠️ Error al actualizar seguimiento');
-    }
+  try {
+    const state=await FollowersModule.toggle(KMD.session.user.id,targetId,nextState);
+    isFollowing=state.isFollowing;
+    FOLLOW_COUNTS.followers=state.followers;
+    FOLLOW_COUNTS.following=state.following;
+    updateFollowUI();
+    toast(isFollowing ? '✅ Siguiendo' : '❌ Dejaste de seguir');
+  } catch(e) {
+    console.warn('Follow toggle:', e.message);
+    isFollowing=!nextState;
+    FOLLOW_COUNTS.followers=Math.max(0,FOLLOW_COUNTS.followers+(nextState?-1:1));
+    updateFollowUI();
+    toast(e.message||'⚠️ Error al actualizar seguimiento');
   }
-  toast(isFollowing ? '✅ Siguiendo' : '❌ Dejaste de seguir');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -4272,6 +4515,7 @@ function listenAuth(){
     }else if(event==='SIGNED_OUT'){
       setGoogleLoading(false);
       KMD.session=null;KMD.user=null;KMD.loggedIn=false;
+      messagesHydrated=false;msgData=[];
       saveUser(null);hdrGuest();
     }
   });
@@ -4301,7 +4545,7 @@ async function initAuth(){
       }
     }
   }
-  // 4. Fallback: localStorage-only session (demo mode only, when Supabase is unavailable)
+  // 4. Fallback: in-memory demo session only when Supabase is unavailable
   const stored=loadUser();
   if(!sb && stored?.email){
     KMD.user=stored;
