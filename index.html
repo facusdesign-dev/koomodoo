@@ -3690,12 +3690,44 @@ async function doGoogleAuth() {
   }
 }
 async function handleOAuthRedirect(){
-  const hash=window.location.hash,search=window.location.search;
-  const hasOAuthParams=hash.includes('access_token')||search.includes('code=');
-  if(!hasOAuthParams)return false;
+  const sb = getSB();
+  if(!sb) return false;
+
+  const hash = window.location.hash;
+  const search = window.location.search;
+
+  const hasOAuthParams =
+    hash.includes('access_token') ||
+    search.includes('code=');
+
+  if(!hasOAuthParams) return false;
+
   setGoogleLoading(true);
-  pendingOAuthCleanup = true;
-  return true;
+
+  try {
+    const { data, error } = await sb.auth.getSession();
+
+    if(data?.session){
+      console.log("LOGIN OK:", data.session.user);
+
+      // LIMPIAR URL
+      window.history.replaceState({}, '', window.location.pathname);
+
+      // DISPARAR LOGIN REAL
+      await onSignedIn(data.session);
+
+      return true;
+    }
+
+    if(error){
+      console.error("OAuth error:", error.message);
+    }
+
+  } catch(e){
+    console.error("OAuth catch:", e.message);
+  }
+
+  return false;
 }
 
 // ── Register ──────────────────────────────────────────────────────────────────
