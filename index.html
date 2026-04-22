@@ -3690,44 +3690,12 @@ async function doGoogleAuth() {
   }
 }
 async function handleOAuthRedirect(){
-  const sb = getSB();
-  if(!sb) return false;
-
-  const hash = window.location.hash;
-  const search = window.location.search;
-
-  const hasOAuthParams =
-    hash.includes('access_token') ||
-    search.includes('code=');
-
-  if(!hasOAuthParams) return false;
-
+  const hash=window.location.hash,search=window.location.search;
+  const hasOAuthParams=hash.includes('access_token')||search.includes('code=');
+  if(!hasOAuthParams)return false;
   setGoogleLoading(true);
-
-  try {
-    const { data, error } = await sb.auth.getSession();
-
-    if(data?.session){
-      console.log("LOGIN OK:", data.session.user);
-
-      // LIMPIAR URL
-      window.history.replaceState({}, '', window.location.pathname);
-
-      // DISPARAR LOGIN REAL
-      await onSignedIn(data.session);
-
-      return true;
-    }
-
-    if(error){
-      console.error("OAuth error:", error.message);
-    }
-
-  } catch(e){
-    console.error("OAuth catch:", e.message);
-  }
-
-  return false;
+  pendingOAuthCleanup = true;
+  return true;
 }
 
 // ── Register ──────────────────────────────────────────────────────────────────
@@ -3928,6 +3896,65 @@ async function createProfileRow(user, seed={}){
   if(error)throw error;
   return data||payload;
 }
+async function ensureUserProfile(){
+  try{
+    const supabase=getSB();
+    if(!supabase)return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if(!user)return;
+
+    const { data: existingProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if(profileError){
+      console.error('[KMD] ensureUserProfile select:', profileError.message);
+      return;
+    }
+
+    if(existingProfile)return;
+
+    const baseUsername=String(user.email||'user')
+      .split('@')[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g,'')
+      .slice(0,30)||'user';
+
+    let username=baseUsername;
+    let insertError=null;
+
+    for(let i=0;i<3;i++){
+      const payload={
+        id:user.id,
+        email:user.email||'',
+        username,
+        first_name:user.user_metadata?.full_name||''
+      };
+
+      const { error } = await supabase.from('profiles').insert(payload);
+      if(!error){
+        insertError=null;
+        break;
+      }
+
+      insertError=error;
+      if(String(error.message||'').toLowerCase().includes('duplicate')||String(error.message||'').toLowerCase().includes('unique')){
+        username=`${baseUsername}_${String(user.id||'').replace(/-/g,'').slice(0,6)}`;
+        continue;
+      }
+      break;
+    }
+
+    if(insertError){
+      console.error('[KMD] ensureUserProfile insert:', insertError.message);
+    }
+  }catch(error){
+    console.error('[KMD] ensureUserProfile:', error?.message||error);
+  }
+}
 async function ensureProfileRecord(session, seed={}){
   try{
     const profile = await ProfileModule.ensureProfileForSession(session, seed);
@@ -3984,6 +4011,7 @@ async function onSignedIn(session,profile){
     window.history.replaceState({},'',window.location.pathname);
     pendingOAuthCleanup=false;
   }
+  await ensureUserProfile();
   const resolvedProfile=await ensureProfileRecord(session,profile||session?.user?.user_metadata||{});
   KMD.session=session;KMD.user={...resolvedProfile,email:session?.user?.email||resolvedProfile?.email};KMD.loggedIn=true;
   messagesHydrated=false;
