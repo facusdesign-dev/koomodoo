@@ -1606,6 +1606,7 @@ button,select,input{font-family:inherit}
 <script src="./auth.js"></script>
 <script src="./profile.js"></script>
 <script src="./followers.js"></script>
+<script src="./commerce.js"></script>
 <script src="./search.js"></script>
 <script src="./services.js"></script>
 <script>
@@ -2785,21 +2786,15 @@ async function publishProduct(){
   const btn=document.querySelector('#pub-panel-product .pub-btn'); if(btn){btn.disabled=true;btn.textContent='Publicando...';}
   if(hasRealSession(KMD.session)){
     product.media=await Promise.all(product.media.map((url,idx)=>uploadUrlToBucket(SB_BUCKETS.products,`products/${KMD.session.user.id}/${product.id}-${idx}.jpg`,url)));
-    const sb=getSB();
-    if(sb){
-      try{
-        const payload={
-          user_id:KMD.session.user.id,
-          title:product.title,
-          description:product.desc,
-          price:product.price,
-          image_url:product.media[0]||'',
-          created_at:new Date().toISOString()
-        };
-        const { data } = await sb.from('products').insert(payload).select('*').single();
-        if(data)Object.assign(product,normalizeProductRecord(data));
-      }catch(e){console.warn('[KMD] Save product:',e.message);}
-    }
+    try{
+      const savedProduct=await createProduct({
+        title:product.title,
+        description:product.desc,
+        price:product.price,
+        image_url:product.media[0]||''
+      });
+      if(savedProduct)Object.assign(product,normalizeProductRecord(savedProduct));
+    }catch(e){console.warn('[KMD] Save product:',e.message);}
   }
   PRODUCT_STORE.unshift(product);
   POSTS_STORE.unshift({
@@ -3912,7 +3907,6 @@ async function ensureUserProfile(){
       .select('*')
       .eq('id', user.id)
       .maybeSingle();
-    console.log("🔍 Resultado select profile:", existingProfile, profileError);
 
     if(profileError){
       console.error('[KMD] ensureUserProfile select:', profileError.message);
@@ -3941,7 +3935,6 @@ async function ensureUserProfile(){
         username,
         first_name:user.user_metadata?.full_name||''
       };
-      console.log("📦 Payload a insertar:", payload);
 
       const { error } = await supabase.from('profiles').insert(payload);
       if(!error){
@@ -3957,10 +3950,8 @@ async function ensureUserProfile(){
       break;
     }
 
-    if (insertError) {
-      console.error("❌ ERROR INSERT PROFILE:", insertError);
-    } else {
-      console.log("✅ Perfil creado correctamente");
+    if(insertError){
+      console.error('[KMD] ensureUserProfile insert:', insertError.message);
     }
   }catch(error){
     console.error('[KMD] ensureUserProfile:', error?.message||error);
@@ -4225,7 +4216,7 @@ function updateFollowUI() {
   const sigEl = document.getElementById('prof-stat-siguiendo');
   if (segEl) segEl.textContent = fmtN(FOLLOW_COUNTS.followers);
   if (sigEl) sigEl.textContent = fmtN(FOLLOW_COUNTS.following);
-  btn.textContent = isFollowing ? '✓ Siguiendo' : '➕ Seguir';
+  btn.textContent = isFollowing ? 'Dejar de seguir' : 'Seguir';
   btn.className = 'btn-p btn-sec' + (isFollowing ? ' following' : '');
 }
 
