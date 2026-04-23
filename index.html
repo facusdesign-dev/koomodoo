@@ -3936,11 +3936,11 @@ if(!user){
         username,
         first_name:user.user_metadata?.full_name||''
       };
+console.log("🟢 creando perfil para:", user.id);
 
-      const { error } = await supabase.from('profiles').insert(payload);
-      if(!error){
-        insertError=null;
-        break;
+const { error: insertError } = await supabase
+  .from('profiles')
+  .insert(payload);
       }
 
       insertError=error;
