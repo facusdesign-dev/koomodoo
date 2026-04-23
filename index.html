@@ -3912,6 +3912,7 @@ async function ensureUserProfile(){
       .select('*')
       .eq('id', user.id)
       .maybeSingle();
+    console.log("🔍 Resultado select profile:", existingProfile, profileError);
 
     if(profileError){
       console.error('[KMD] ensureUserProfile select:', profileError.message);
@@ -3940,6 +3941,7 @@ async function ensureUserProfile(){
         username,
         first_name:user.user_metadata?.full_name||''
       };
+      console.log("📦 Payload a insertar:", payload);
 
       const { error } = await supabase.from('profiles').insert(payload);
       if(!error){
@@ -3955,8 +3957,10 @@ async function ensureUserProfile(){
       break;
     }
 
-    if(insertError){
-      console.error('[KMD] ensureUserProfile insert:', insertError.message);
+    if (insertError) {
+      console.error("❌ ERROR INSERT PROFILE:", insertError);
+    } else {
+      console.log("✅ Perfil creado correctamente");
     }
   }catch(error){
     console.error('[KMD] ensureUserProfile:', error?.message||error);
