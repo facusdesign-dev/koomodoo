@@ -1,14 +1,4 @@
 window.ProfileModule = (() => {
-  function getAuthUserNameParts(user) {
-    const meta = user?.user_metadata || {};
-    const full = String(meta.full_name || '').trim();
-    const parts = full ? full.split(/\s+/) : [];
-    return {
-      first_name: meta.first_name || meta.given_name || parts[0] || '',
-      last_name: meta.last_name || meta.family_name || parts.slice(1).join(' ') || '',
-    };
-  }
-
   function makeUsername(email, id = '') {
     const base = String(email || 'user')
       .split('@')[0]
@@ -49,54 +39,29 @@ window.ProfileModule = (() => {
     return data || null;
   }
 
-  async function createProfile(authUser, seed = {}) {
-    const sb = getSB();
-    if (!sb || !authUser?.id) return null;
-    const names = getAuthUserNameParts(authUser);
-    const payload = {
-      id: authUser.id,
-      email: authUser.email || '',
-      first_name: AuthModule.sanitizeText(seed.firstName || names.first_name, 80),
-      last_name: AuthModule.sanitizeText(seed.lastName || names.last_name, 80),
-      username: AuthModule.sanitizeUsername(seed.username || makeUsername(authUser.email, authUser.id)),
-      avatar_url: seed.photoUrl || authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || '',
-      bio: AuthModule.sanitizeText(seed.bio, 240),
-      location: AuthModule.sanitizeText(seed.location, 120),
-      phone: AuthModule.normalizePhone(seed.phone),
-      created_at: new Date().toISOString(),
-    };
-    const { data, error } = await sb.from('profiles').insert(payload).select('*').single();
-    if (error) throw error;
-    return data;
-  }
-
   async function ensureProfileForSession(session, seed = {}) {
     if (!session?.user) return null;
     const sb = getSB();
-    if (!sb) {
-      return rowToUser({
-        id: session.user.id,
-        email: session.user.email,
-        first_name: seed.firstName || '',
-        last_name: seed.lastName || '',
-        username: seed.username || makeUsername(session.user.email, session.user.id),
-        avatar_url: seed.photoUrl || session.user.user_metadata?.avatar_url || '',
-        bio: seed.bio || '',
-        location: seed.location || '',
-        phone: seed.phone || '',
-        created_at: new Date().toISOString(),
-      }, session.user);
-    }
-    let authUser = session.user;
-    try {
-      const { data } = await sb.auth.getUser();
-      if (data?.user) authUser = data.user;
-    } catch {}
-    let row = await fetchProfile(authUser.id);
+    if (!sb) return null;
+    let row = await fetchProfile(session.user.id);
     if (!row) {
-      row = await createProfile(authUser, seed);
+      const payload = {
+        id: session.user.id,
+        email: session.user.email || '',
+        first_name: AuthModule.sanitizeText(seed.firstName || session.user.user_metadata?.full_name || '', 80),
+        last_name: AuthModule.sanitizeText(seed.lastName || '', 80),
+        username: AuthModule.sanitizeUsername(seed.username || makeUsername(session.user.email, session.user.id)),
+        avatar_url: seed.photoUrl || session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '',
+        bio: AuthModule.sanitizeText(seed.bio, 240),
+        location: AuthModule.sanitizeText(seed.location, 120),
+        phone: AuthModule.normalizePhone(seed.phone),
+        created_at: new Date().toISOString(),
+      };
+      const { data, error } = await sb.from('profiles').insert(payload).select('*').single();
+      if (error) throw error;
+      row = data;
     }
-    return rowToUser(row, authUser);
+    return rowToUser(row, session.user);
   }
 
   async function saveProfile(profile) {
@@ -120,33 +85,13 @@ window.ProfileModule = (() => {
   }
 
   async function loadProfileStats(userId) {
-    const sb = getSB();
-    if (!sb || !userId) return { followers: 0, following: 0, sales: 0, rating: 0 };
-    const [
-      followersRes,
-      followingRes,
-      salesRes,
-      ratingsRes,
-    ] = await Promise.all([
-      sb.from('followers').select('id', { count: 'exact', head: true }).eq('following_id', userId),
-      sb.from('followers').select('id', { count: 'exact', head: true }).eq('follower_id', userId),
-      sb.from('sales').select('id', { count: 'exact', head: true }).eq('seller_id', userId).eq('status', 'completed'),
-      sb.from('ratings').select('rating').eq('to_user', userId),
+    const [followers, following, sales, rating] = await Promise.all([
+      getFollowersCount(userId),
+      getFollowingCount(userId),
+      getSalesCount(userId),
+      getAverageRating(userId),
     ]);
-    if (followersRes.error) throw followersRes.error;
-    if (followingRes.error) throw followingRes.error;
-    if (salesRes.error) throw salesRes.error;
-    if (ratingsRes.error) throw ratingsRes.error;
-    const ratingRows = ratingsRes.data || [];
-    const rating = ratingRows.length
-      ? (ratingRows.reduce((sum, row) => sum + Number(row.rating || 0), 0) / ratingRows.length).toFixed(1)
-      : '0.0';
-    return {
-      followers: followersRes.count || 0,
-      following: followingRes.count || 0,
-      sales: salesRes.count || 0,
-      rating,
-    };
+    return { followers, following, sales, rating };
   }
 
   async function loadPublicProfileSummary(userId) {
