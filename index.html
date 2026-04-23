@@ -3901,11 +3901,8 @@ async function ensureUserProfile(){
     const supabase=getSB();
     if(!supabase)return;
 
-    const user = KMD?.session?.user;
-if(!user){
-  console.warn("❌ No hay user en sesión");
-  return;
-}
+    const { data: { user } } = await supabase.auth.getUser();
+    if(!user)return;
 
     const { data: existingProfile, error: profileError } = await supabase
       .from('profiles')
@@ -3936,11 +3933,11 @@ if(!user){
         username,
         first_name:user.user_metadata?.full_name||''
       };
-console.log("🟢 creando perfil para:", user.id);
 
-const { error: insertError } = await supabase
-  .from('profiles')
-  .insert(payload);
+      const { error } = await supabase.from('profiles').insert(payload);
+      if(!error){
+        insertError=null;
+        break;
       }
 
       insertError=error;
