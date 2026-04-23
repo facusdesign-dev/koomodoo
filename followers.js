@@ -1,37 +1,121 @@
 window.FollowersModule = (() => {
-  async function getState(viewerId, targetUserId) {
+  async function followUser(targetUserId) {
     const sb = getSB();
-    if (!sb || !targetUserId) return { isFollowing: false, followers: 0, following: 0 };
-    const [followRes, followersRes, followingRes] = await Promise.all([
-      viewerId ? sb.from('followers').select('id').eq('follower_id', viewerId).eq('following_id', targetUserId).maybeSingle() : Promise.resolve({ data: null, error: null }),
-      sb.from('followers').select('id', { count: 'exact', head: true }).eq('following_id', targetUserId),
-      sb.from('followers').select('id', { count: 'exact', head: true }).eq('follower_id', targetUserId),
+    const currentUserId = KMD?.session?.user?.id;
+    if (!sb || !currentUserId || !targetUserId) return false;
+    if (currentUserId === targetUserId) return false;
+
+    const exists = await isFollowing(targetUserId);
+    if (exists) return true;
+
+    const { error } = await sb.from('followers').insert({
+      follower_id: currentUserId,
+      following_id: targetUserId,
+      created_at: new Date().toISOString()
+    });
+    if (error) {
+      console.error('[KMD] followUser:', error);
+      return false;
+    }
+    return true;
+  }
+
+  async function unfollowUser(targetUserId) {
+    const sb = getSB();
+    const currentUserId = KMD?.session?.user?.id;
+    if (!sb || !currentUserId || !targetUserId) return false;
+
+    const { error } = await sb
+      .from('followers')
+      .delete()
+      .eq('follower_id', currentUserId)
+      .eq('following_id', targetUserId);
+
+    if (error) {
+      console.error('[KMD] unfollowUser:', error);
+      return false;
+    }
+    return true;
+  }
+
+  async function isFollowing(targetUserId) {
+    const sb = getSB();
+    const currentUserId = KMD?.session?.user?.id;
+    if (!sb || !currentUserId || !targetUserId) return false;
+
+    const { data, error } = await sb
+      .from('followers')
+      .select('id')
+      .eq('follower_id', currentUserId)
+      .eq('following_id', targetUserId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[KMD] isFollowing:', error);
+      return false;
+    }
+    return !!data;
+  }
+
+  async function getFollowersCount(userId) {
+    const sb = getSB();
+    if (!sb || !userId) return 0;
+    const { count, error } = await sb
+      .from('followers')
+      .select('id', { count: 'exact', head: true })
+      .eq('following_id', userId);
+    if (error) {
+      console.error('[KMD] getFollowersCount:', error);
+      return 0;
+    }
+    return count || 0;
+  }
+
+  async function getFollowingCount(userId) {
+    const sb = getSB();
+    if (!sb || !userId) return 0;
+    const { count, error } = await sb
+      .from('followers')
+      .select('id', { count: 'exact', head: true })
+      .eq('follower_id', userId);
+    if (error) {
+      console.error('[KMD] getFollowingCount:', error);
+      return 0;
+    }
+    return count || 0;
+  }
+
+  async function getState(viewerId, targetUserId) {
+    const [following, followers, followingCount] = await Promise.all([
+      viewerId === targetUserId ? Promise.resolve(false) : isFollowing(targetUserId),
+      getFollowersCount(targetUserId),
+      getFollowingCount(targetUserId),
     ]);
-    if (followRes.error) throw followRes.error;
-    if (followersRes.error) throw followersRes.error;
-    if (followingRes.error) throw followingRes.error;
     return {
-      isFollowing: !!followRes.data,
-      followers: followersRes.count || 0,
-      following: followingRes.count || 0,
+      isFollowing: following,
+      followers,
+      following: followingCount,
     };
   }
 
   async function toggle(viewerId, targetUserId, nextState) {
-    const sb = getSB();
-    if (!sb || !viewerId || !targetUserId) throw new Error('Faltan datos para seguir este perfil.');
-    if (viewerId === targetUserId) throw new Error('No podés seguirte a vos mismo.');
-    if (nextState) {
-      const { error } = await sb.from('followers').insert({ follower_id: viewerId, following_id: targetUserId });
-      if (error && !String(error.message || '').includes('duplicate')) throw error;
-    } else {
-      const { error } = await sb.from('followers').delete().eq('follower_id', viewerId).eq('following_id', targetUserId);
-      if (error) throw error;
-    }
+    const ok = nextState ? await followUser(targetUserId) : await unfollowUser(targetUserId);
+    if (!ok) throw new Error('No se pudo actualizar el seguimiento.');
     return getState(viewerId, targetUserId);
   }
 
+  window.followUser = followUser;
+  window.unfollowUser = unfollowUser;
+  window.isFollowing = isFollowing;
+  window.getFollowersCount = getFollowersCount;
+  window.getFollowingCount = getFollowingCount;
+
   return {
+    followUser,
+    unfollowUser,
+    isFollowing,
+    getFollowersCount,
+    getFollowingCount,
     getState,
     toggle,
   };
