@@ -4570,17 +4570,14 @@ function hdrGuest(){const av=document.getElementById('hdr-av');const lbl=documen
 // ── Supabase state listener ───────────────────────────────────────────────────
 function listenAuth(){
   const sb=getSB();if(!sb)return;
-  sb.auth.onAuthStateChange(async(event,session)=>{
-    if(event==='SIGNED_IN'&&session){
-      setTimeout(()=>{ onSignedIn(session).catch(e=>console.warn('[KMD] SIGNED_IN:',e.message)); },0);
-    }else if(event==='SIGNED_OUT'){
-      setGoogleLoading(false);
-      KMD.session=null;KMD.user=null;KMD.loggedIn=false;
-      messagesHydrated=false;msgData=[];
-      saveUser(null);hdrGuest();
-    }
-  });
-}
+  sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    console.log("✅ LOGIN DETECTADO");
+
+    await ensureUserProfile(); // 🔥 ACÁ VA
+
+  }
+});
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function initAuth(){
