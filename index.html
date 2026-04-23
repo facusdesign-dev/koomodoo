@@ -3901,8 +3901,11 @@ async function ensureUserProfile(){
     const supabase=getSB();
     if(!supabase)return;
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if(!user)return;
+    const user = KMD?.session?.user;
+    if(!user){
+      console.warn('No hay sesión activa');
+      return;
+    }
 
     const { data: existingProfile, error: profileError } = await supabase
       .from('profiles')
@@ -3915,7 +3918,10 @@ async function ensureUserProfile(){
       return;
     }
 
-    if(existingProfile)return;
+    if(existingProfile){
+      console.log('Perfil ya existe:', user.id);
+      return;
+    }
 
     const baseUsername=String(user.email||'user')
       .split('@')[0]
@@ -3925,6 +3931,7 @@ async function ensureUserProfile(){
 
     let username=baseUsername;
     let insertError=null;
+    console.log('Creando perfil para:', user.id);
 
     for(let i=0;i<3;i++){
       const payload={
@@ -4011,7 +4018,6 @@ async function onSignedIn(session,profile){
     window.history.replaceState({},'',window.location.pathname);
     pendingOAuthCleanup=false;
   }
-  await ensureUserProfile();
   const resolvedProfile=await ensureProfileRecord(session,profile||session?.user?.user_metadata||{});
   KMD.session=session;KMD.user={...resolvedProfile,email:session?.user?.email||resolvedProfile?.email};KMD.loggedIn=true;
   messagesHydrated=false;
@@ -4571,7 +4577,12 @@ function listenAuth(){
   const sb=getSB();if(!sb)return;
   sb.auth.onAuthStateChange(async(event,session)=>{
     if(event==='SIGNED_IN'&&session){
-      setTimeout(()=>{ onSignedIn(session).catch(e=>console.warn('[KMD] SIGNED_IN:',e.message)); },0);
+      setTimeout(()=>{
+        KMD.session = session;
+        ensureUserProfile()
+          .catch(e=>console.error('[KMD] ensureUserProfile:', e.message))
+          .finally(()=>{ onSignedIn(session).catch(e=>console.warn('[KMD] SIGNED_IN:',e.message)); });
+      },0);
     }else if(event==='SIGNED_OUT'){
       setGoogleLoading(false);
       KMD.session=null;KMD.user=null;KMD.loggedIn=false;
