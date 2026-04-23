@@ -47,6 +47,7 @@ window.AuthModule = (() => {
     if (currentUserId) query = query.neq('id', currentUserId);
     const { count, error } = await query;
     if (error) {
+      console.error('[KMD] validateUsername:', error);
       return { ok: false, value, message: 'No se pudo validar el usuario. Intentá de nuevo.' };
     }
     if ((count || 0) > 0) {
@@ -57,21 +58,13 @@ window.AuthModule = (() => {
 
   async function withButton(buttonId, label, task) {
     const btn = document.getElementById(buttonId);
-    const original = btn ? btn.innerHTML : '';
-    if (btn) {
-      btn.disabled = true;
-      btn.classList.add('is-loading');
-    }
     if (typeof afBtnLoad === 'function') afBtnLoad(buttonId, true, '');
+    if (btn) btn.disabled = true;
     try {
       return await task();
     } finally {
       if (typeof afBtnLoad === 'function') afBtnLoad(buttonId, false, label);
-      if (btn) {
-        btn.disabled = false;
-        btn.classList.remove('is-loading');
-        if (!btn.innerHTML || btn.innerHTML.includes('af-spin')) btn.innerHTML = original || `<span>${label}</span>`;
-      }
+      if (btn) btn.disabled = false;
     }
   }
 
