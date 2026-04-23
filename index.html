@@ -2543,6 +2543,7 @@ async function publishService(){
 function renderProfile(){} // compat stub
 
 async function renderProfilePage(){
+  console.log('renderProfilePage ejecutado');
   const ownUser=KMD&&KMD.user;if(!ownUser)return;
   const setTxt=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   const setHtml=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
@@ -2566,11 +2567,12 @@ async function renderProfilePage(){
     if(locEl)locEl.innerHTML=`<span>📍</span><span>${location}</span>`;
     setTxt('prof-bio-el',bio);
     if(isOwn)hdrLoggedIn(ownUser);
-    const followBtn=document.getElementById('follow-btn');
-    if(followBtn){
-      followBtn.style.display=isOwn?'none':'inline-flex';
-      followBtn.textContent='Seguir';
-    }
+    setHtml('prof-acts-el', `
+      <button class="btn-p btn-pri" onclick="openLiveModal()">📡 Live</button>
+      <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
+      <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
+      <button id="follow-btn" class="follow-btn btn-p btn-sec" style="${isOwn?'display:none':'display:inline-flex'}">Seguir</button>
+    `);
   };
   drawProfile(ownUser,!activeProfileId||activeProfileId===ownUser.id);
   setTxt('prof-stat-seguidores','...');
@@ -2581,6 +2583,7 @@ async function renderProfilePage(){
   const isOwnTarget=targetId===ownUser.id;
   const currentUserId=KMD?.session?.user?.id;
   const followBtn=document.getElementById('follow-btn');
+  console.log('botón follow encontrado', !!followBtn);
   if(followBtn){
     if(!currentUserId||isOwnTarget){
       followBtn.style.display='none';
@@ -2617,6 +2620,20 @@ async function renderProfilePage(){
         location:row.location||'',
         role:'BUYER'
       },false);
+      const refreshedBtn=document.getElementById('follow-btn');
+      console.log('botón follow encontrado', !!refreshedBtn);
+      if(refreshedBtn){
+        refreshedBtn.style.display='inline-flex';
+        window.isFollowing(targetId).then(followingNow=>{
+          refreshedBtn.textContent=followingNow?'Dejar de seguir':'Seguir';
+          refreshedBtn.onclick=async()=>{
+            const currentlyFollowing=await window.isFollowing(targetId);
+            if(currentlyFollowing) await unfollowUser(targetId);
+            else await followUser(targetId);
+            await renderProfilePage();
+          };
+        });
+      }
       loadFollowState(targetId);
     }).catch(e=>console.warn('[KMD] public profile:',e.message));
   }
