@@ -3901,8 +3901,11 @@ async function ensureUserProfile(){
     const supabase=getSB();
     if(!supabase)return;
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if(!user)return;
+    const user = KMD?.session?.user;
+if(!user){
+  console.warn("❌ No hay user en sesión");
+  return;
+}
 
     const { data: existingProfile, error: profileError } = await supabase
       .from('profiles')
