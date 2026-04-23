@@ -4011,9 +4011,8 @@ async function onSignedIn(session,profile){
     window.history.replaceState({},'',window.location.pathname);
     pendingOAuthCleanup=false;
   }
-  console.log("🚀 ensureUserProfile ejecutando...");
- const { data: { user } } = await sb.auth.getUser();
-console.log("👤 USER:", user);
+  await ensureUserProfile();
+  const resolvedProfile=await ensureProfileRecord(session,profile||session?.user?.user_metadata||{});
   KMD.session=session;KMD.user={...resolvedProfile,email:session?.user?.email||resolvedProfile?.email};KMD.loggedIn=true;
   messagesHydrated=false;
   setLocalCurrencyByCountry(KMD.user.country||inferCountryCode());
@@ -4570,14 +4569,17 @@ function hdrGuest(){const av=document.getElementById('hdr-av');const lbl=documen
 // ── Supabase state listener ───────────────────────────────────────────────────
 function listenAuth(){
   const sb=getSB();if(!sb)return;
-  sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    console.log("✅ LOGIN DETECTADO");
-
-    await ensureUserProfile(); // 🔥 ACÁ VA
-
-  }
-});
+  sb.auth.onAuthStateChange(async(event,session)=>{
+    if(event==='SIGNED_IN'&&session){
+      setTimeout(()=>{ onSignedIn(session).catch(e=>console.warn('[KMD] SIGNED_IN:',e.message)); },0);
+    }else if(event==='SIGNED_OUT'){
+      setGoogleLoading(false);
+      KMD.session=null;KMD.user=null;KMD.loggedIn=false;
+      messagesHydrated=false;msgData=[];
+      saveUser(null);hdrGuest();
+    }
+  });
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function initAuth(){
