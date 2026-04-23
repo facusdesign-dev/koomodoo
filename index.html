@@ -4011,8 +4011,9 @@ async function onSignedIn(session,profile){
     window.history.replaceState({},'',window.location.pathname);
     pendingOAuthCleanup=false;
   }
-  await ensureUserProfile();
-  const resolvedProfile=await ensureProfileRecord(session,profile||session?.user?.user_metadata||{});
+  console.log("🚀 ensureUserProfile ejecutando...");
+ const { data: { user } } = await sb.auth.getUser();
+console.log("👤 USER:", user);
   KMD.session=session;KMD.user={...resolvedProfile,email:session?.user?.email||resolvedProfile?.email};KMD.loggedIn=true;
   messagesHydrated=false;
   setLocalCurrencyByCountry(KMD.user.country||inferCountryCode());
