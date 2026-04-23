@@ -27,8 +27,5 @@ window.ServicesModule = (() => {
     return data || [];
   }
 
-  return {
-    publish,
-    list,
-  };
+  return { publish, list };
 })();
