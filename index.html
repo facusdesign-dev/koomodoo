@@ -2542,7 +2542,7 @@ async function publishService(){
 // ═══════════════════════════════════════
 function renderProfile(){} // compat stub
 
-function renderProfilePage(){
+async function renderProfilePage(){
   const ownUser=KMD&&KMD.user;if(!ownUser)return;
   const setTxt=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   const setHtml=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
@@ -2569,7 +2569,7 @@ function renderProfilePage(){
     const followBtn=document.getElementById('follow-btn');
     if(followBtn){
       followBtn.style.display=isOwn?'none':'inline-flex';
-      followBtn.textContent='➕ Seguir';
+      followBtn.textContent='Seguir';
     }
   };
   drawProfile(ownUser,!activeProfileId||activeProfileId===ownUser.id);
@@ -2579,6 +2579,27 @@ function renderProfilePage(){
   setTxt('prof-stat-rating','⭐ ...');
   const targetId=activeProfileId&&activeProfileId!==ownUser.id?activeProfileId:ownUser.id;
   const isOwnTarget=targetId===ownUser.id;
+  const currentUserId=KMD?.session?.user?.id;
+  const followBtn=document.getElementById('follow-btn');
+  if(followBtn){
+    if(!currentUserId||isOwnTarget){
+      followBtn.style.display='none';
+      followBtn.onclick=null;
+    }else{
+      followBtn.style.display='inline-flex';
+      const followingNow=hasRealSession(KMD.session)&&typeof window.isFollowing==='function'
+        ? await window.isFollowing(targetId)
+        : false;
+      followBtn.textContent=followingNow?'Dejar de seguir':'Seguir';
+      followBtn.onclick=async()=>{
+        if(typeof window.isFollowing!=='function')return;
+        const currentlyFollowing=await window.isFollowing(targetId);
+        if(currentlyFollowing) await unfollowUser(targetId);
+        else await followUser(targetId);
+        await renderProfilePage();
+      };
+    }
+  }
   if(!isOwnTarget&&hasRealSession(KMD.session)){
     ProfileModule.loadPublicProfileSummary(targetId).then(row=>{
       if(!row)return;
