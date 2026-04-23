@@ -2543,6 +2543,7 @@ async function publishService(){
 function renderProfile(){} // compat stub
 
 async function renderProfilePage(){
+  console.log('🔥 RENDER REAL DE PERFIL DETECTADO');
   console.log('renderProfilePage ejecutado');
   const ownUser=KMD&&KMD.user;if(!ownUser)return;
   const setTxt=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
@@ -2590,16 +2591,17 @@ async function renderProfilePage(){
       followBtn.onclick=null;
     }else{
       followBtn.style.display='inline-flex';
+      const targetUserId=targetId;
       const followingNow=hasRealSession(KMD.session)&&typeof window.isFollowing==='function'
-        ? await window.isFollowing(targetId)
+        ? await window.isFollowing(targetUserId)
         : false;
       followBtn.textContent=followingNow?'Dejar de seguir':'Seguir';
       followBtn.onclick=async()=>{
         if(typeof window.isFollowing!=='function')return;
-        const currentlyFollowing=await window.isFollowing(targetId);
-        if(currentlyFollowing) await unfollowUser(targetId);
-        else await followUser(targetId);
-        await renderProfilePage();
+        const currentlyFollowing=await window.isFollowing(targetUserId);
+        if(currentlyFollowing) await unfollowUser(targetUserId);
+        else await followUser(targetUserId);
+        location.reload();
       };
     }
   }
@@ -2624,13 +2626,14 @@ async function renderProfilePage(){
       console.log('botón follow encontrado', !!refreshedBtn);
       if(refreshedBtn){
         refreshedBtn.style.display='inline-flex';
-        window.isFollowing(targetId).then(followingNow=>{
+        const targetUserId=targetId;
+        window.isFollowing(targetUserId).then(followingNow=>{
           refreshedBtn.textContent=followingNow?'Dejar de seguir':'Seguir';
           refreshedBtn.onclick=async()=>{
-            const currentlyFollowing=await window.isFollowing(targetId);
-            if(currentlyFollowing) await unfollowUser(targetId);
-            else await followUser(targetId);
-            await renderProfilePage();
+            const currentlyFollowing=await window.isFollowing(targetUserId);
+            if(currentlyFollowing) await unfollowUser(targetUserId);
+            else await followUser(targetUserId);
+            location.reload();
           };
         });
       }
