@@ -2602,6 +2602,11 @@ async function renderProfilePage(){
         const currentlyFollowing=await window.isFollowing(targetUserId);
         if(currentlyFollowing) await unfollowUser(targetUserId);
         else await followUser(targetUserId);
+        const currentUserId=KMD.session.user.id;
+        const following=await getFollowingCount(currentUserId);
+        const followingEl=document.getElementById('following-count')||document.getElementById('prof-stat-siguiendo');
+        if(followingEl) followingEl.textContent=String(following);
+        console.log('🔁 following actualizado:', following);
         await renderProfilePage();
         console.log('🔄 perfil actualizado después de follow');
       };
@@ -2635,6 +2640,11 @@ async function renderProfilePage(){
             const currentlyFollowing=await window.isFollowing(targetUserId);
             if(currentlyFollowing) await unfollowUser(targetUserId);
             else await followUser(targetUserId);
+            const currentUserId=KMD.session.user.id;
+            const following=await getFollowingCount(currentUserId);
+            const followingEl=document.getElementById('following-count')||document.getElementById('prof-stat-siguiendo');
+            if(followingEl) followingEl.textContent=String(following);
+            console.log('🔁 following actualizado:', following);
             await renderProfilePage();
             console.log('🔄 perfil actualizado después de follow');
           };
