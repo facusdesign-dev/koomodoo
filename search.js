@@ -12,63 +12,73 @@ window.SearchModule = (() => {
   function render(results) {
     const dd = document.getElementById('global-search-dd');
     if (!dd) return;
-    if (!results.length) {
+    const users = Array.isArray(results?.users) ? results.users : [];
+    const products = Array.isArray(results?.products) ? results.products : [];
+    if (!users.length && !products.length) {
       dd.innerHTML = '<div class="gs-empty">Sin resultados</div>';
       dd.classList.add('open');
       return;
     }
-    dd.innerHTML = results.map(item => {
-      if (item.kind === 'profile') {
-        return `<button class="gs-item" onclick="openSearchResult('profile','${item.id}')"><div class="gs-emoji">${item.avatar_html}</div><div class="gs-body"><div class="gs-title">${item.title}</div><div class="gs-sub">@${item.username || 'usuario'} · Perfil</div></div></button>`;
-      }
-      return `<button class="gs-item" onclick="openSearchResult('product','${item.id}')"><div class="gs-emoji">${item.emoji}</div><div class="gs-body"><div class="gs-title">${item.title}</div><div class="gs-sub">${item.subtitle}</div></div></button>`;
+    const userHtml = users.map(user => {
+      const username = user.username || user.email || 'usuario';
+      return `<button class="gs-item" onclick="openSearchResult('profile','${user.id}')"><div class="gs-emoji">👤</div><div class="gs-body"><div class="gs-title">@${username}</div><div class="gs-sub">${user.email || 'Perfil'}</div></div></button>`;
     }).join('');
+    const productHtml = products.map(product => {
+      const priceLabel = typeof fmt === 'function' ? fmt(Number(product.price || 0)) : `$${product.price || 0}`;
+      const media = product.image_url
+        ? `<img src="${product.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
+        : '🛍️';
+      return `<button class="gs-item" onclick="openSearchResult('product','${product.id}')"><div class="gs-emoji">${media}</div><div class="gs-body"><div class="gs-title">${product.title || 'Producto'}</div><div class="gs-sub">${priceLabel}</div></div></button>`;
+    }).join('');
+    dd.innerHTML = `${users.length ? `<div class="gs-group">${userHtml}</div>` : ''}${products.length ? `<div class="gs-group">${productHtml}</div>` : ''}`;
     dd.classList.add('open');
   }
 
-  async function searchAll(term) {
-    const q = AuthModule.sanitizeText(term, 60);
+  async function searchGlobal(query) {
+    const q = AuthModule.sanitizeText(query, 60);
     if (q.length < 2) {
       close();
-      return [];
+      return { users: [], products: [] };
     }
     const sb = getSB();
-    if (!sb) return [];
+    if (!sb) return { users: [], products: [] };
+    console.log('🔎 Buscando:', q);
     const [profilesRes, productsRes] = await Promise.all([
-      sb.from('profiles').select('id, first_name, username, avatar_url').or(`username.ilike.%${q}%,first_name.ilike.%${q}%,email.ilike.%${q}%`).limit(5),
-      sb.from('products').select('id, title, price, image_url').ilike('title', `%${q}%`).limit(5),
+      sb
+        .from('profiles')
+        .select('id, username, email')
+        .ilike('username', `%${q}%`)
+        .limit(5),
+      sb
+        .from('products')
+        .select('id, title, price, image_url')
+        .ilike('title', `%${q}%`)
+        .limit(5),
     ]);
     if (profilesRes.error) {
-      console.error('[KMD] search profiles:', profilesRes.error);
-      return [];
+      console.error(profilesRes.error);
     }
     if (productsRes.error) {
-      console.error('[KMD] search products:', productsRes.error);
-      return [];
+      console.error(productsRes.error);
     }
-    const profileItems = (profilesRes.data || []).map(row => ({
-      kind: 'profile',
-      id: row.id,
-      title: row.first_name || row.username || 'Perfil',
-      username: row.username || '',
-      avatar_html: row.avatar_url ? `<img src="${row.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤',
-    }));
-    const productItems = (productsRes.data || []).map(row => ({
-      kind: 'product',
-      id: String(row.id),
-      title: row.title || 'Producto',
-      subtitle: typeof fmt === 'function' ? fmt(Number(row.price || 0)) : `$${row.price || 0}`,
-      emoji: row.image_url ? `<img src="${row.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">` : '🛍️',
-    }));
-    const results = [...profileItems, ...productItems];
+    const users = profilesRes.data || [];
+    const products = productsRes.data || [];
+    console.log('👤 Usuarios:', users);
+    console.log('🛒 Productos:', products);
+    const results = { users, products };
     render(results);
     return results;
   }
 
   function queue(term) {
     clearTimeout(timer);
-    timer = setTimeout(() => { searchAll(term).catch(err => { console.error('[KMD] search:', err); close(); }); }, 300);
+    timer = setTimeout(() => {
+      searchGlobal(term).catch(err => {
+        console.error('[KMD] search:', err);
+        close();
+      });
+    }, 300);
   }
 
-  return { queue, searchAll, close };
+  return { queue, searchGlobal, close };
 })();
