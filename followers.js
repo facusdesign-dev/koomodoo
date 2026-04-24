@@ -74,10 +74,12 @@ window.FollowersModule = (() => {
   async function getFollowingCount(userId) {
     const sb = getSB();
     if (!sb || !userId) return 0;
+    console.log('📊 getFollowingCount userId:', userId);
     const { count, error } = await sb
       .from('followers')
-      .select('id', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true })
       .eq('follower_id', userId);
+    console.log('📊 following count result:', count);
     if (error) {
       console.error('[KMD] getFollowingCount:', error);
       return 0;
