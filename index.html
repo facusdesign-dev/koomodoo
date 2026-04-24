@@ -2641,19 +2641,23 @@ async function renderProfilePage(){
     }).catch(e=>console.warn('[KMD] public profile:',e.message));
   }
   if(targetId&&hasRealSession(KMD.session)){
-    ProfileModule.loadProfileStats(targetId).then(stats=>{
-      if(isOwnTarget)KMD.user={...KMD.user,followerCount:stats.followers,followingCount:stats.following,salesCount:stats.sales,rating:stats.rating};
-      setTxt('prof-stat-seguidores',fmtN(stats.followers));
-      setTxt('prof-stat-siguiendo',fmtN(stats.following));
-      setTxt('prof-stat-ventas',fmtN(stats.sales));
-      setTxt('prof-stat-rating','⭐ '+stats.rating);
-    }).catch(e=>{
+    try{
+      const followers=await getFollowersCount(targetId);
+      const following=await getFollowingCount(targetId);
+      const sales=await getSalesCount(targetId);
+      const rating=await getAverageRating(targetId);
+      if(isOwnTarget)KMD.user={...KMD.user,followerCount:followers,followingCount:following,salesCount:sales,rating};
+      setTxt('prof-stat-seguidores',fmtN(followers));
+      setTxt('prof-stat-siguiendo',fmtN(following));
+      setTxt('prof-stat-ventas',fmtN(sales));
+      setTxt('prof-stat-rating','⭐ '+rating);
+    }catch(e){
       console.warn('[KMD] profile stats:',e.message);
       setTxt('prof-stat-seguidores','0');
       setTxt('prof-stat-siguiendo','0');
       setTxt('prof-stat-ventas','0');
       setTxt('prof-stat-rating','⭐ 0.0');
-    });
+    }
   }
   // Highlights
   const hls=[{em:'➕',add:true},{em:'🔥',l:'Ofertas'},{em:'💻',l:'Tech'},{em:'👗',l:'Moda'},{em:'🎁',l:'Combos'}];
