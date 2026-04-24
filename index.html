@@ -2602,7 +2602,8 @@ async function renderProfilePage(){
         const currentlyFollowing=await window.isFollowing(targetUserId);
         if(currentlyFollowing) await unfollowUser(targetUserId);
         else await followUser(targetUserId);
-        location.reload();
+        await renderProfilePage();
+        console.log('🔄 perfil actualizado después de follow');
       };
     }
   }
@@ -2634,7 +2635,8 @@ async function renderProfilePage(){
             const currentlyFollowing=await window.isFollowing(targetUserId);
             if(currentlyFollowing) await unfollowUser(targetUserId);
             else await followUser(targetUserId);
-            location.reload();
+            await renderProfilePage();
+            console.log('🔄 perfil actualizado después de follow');
           };
         });
       }
