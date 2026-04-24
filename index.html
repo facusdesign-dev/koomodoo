@@ -2542,7 +2542,7 @@ async function publishService(){
 // ═══════════════════════════════════════
 function renderProfile(){} // compat stub
 
-async function renderProfilePage(){
+async function renderProfilePage(targetProfileId){
   console.log('🔥 RENDER REAL DE PERFIL DETECTADO');
   console.log('renderProfilePage ejecutado');
   const ownUser=KMD&&KMD.user;if(!ownUser)return;
@@ -2575,14 +2575,44 @@ async function renderProfilePage(){
       <button id="follow-btn" class="follow-btn btn-p btn-sec" style="${isOwn?'display:none':'display:inline-flex'}">Seguir</button>
     `);
   };
-  drawProfile(ownUser,!activeProfileId||activeProfileId===ownUser.id);
   setTxt('prof-stat-seguidores','...');
   setTxt('prof-stat-siguiendo','...');
   setTxt('prof-stat-ventas','...');
   setTxt('prof-stat-rating','⭐ ...');
-  const targetId=activeProfileId&&activeProfileId!==ownUser.id?activeProfileId:ownUser.id;
+  const targetId=targetProfileId || ((activeProfileId&&activeProfileId!==ownUser.id)?activeProfileId:ownUser.id);
+  console.log('🎯 render perfil correcto:', targetId);
   console.log('👤 Perfil cargado ID:', targetId);
   const isOwnTarget=targetId===ownUser.id;
+  if(isOwnTarget){
+    drawProfile(ownUser,true);
+  }else if(hasRealSession(KMD.session)){
+    try{
+      const row=await ProfileModule.loadPublicProfileSummary(targetId);
+      if(row){
+        drawProfile({
+          id:row.id,
+          email:row.email||'',
+          firstName:row.first_name||'',
+          lastName:row.last_name||'',
+          username:row.username||'usuario',
+          photoUrl:row.avatar_url||'',
+          avatar_type:row.avatar_url?'image':'emoji',
+          avatar_value:row.avatar_url||'👤',
+          avatar:'👤',
+          bio:row.bio||'',
+          location:row.location||'',
+          role:'BUYER'
+        },false);
+      }else{
+        drawProfile(ownUser,true);
+      }
+    }catch(e){
+      console.warn('[KMD] public profile:',e.message);
+      drawProfile(ownUser,true);
+    }
+  }else{
+    drawProfile(ownUser,true);
+  }
   const currentUserId=KMD?.session?.user?.id;
   const followBtn=document.getElementById('follow-btn');
   console.log('botón follow encontrado', !!followBtn);
@@ -2607,51 +2637,13 @@ async function renderProfilePage(){
         const followingEl=document.getElementById('following-count')||document.getElementById('prof-stat-siguiendo');
         if(followingEl) followingEl.textContent=String(following);
         console.log('🔁 following actualizado:', following);
-        await renderProfilePage();
+        await renderProfilePage(targetUserId);
         console.log('🔄 perfil actualizado después de follow');
       };
     }
   }
   if(!isOwnTarget&&hasRealSession(KMD.session)){
-    ProfileModule.loadPublicProfileSummary(targetId).then(row=>{
-      if(!row)return;
-      drawProfile({
-        id:row.id,
-        email:row.email||'',
-        firstName:row.first_name||'',
-        lastName:row.last_name||'',
-        username:row.username||'usuario',
-        photoUrl:row.avatar_url||'',
-        avatar_type:row.avatar_url?'image':'emoji',
-        avatar_value:row.avatar_url||'👤',
-        avatar:'👤',
-        bio:row.bio||'',
-        location:row.location||'',
-        role:'BUYER'
-      },false);
-      const refreshedBtn=document.getElementById('follow-btn');
-      console.log('botón follow encontrado', !!refreshedBtn);
-      if(refreshedBtn){
-        refreshedBtn.style.display='inline-flex';
-        const targetUserId=targetId;
-        window.isFollowing(targetUserId).then(followingNow=>{
-          refreshedBtn.textContent=followingNow?'Dejar de seguir':'Seguir';
-          refreshedBtn.onclick=async()=>{
-            const currentlyFollowing=await window.isFollowing(targetUserId);
-            if(currentlyFollowing) await unfollowUser(targetUserId);
-            else await followUser(targetUserId);
-            const currentUserId=KMD.session.user.id;
-            const following=await getFollowingCount(currentUserId);
-            const followingEl=document.getElementById('following-count')||document.getElementById('prof-stat-siguiendo');
-            if(followingEl) followingEl.textContent=String(following);
-            console.log('🔁 following actualizado:', following);
-            await renderProfilePage();
-            console.log('🔄 perfil actualizado después de follow');
-          };
-        });
-      }
-      loadFollowState(targetId);
-    }).catch(e=>console.warn('[KMD] public profile:',e.message));
+    loadFollowState(targetId);
   }
   if(targetId&&hasRealSession(KMD.session)){
     try{
