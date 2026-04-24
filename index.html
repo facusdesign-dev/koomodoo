@@ -2581,6 +2581,7 @@ async function renderProfilePage(){
   setTxt('prof-stat-ventas','...');
   setTxt('prof-stat-rating','⭐ ...');
   const targetId=activeProfileId&&activeProfileId!==ownUser.id?activeProfileId:ownUser.id;
+  console.log('👤 Perfil cargado ID:', targetId);
   const isOwnTarget=targetId===ownUser.id;
   const currentUserId=KMD?.session?.user?.id;
   const followBtn=document.getElementById('follow-btn');
