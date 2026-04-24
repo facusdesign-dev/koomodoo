@@ -2644,7 +2644,9 @@ async function renderProfilePage(){
   if(targetId&&hasRealSession(KMD.session)){
     try{
       const followers=await getFollowersCount(targetId);
-      const following=await getFollowingCount(targetId);
+      const currentUserId=KMD.session.user.id;
+      console.log('✅ following correcto:', currentUserId);
+      const following=await getFollowingCount(currentUserId);
       const sales=await getSalesCount(targetId);
       const rating=await getAverageRating(targetId);
       if(isOwnTarget)KMD.user={...KMD.user,followerCount:followers,followingCount:following,salesCount:sales,rating};
