@@ -2568,11 +2568,14 @@ async function renderProfilePage(targetProfileId){
     if(locEl)locEl.innerHTML=`<span>📍</span><span>${location}</span>`;
     setTxt('prof-bio-el',bio);
     if(isOwn)hdrLoggedIn(ownUser);
-    setHtml('prof-acts-el', `
+    setHtml('prof-acts-el', isOwn ? `
       <button class="btn-p btn-pri" onclick="openLiveModal()">📡 Live</button>
       <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
       <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
-      <button id="follow-btn" class="follow-btn btn-p btn-sec" style="${isOwn?'display:none':'display:inline-flex'}">Seguir</button>
+    ` : `
+      <button id="follow-btn" class="follow-btn btn-p btn-sec" style="display:inline-flex">Seguir</button>
+      <button id="message-btn" class="btn-p btn-sec" style="display:inline-flex">💬 Mensaje</button>
+      <button id="contact-btn" class="btn-p btn-sec" style="display:inline-flex">📞 Contacto</button>
     `);
   };
   setTxt('prof-stat-seguidores','...');
@@ -2615,7 +2618,25 @@ async function renderProfilePage(targetProfileId){
   }
   const currentUserId=KMD?.session?.user?.id;
   const followBtn=document.getElementById('follow-btn');
+  const messageBtn=document.getElementById('message-btn');
+  const contactBtn=document.getElementById('contact-btn');
   console.log('botón follow encontrado', !!followBtn);
+  if(messageBtn){
+    if(!currentUserId||isOwnTarget){
+      messageBtn.style.display='none';
+    }else{
+      messageBtn.style.display='inline-flex';
+      messageBtn.onclick=()=>nav('mensajes');
+    }
+  }
+  if(contactBtn){
+    if(!currentUserId||isOwnTarget){
+      contactBtn.style.display='none';
+    }else{
+      contactBtn.style.display='inline-flex';
+      contactBtn.onclick=()=>toast('📞 Contacto disponible desde mensajes o perfil público');
+    }
+  }
   if(followBtn){
     if(!currentUserId||isOwnTarget){
       followBtn.style.display='none';
@@ -2633,10 +2654,15 @@ async function renderProfilePage(targetProfileId){
         if(currentlyFollowing) await unfollowUser(targetUserId);
         else await followUser(targetUserId);
         const currentUserId=KMD.session.user.id;
-        const following=await getFollowingCount(currentUserId);
-        const followingEl=document.getElementById('following-count')||document.getElementById('prof-stat-siguiendo');
-        if(followingEl) followingEl.textContent=String(following);
-        console.log('🔁 following actualizado:', following);
+        const followers=await getFollowersCount(targetUserId);
+        const followersEl=document.getElementById('prof-stat-seguidores');
+        if(followersEl) followersEl.textContent=fmtN(followers);
+        if(targetUserId===currentUserId){
+          const following=await getFollowingCount(currentUserId);
+          const followingEl=document.getElementById('following-count')||document.getElementById('prof-stat-siguiendo');
+          if(followingEl) followingEl.textContent=fmtN(following);
+          console.log('🔁 following actualizado:', following);
+        }
         await renderProfilePage(targetUserId);
         console.log('🔄 perfil actualizado después de follow');
       };
@@ -2650,7 +2676,8 @@ async function renderProfilePage(targetProfileId){
       const followers=await getFollowersCount(targetId);
       const currentUserId=KMD.session.user.id;
       console.log('✅ following correcto:', currentUserId);
-      const following=await getFollowingCount(currentUserId);
+      const followingOwnerId=isOwnTarget?currentUserId:targetId;
+      const following=await getFollowingCount(followingOwnerId);
       const sales=await getSalesCount(targetId);
       const rating=await getAverageRating(targetId);
       if(isOwnTarget)KMD.user={...KMD.user,followerCount:followers,followingCount:following,salesCount:sales,rating};
@@ -2660,8 +2687,6 @@ async function renderProfilePage(targetProfileId){
       setTxt('prof-stat-rating','⭐ '+rating);
     }catch(e){
       console.warn('[KMD] profile stats:',e.message);
-      setTxt('prof-stat-seguidores','0');
-      setTxt('prof-stat-siguiendo','0');
       setTxt('prof-stat-ventas','0');
       setTxt('prof-stat-rating','⭐ 0.0');
     }
@@ -4264,10 +4289,6 @@ async function loadFollowState(targetUserId) {
 
 function updateFollowUI() {
   const btn = document.getElementById('follow-btn'); if (!btn) return;
-  const segEl = document.getElementById('prof-stat-seguidores');
-  const sigEl = document.getElementById('prof-stat-siguiendo');
-  if (segEl) segEl.textContent = fmtN(FOLLOW_COUNTS.followers);
-  if (sigEl) sigEl.textContent = fmtN(FOLLOW_COUNTS.following);
   btn.textContent = isFollowing ? 'Dejar de seguir' : 'Seguir';
   btn.className = 'btn-p btn-sec' + (isFollowing ? ' following' : '');
 }
