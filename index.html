@@ -1144,9 +1144,9 @@ button,select,input{font-family:inherit}
       <button class="cur-btn" id="cur-usd" onclick="setCurrency('USD')">USD</button>
     </div>
 
-    <div class="hbtn" onclick="nav('mensajes')" title="Mensajes">💬<div class="badge">3</div></div>
-    <div class="hbtn" onclick="nav('favoritos')" title="Favoritos">❤️<div class="badge" id="fav-badge">3</div></div>
-    <div class="hbtn" onclick="nav('carrito')" title="Carrito">🛒<div class="badge" id="cart-badge">2</div></div>
+    <div class="hbtn" onclick="nav('mensajes')" title="Mensajes">💬<div class="badge" id="msg-badge" style="display:none"></div></div>
+    <div class="hbtn" onclick="nav('favoritos')" title="Favoritos">❤️<div class="badge" id="fav-badge" style="display:none"></div></div>
+    <div class="hbtn" onclick="nav('carrito')" title="Carrito">🛒<div class="badge" id="cart-badge" style="display:none"></div></div>
     <div style="position:relative;flex-shrink:0" id="hdr-auth-wrap">
       <div id="hdr-auth-btn" onclick="hdrAuthClick()" style="display:flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;border-radius:11px;background:var(--surf);border:1px solid var(--b2);cursor:pointer;transition:all .15s">
         <div id="hdr-av" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;position:relative;overflow:hidden">👤</div>
@@ -1199,9 +1199,9 @@ button,select,input{font-family:inherit}
     <span class="sb-sec-lbl sb-label">Menú</span>
     <div class="si on" id="si-home"      onclick="nav('home')">       <span class="si-icon">🏠</span><span class="si-txt">Inicio</span></div>
     <div class="si"    id="si-marketplace" onclick="nav('marketplace')"><span class="si-icon">🛍️</span><span class="si-txt">Marketplace</span></div>
-    <div class="si"    id="si-favoritos" onclick="nav('favoritos')">   <span class="si-icon">❤️</span><span class="si-txt">Favoritos</span><span class="si-badge sb-label" id="sb-fav">3</span></div>
-    <div class="si"    id="si-pedidos"   onclick="nav('pedidos')">     <span class="si-icon">📦</span><span class="si-txt">Pedidos</span><span class="si-badge sb-label">4</span></div>
-    <div class="si"    id="si-mensajes"  onclick="nav('mensajes')">    <span class="si-icon">💬</span><span class="si-txt">Mensajes</span><span class="si-badge sb-label">3</span></div>
+    <div class="si"    id="si-favoritos" onclick="nav('favoritos')">   <span class="si-icon">❤️</span><span class="si-txt">Favoritos</span><span class="si-badge sb-label" id="sb-fav" style="display:none"></span></div>
+    <div class="si"    id="si-pedidos"   onclick="nav('pedidos')">     <span class="si-icon">📦</span><span class="si-txt">Pedidos</span></div>
+    <div class="si"    id="si-mensajes"  onclick="nav('mensajes')">    <span class="si-icon">💬</span><span class="si-txt">Mensajes</span><span class="si-badge sb-label" id="sb-msg" style="display:none"></span></div>
     <div class="si"    id="si-perfil"    onclick="nav('perfil')">      <span class="si-icon">👤</span><span class="si-txt">Mi Perfil</span></div>
     <div class="si"    id="si-servicios" onclick="nav('servicios')">   <span class="si-icon">🛠️</span><span class="si-txt">Servicios</span></div>
   </div>
@@ -1312,6 +1312,7 @@ button,select,input{font-family:inherit}
   <div class="msg-wrap">
     <div class="msg-list">
       <div class="msg-lhdr">💬 Mensajes</div>
+      <div id="msg-notifications"></div>
       <div id="msg-threads"></div>
     </div>
     <div class="chat" id="chat-panel">
@@ -1403,10 +1404,10 @@ button,select,input{font-family:inherit}
       <!-- Stats: número grande arriba, label abajo -->
       <div class="prof-stats" id="prof-stats-el">
         <div class="prof-stat-item">
-          <div><div class="ps-n" id="prof-stat-seguidores">1.2k</div><div class="ps-l">Seguidores</div></div>
+          <div><div class="ps-n" id="followers-count">1.2k</div><div class="ps-l">Seguidores</div></div>
         </div>
         <div class="prof-stat-item">
-          <div><div class="ps-n" id="prof-stat-siguiendo">386</div><div class="ps-l">Siguiendo</div></div>
+          <div><div class="ps-n" id="following-count">386</div><div class="ps-l">Siguiendo</div></div>
         </div>
         <div class="prof-stat-item">
           <div><div class="ps-n" id="prof-stat-ventas">847</div><div class="ps-l">Ventas</div></div>
@@ -1755,24 +1756,7 @@ const orders=[
   {id:'o3',num:'KMD-2026-00798',date:'10 mar 2026',status:'delivered',total:415000,items:[{pid:'p4',qty:1,price:320000},{pid:'p8',qty:1,price:95000}]},
   {id:'o4',num:'KMD-2026-00901',date:'27 mar 2026',status:'pending',total:1099000,items:[{pid:'p7',qty:1,price:1099000}]},
 ];
-let msgData=[
-  {id:'m1',wid:'s1',preview:'¿Tenés garantía oficial Apple?',time:'10:24',unread:2,msgs:[
-    {from:'me',text:'¡Hola! ¿Tenés stock del MacBook Pro M3?',t:'10:20'},
-    {from:'them',text:'¡Hola! Sí, tenemos 5 unidades disponibles 😊',t:'10:21'},
-    {from:'me',text:'¿Tenés garantía oficial Apple?',t:'10:22'},
-    {from:'them',text:'Sí, garantía oficial Apple Uruguay 1 año 🍎',t:'10:23'},
-    {from:'them',text:'¿Querés que te reserve una unidad?',t:'10:24'},
-  ]},
-  {id:'m2',wid:'s2',preview:'El pedido fue enviado hoy ✅',time:'Ayer',unread:0,msgs:[
-    {from:'them',text:'¡Tu Vestido Floral fue despachado! 🌸',t:'Ayer 14:30'},
-    {from:'me',text:'Perfecto, muchas gracias 🙏',t:'Ayer 14:45'},
-    {from:'them',text:'El pedido fue enviado hoy ✅',t:'Ayer 15:00'},
-  ]},
-  {id:'m3',wid:'s4',preview:'Talle 42 en negro y blanco disponible',time:'Mar',unread:1,msgs:[
-    {from:'me',text:'Hola! ¿Tienen Nike Air Max talle 42?',t:'Mar 09:15'},
-    {from:'them',text:'Talle 42 en negro y blanco disponible',t:'Mar 09:20'},
-  ]},
-];
+let msgData=[];
 const CATS=[
   {slug:'all',name:'Todo',em:'🔥'},
   {slug:'tecnologia',name:'Tecnología',em:'💻'},
@@ -1823,8 +1807,8 @@ const CURRENCY_META={
 // ═══════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════
-let cart=[{pid:'p1',qty:1},{pid:'p3',qty:2}];
-let favs=new Set(['p2','p4','p8']);
+let cart=[];
+let favs=new Set();
 let currency='UYU';
 let localCurrency='UYU';
 let currentPage='home';
@@ -1975,10 +1959,40 @@ function toast(msg){
   t.textContent=msg;t.classList.add('show');
   clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2500);
 }
-function updateBadges(){
-  document.getElementById('cart-badge').textContent=cart.reduce((s,i)=>s+i.qty,0);
-  document.getElementById('fav-badge').textContent=favs.size;
-  document.getElementById('sb-fav').textContent=favs.size;
+function setBadgeValue(id,value){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const count=Number(value||0);
+  if(count>0){
+    el.textContent=String(count);
+    el.style.display='';
+  }else{
+    el.textContent='';
+    el.style.display='none';
+  }
+}
+async function syncFavoritesFromDB(){
+  if(!KMD.loggedIn||!hasRealSession(KMD.session))return 0;
+  const sb=getSB(); if(!sb) return 0;
+  try{
+    const { data, error } = await sb.from('favorites').select('product_id').eq('user_id',KMD.session.user.id);
+    if(error) throw error;
+    favs=new Set((data||[]).map(row=>String(row.product_id)).filter(Boolean));
+    return favs.size;
+  }catch(e){
+    console.warn('[KMD] favorites badge:',e.message);
+    return 0;
+  }
+}
+async function updateBadges(){
+  const cartCount=cart.reduce((s,i)=>s+i.qty,0);
+  const favCount=await syncFavoritesFromDB();
+  const msgCount=msgData.reduce((sum,m)=>sum+Number(m.unread||0),0) || msgData.length;
+  setBadgeValue('cart-badge',cartCount);
+  setBadgeValue('fav-badge',favCount);
+  setBadgeValue('sb-fav',favCount);
+  setBadgeValue('msg-badge',msgCount);
+  setBadgeValue('sb-msg',msgCount);
 }
 
 // ═══════════════════════════════════════
@@ -2044,16 +2058,27 @@ function _showSection(page){
   const pg=document.getElementById('pg-'+page);const si=document.getElementById('si-'+page);const mn=document.getElementById('mn-'+page);
   if(pg)pg.classList.add('on');if(si)si.classList.add('on');if(mn)mn.classList.add('on');
   currentPage=page;
+  try{localStorage.setItem('kmd_current_page',page);}catch{}
+  if(page==='perfil'&&activeProfileId){try{localStorage.setItem('kmd_active_profile',activeProfileId);}catch{}}
+  else if(page!=='perfil'){try{localStorage.removeItem('kmd_active_profile');}catch{}}
   if(page!=='live'&&typeof chatIv!=='undefined'&&chatIv){clearInterval(chatIv);chatIv=null;}
   if(page!=='live'&&typeof viewerIv!=='undefined'&&viewerIv){clearInterval(viewerIv);viewerIv=null;}
   if(page==='marketplace')renderMarketplace();if(page==='carrito')renderCart();
   if(page==='favoritos')renderFavs();if(page==='pedidos')renderOrders();
   if(page==='mensajes')renderMessages();
-  if(page==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfilePage();
+  if(page==='perfil'&&typeof KMD!=='undefined'&&KMD.loggedIn)renderProfilePage(activeProfileId||undefined);
   if(page==='servicios')renderServicesPage();
   if(page==='live')renderLivePage();if(page==='analytics')renderAnalytics();
 }
 const PROTECTED_PAGES=new Set(['mensajes','carrito','pedidos','publicar','analytics']);
+function getSavedPage(){
+  try{return localStorage.getItem('kmd_current_page')||'home';}
+  catch{return 'home';}
+}
+function getSavedActiveProfile(){
+  try{return localStorage.getItem('kmd_active_profile')||null;}
+  catch{return null;}
+}
 function nav(page){
   if(page==='perfil'&&!window.__keepActiveProfile)activeProfileId=null;
   window.__keepActiveProfile=false;
@@ -2075,6 +2100,7 @@ function openSearchResult(kind,id){
   const hq=document.getElementById('hq'); if(hq) hq.value='';
   if(kind==='profile'){
     activeProfileId=id;
+    try{localStorage.setItem('kmd_active_profile',id);}catch{}
     window.__keepActiveProfile=true;
     nav('perfil');
     return;
@@ -2385,6 +2411,8 @@ function renderOrders(){
 // ═══════════════════════════════════════
 let messagesHydrated=false;
 let messagesLoading=false;
+let notificationsData=[];
+let notificationsLoading=false;
 async function loadMessagesFromDB(){
   if(!KMD.loggedIn||!hasRealSession(KMD.session))return;
   const sb=getSB(); if(!sb) return;
@@ -2424,10 +2452,50 @@ async function loadMessagesFromDB(){
     messagesLoading=false;
   }
 }
+async function loadNotificationsFromDB(){
+  if(!KMD.loggedIn||!hasRealSession(KMD.session)||notificationsLoading)return;
+  const sb=getSB(); if(!sb || !window.getNotifications) return;
+  notificationsLoading=true;
+  try{
+    const rows=await window.getNotifications(KMD.session.user.id);
+    notificationsData=rows||[];
+  }catch(e){
+    console.warn('[KMD] notifications:',e.message);
+    notificationsData=[];
+  }finally{
+    notificationsLoading=false;
+  }
+}
+function renderNotificationsPanel(){
+  const box=document.getElementById('msg-notifications');
+  if(!box)return;
+  if(!notificationsData.length){
+    box.innerHTML='';
+    return;
+  }
+  box.innerHTML=`
+    <div style="padding:10px 12px 6px;font-size:11px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Notificaciones</div>
+    ${notificationsData.map(n=>`
+      <div class="mt">
+        <div class="mt-av">${n.actorAvatar||'👤'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="mt-nm">${escHtml(n.actorName||'Usuario')}</div>
+          <div class="mt-pr">te comenzó a seguir</div>
+        </div>
+        <button class="btn-p btn-sec" style="padding:7px 10px;font-size:11px" onclick="handleNotificationFollow('${n.actorId}')">Seguir</button>
+      </div>
+    `).join('')}
+  `;
+}
 function renderMessages(){
   if(KMD.loggedIn&&hasRealSession(KMD.session)&&!messagesHydrated&&!messagesLoading){
     messagesLoading=true;
     loadMessagesFromDB().then(()=>renderMessages());
+  }
+  if(KMD.loggedIn&&hasRealSession(KMD.session)&&!notificationsLoading&&window.getNotifications){
+    loadNotificationsFromDB().then(()=>renderNotificationsPanel());
+  }else{
+    renderNotificationsPanel();
   }
   const c=document.getElementById('msg-threads');
   if(!c)return;
@@ -2440,6 +2508,45 @@ function renderMessages(){
       <div style="flex:1;min-width:0"><div class="mt-nm">${nm}</div><div class="mt-pr">${escHtml(m.preview||'')}</div></div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="mt-tm">${m.time||''}</div>${m.unread?`<div class="mt-un">${m.unread}</div>`:''}</div>
     </div>`;}).join('')||`<div class="empty" style="padding:18px"><div class="empty-t">Sin mensajes aún</div><div class="empty-s">Las respuestas a historias y chats van a aparecer acá</div></div>`;
+  updateBadges();
+}
+async function startDirectChat(targetUserId){
+  if(!KMD.loggedIn){openAuthModal('login');return;}
+  if(!targetUserId||targetUserId===KMD.session?.user?.id){nav('mensajes');return;}
+  const sb=getSB();
+  let profile={};
+  if(sb){
+    try{
+      const { data } = await sb.from('profiles').select('id, first_name, username, avatar_url, phone').eq('id',targetUserId).maybeSingle();
+      profile=data||{};
+    }catch(e){
+      console.warn('[KMD] direct chat profile:',e.message);
+    }
+  }
+  const chatId=`msg-${targetUserId}`;
+  let thread=msgData.find(m=>m.id===chatId);
+  if(!thread){
+    thread={
+      id:chatId,
+      wid:targetUserId,
+      preview:'Sin mensajes aún',
+      time:'',
+      unread:0,
+      partnerName:profile.first_name||profile.username||'Usuario',
+      partnerAvatar:profile.avatar_url?`<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
+      msgs:[]
+    };
+    msgData.unshift(thread);
+  }
+  nav('mensajes');
+  openChat(chatId);
+}
+async function handleNotificationFollow(actorId){
+  if(!actorId)return;
+  if(await window.isFollowing(actorId)) await unfollowUser(actorId);
+  else await followUser(actorId);
+  await loadNotificationsFromDB();
+  renderNotificationsPanel();
 }
 function openChat(id){
   activeMsgId=id;
@@ -2578,8 +2685,8 @@ async function renderProfilePage(targetProfileId){
       <button id="contact-btn" class="btn-p btn-sec" style="display:inline-flex">📞 Contacto</button>
     `);
   };
-  setTxt('prof-stat-seguidores','...');
-  setTxt('prof-stat-siguiendo','...');
+  setTxt('followers-count','...');
+  setTxt('following-count','...');
   setTxt('prof-stat-ventas','...');
   setTxt('prof-stat-rating','⭐ ...');
   const targetId=targetProfileId || ((activeProfileId&&activeProfileId!==ownUser.id)?activeProfileId:ownUser.id);
@@ -2626,7 +2733,7 @@ async function renderProfilePage(targetProfileId){
       messageBtn.style.display='none';
     }else{
       messageBtn.style.display='inline-flex';
-      messageBtn.onclick=()=>nav('mensajes');
+      messageBtn.onclick=()=>startDirectChat(targetId);
     }
   }
   if(contactBtn){
@@ -2655,11 +2762,11 @@ async function renderProfilePage(targetProfileId){
         else await followUser(targetUserId);
         const currentUserId=KMD.session.user.id;
         const followers=await getFollowersCount(targetUserId);
-        const followersEl=document.getElementById('prof-stat-seguidores');
+        const followersEl=document.getElementById('followers-count');
         if(followersEl) followersEl.textContent=fmtN(followers);
         if(targetUserId===currentUserId){
           const following=await getFollowingCount(currentUserId);
-          const followingEl=document.getElementById('following-count')||document.getElementById('prof-stat-siguiendo');
+          const followingEl=document.getElementById('following-count');
           if(followingEl) followingEl.textContent=fmtN(following);
           console.log('🔁 following actualizado:', following);
         }
@@ -2675,18 +2782,24 @@ async function renderProfilePage(targetProfileId){
     try{
       const followers=await getFollowersCount(targetId);
       const currentUserId=KMD.session.user.id;
-      console.log('✅ following correcto:', currentUserId);
-      const followingOwnerId=isOwnTarget?currentUserId:targetId;
-      const following=await getFollowingCount(followingOwnerId);
+      const following=await getFollowingCount(currentUserId);
+      console.log('✅ followers:', followers);
+      console.log('✅ following:', following);
       const sales=await getSalesCount(targetId);
       const rating=await getAverageRating(targetId);
       if(isOwnTarget)KMD.user={...KMD.user,followerCount:followers,followingCount:following,salesCount:sales,rating};
-      setTxt('prof-stat-seguidores',fmtN(followers));
-      setTxt('prof-stat-siguiendo',fmtN(following));
+      const followersEl=document.getElementById('followers-count');
+      const followingEl=document.getElementById('following-count');
+      if(followersEl) followersEl.textContent=String(followers ?? 0);
+      if(followingEl) followingEl.textContent=String(following ?? 0);
       setTxt('prof-stat-ventas',fmtN(sales));
       setTxt('prof-stat-rating','⭐ '+rating);
     }catch(e){
-      console.warn('[KMD] profile stats:',e.message);
+      console.error('❌ error stats:', e);
+      const followersEl=document.getElementById('followers-count');
+      const followingEl=document.getElementById('following-count');
+      if(followersEl) followersEl.textContent='0';
+      if(followingEl) followingEl.textContent='0';
       setTxt('prof-stat-ventas','0');
       setTxt('prof-stat-rating','⭐ 0.0');
     }
@@ -4079,7 +4192,8 @@ async function doLogout(){
   closeDd();closeEditModal();
   const sb=getSB();if(sb){try{await sb.auth.signOut();}catch{}}
   KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();
-  messagesHydrated=false;msgData=[];
+  messagesHydrated=false;msgData=[];notificationsData=[];
+  try{localStorage.setItem('kmd_current_page','home');localStorage.removeItem('kmd_active_profile');}catch{}
   _showSection('home');toast('👋 Sesión cerrada. ¡Hasta pronto!');
 }
 
@@ -4099,8 +4213,10 @@ async function onSignedIn(session,profile){
   if(KMD.user.profileComplete!==true){
     openCompleteProfile();
   }else{
-    _showSection('home');
+    activeProfileId=getSavedActiveProfile();
+    _showSection(getSavedPage());
   }
+  await updateBadges();
 }
 
 // ── completeProfile ───────────────────────────────────────────────────────────
@@ -4710,7 +4826,11 @@ async function startApp(){
   renderCurrencySwitcher();
   updateProductCategoryFields();
   renderHome();
-  updateBadges();
+  activeProfileId=getSavedActiveProfile();
+  const savedPage=getSavedPage();
+  const safePage=!KMD.loggedIn&&(PROTECTED_PAGES.has(savedPage)||savedPage==='perfil')?'home':savedPage;
+  _showSection(safePage);
+  await updateBadges();
 }
 startApp();
 </script>
