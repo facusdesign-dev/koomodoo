@@ -2059,8 +2059,8 @@ function _showSection(page){
   if(pg)pg.classList.add('on');if(si)si.classList.add('on');if(mn)mn.classList.add('on');
   currentPage=page;
   try{localStorage.setItem('kmd_current_page',page);}catch{}
-  if(page==='perfil'&&activeProfileId){try{localStorage.setItem('kmd_active_profile',activeProfileId);}catch{}}
-  else if(page!=='perfil'){try{localStorage.removeItem('kmd_active_profile');}catch{}}
+  if(page==='perfil'&&activeProfileId&&activeProfileId!==KMD?.session?.user?.id){try{localStorage.setItem('lastProfileVisited',activeProfileId);}catch{}}
+  else if(page!=='perfil'||!activeProfileId||activeProfileId===KMD?.session?.user?.id){try{localStorage.removeItem('lastProfileVisited');}catch{}}
   if(page!=='live'&&typeof chatIv!=='undefined'&&chatIv){clearInterval(chatIv);chatIv=null;}
   if(page!=='live'&&typeof viewerIv!=='undefined'&&viewerIv){clearInterval(viewerIv);viewerIv=null;}
   if(page==='marketplace')renderMarketplace();if(page==='carrito')renderCart();
@@ -2076,7 +2076,7 @@ function getSavedPage(){
   catch{return 'home';}
 }
 function getSavedActiveProfile(){
-  try{return localStorage.getItem('kmd_active_profile')||null;}
+  try{return localStorage.getItem('lastProfileVisited')||null;}
   catch{return null;}
 }
 function nav(page){
@@ -2100,7 +2100,11 @@ function openSearchResult(kind,id){
   const hq=document.getElementById('hq'); if(hq) hq.value='';
   if(kind==='profile'){
     activeProfileId=id;
-    try{localStorage.setItem('kmd_active_profile',id);}catch{}
+    if(id!==KMD?.session?.user?.id){
+      try{localStorage.setItem('lastProfileVisited',id);}catch{}
+    }else{
+      try{localStorage.removeItem('lastProfileVisited');}catch{}
+    }
     window.__keepActiveProfile=true;
     nav('perfil');
     return;
@@ -2570,6 +2574,56 @@ function openChat(id){
     </div>`;
   setTimeout(()=>{const b=document.getElementById('cmsgs');if(b)b.scrollTop=9999;},50);
 }
+function openMessagesUI(convoId,userId){
+  nav('mensajes');
+  if(userId){
+    const threadId=`msg-${userId}`;
+    if(msgData.find(x=>x.id===threadId)){
+      openChat(threadId);
+      return;
+    }
+  }
+  if(convoId&&msgData.find(x=>x.id===convoId)){
+    openChat(convoId);
+  }
+}
+async function openChatWith(userId){
+  if(!KMD.loggedIn){openAuthModal('login');return;}
+  const currentUserId=KMD.session?.user?.id;
+  const sb=getSB();
+  if(!currentUserId||!userId||!sb){
+    await startDirectChat(userId);
+    return;
+  }
+  try{
+    let { data, error } = await sb
+      .from('conversations')
+      .select('*')
+      .or(`user1.eq.${currentUserId},user2.eq.${currentUserId}`);
+    if(error) throw error;
+
+    let convo=(data||[]).find(c=>
+      (c.user1===currentUserId&&c.user2===userId)||
+      (c.user2===currentUserId&&c.user1===userId)
+    );
+
+    if(!convo){
+      const { data:newConvo, error:insertError } = await sb
+        .from('conversations')
+        .insert({ user1:currentUserId, user2:userId })
+        .select()
+        .single();
+      if(insertError) throw insertError;
+      convo=newConvo;
+    }
+
+    await startDirectChat(userId);
+    openMessagesUI(convo?.id, userId);
+  }catch(e){
+    console.warn('[KMD] openChatWith:',e.message);
+    await startDirectChat(userId);
+  }
+}
 async function sendMsg(id){
   const f=document.getElementById('chat-field');
   const v=AuthModule.sanitizeText(f?.value||'',500);if(!v)return;
@@ -2661,8 +2715,9 @@ async function renderProfilePage(targetProfileId){
     const roleLabel={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
     const location=u.location||'Uruguay';
     const bio=u.bio||'Miembro de KOOMODOO';
-    const avType=u.avatar_type||(u.photoUrl?'image':'emoji');
-    const avValue=u.avatar_value||u.photoUrl||u.avatar||'🦁';
+    const avatar=u.photoUrl||u.avatar_value||'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%25" height="100%25" rx="60" fill="%23111827"/><text x="50%25" y="56%25" text-anchor="middle" font-size="52" fill="%23E5E7EB">👤</text></svg>';
+    const avType=u.avatar_type||((u.photoUrl||String(u.avatar_value||'').startsWith('http')||String(u.avatar_value||'').startsWith('data:image'))?'image':'emoji');
+    const avValue=avatar;
     const avEl=document.getElementById('prof-hero-av');
     if(avEl){
       if(avType==='image'&&avValue){avEl.innerHTML=`<img src="${avValue}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="foto">`;}
@@ -2693,6 +2748,11 @@ async function renderProfilePage(targetProfileId){
   console.log('🎯 render perfil correcto:', targetId);
   console.log('👤 Perfil cargado ID:', targetId);
   const isOwnTarget=targetId===ownUser.id;
+  if(targetId!==KMD?.session?.user?.id){
+    try{localStorage.setItem('lastProfileVisited',targetId);}catch{}
+  }else{
+    try{localStorage.removeItem('lastProfileVisited');}catch{}
+  }
   if(isOwnTarget){
     drawProfile(ownUser,true);
   }else if(hasRealSession(KMD.session)){
@@ -2705,9 +2765,9 @@ async function renderProfilePage(targetProfileId){
           firstName:row.first_name||'',
           lastName:row.last_name||'',
           username:row.username||'usuario',
-          photoUrl:row.avatar_url||'',
-          avatar_type:row.avatar_url?'image':'emoji',
-          avatar_value:row.avatar_url||'👤',
+          photoUrl:row.avatar_url||row.photo_url||'',
+          avatar_type:(row.avatar_url||row.photo_url)?'image':'emoji',
+          avatar_value:row.avatar_url||row.photo_url||row.avatar_value||'👤',
           avatar:'👤',
           bio:row.bio||'',
           location:row.location||'',
@@ -2733,7 +2793,7 @@ async function renderProfilePage(targetProfileId){
       messageBtn.style.display='none';
     }else{
       messageBtn.style.display='inline-flex';
-      messageBtn.onclick=()=>startDirectChat(targetId);
+      messageBtn.onclick=()=>openChatWith(targetId);
     }
   }
   if(contactBtn){
@@ -2783,15 +2843,23 @@ async function renderProfilePage(targetProfileId){
       const followers=await getFollowersCount(targetId);
       const currentUserId=KMD.session.user.id;
       const following=await getFollowingCount(currentUserId);
+      const followersEl=document.getElementById('followers-count');
+      const followingEl=document.getElementById('following-count');
+      if(!followersEl||!followingEl){
+        console.warn('❌ elementos no encontrados');
+        return;
+      }
       console.log('✅ followers:', followers);
       console.log('✅ following:', following);
       const sales=await getSalesCount(targetId);
       const rating=await getAverageRating(targetId);
       if(isOwnTarget)KMD.user={...KMD.user,followerCount:followers,followingCount:following,salesCount:sales,rating};
-      const followersEl=document.getElementById('followers-count');
-      const followingEl=document.getElementById('following-count');
-      if(followersEl) followersEl.textContent=String(followers ?? 0);
-      if(followingEl) followingEl.textContent=String(following ?? 0);
+      followersEl.textContent=String(followers || 0);
+      followingEl.textContent=String(following || 0);
+      setTimeout(()=>{
+        followersEl.textContent=String(followers || 0);
+        followingEl.textContent=String(following || 0);
+      },100);
       setTxt('prof-stat-ventas',fmtN(sales));
       setTxt('prof-stat-rating','⭐ '+rating);
     }catch(e){
@@ -4193,7 +4261,7 @@ async function doLogout(){
   const sb=getSB();if(sb){try{await sb.auth.signOut();}catch{}}
   KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();
   messagesHydrated=false;msgData=[];notificationsData=[];
-  try{localStorage.setItem('kmd_current_page','home');localStorage.removeItem('kmd_active_profile');}catch{}
+  try{localStorage.setItem('kmd_current_page','home');localStorage.removeItem('lastProfileVisited');}catch{}
   _showSection('home');toast('👋 Sesión cerrada. ¡Hasta pronto!');
 }
 
