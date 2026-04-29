@@ -2421,6 +2421,7 @@ async function loadMessagesFromDB(){
   if(!KMD.loggedIn||!hasRealSession(KMD.session))return;
   const sb=getSB(); if(!sb) return;
   try{
+    const draftThreads=(msgData||[]).filter(m=>m?.wid&&(!Array.isArray(m.msgs)||m.msgs.length===0));
     const { data, error } = await sb.from('messages').select('*').or(`from_user.eq.${KMD.session.user.id},to_user.eq.${KMD.session.user.id}`).order('created_at',{ascending:true}).limit(200);
     if(error) throw error;
     const rows=data||[];
@@ -2448,7 +2449,11 @@ async function loadMessagesFromDB(){
         partnerAvatar:profile.avatar_url?`<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
         msgs
       };
-    }).sort((a,b)=>b.time.localeCompare(a.time));
+    });
+    draftThreads.forEach(thread=>{
+      if(!msgData.find(item=>item.wid===thread.wid)) msgData.unshift(thread);
+    });
+    msgData.sort((a,b)=>(b.time||'').localeCompare(a.time||''));
     messagesHydrated=true;
   }catch(e){
     console.warn('[KMD] messages:',e.message);
@@ -2542,7 +2547,9 @@ async function startDirectChat(targetUserId){
     };
     msgData.unshift(thread);
   }
+  messagesHydrated=true;
   nav('mensajes');
+  renderMessages();
   openChat(chatId);
 }
 async function handleNotificationFollow(actorId){
@@ -2702,6 +2709,11 @@ async function publishService(){
 // PROFILE
 // ═══════════════════════════════════════
 function renderProfile(){} // compat stub
+function getProfileTargetId(){
+  const ownUser=KMD&&KMD.user;
+  if(!ownUser) return null;
+  return activeProfileId&&activeProfileId!==ownUser.id ? activeProfileId : ownUser.id;
+}
 
 async function renderProfilePage(targetProfileId){
   console.log('🔥 RENDER REAL DE PERFIL DETECTADO');
@@ -2744,7 +2756,7 @@ async function renderProfilePage(targetProfileId){
   setTxt('following-count','...');
   setTxt('prof-stat-ventas','...');
   setTxt('prof-stat-rating','⭐ ...');
-  const targetId=targetProfileId || ((activeProfileId&&activeProfileId!==ownUser.id)?activeProfileId:ownUser.id);
+  const targetId=targetProfileId || getProfileTargetId();
   console.log('🎯 render perfil correcto:', targetId);
   console.log('👤 Perfil cargado ID:', targetId);
   const isOwnTarget=targetId===ownUser.id;
@@ -2841,8 +2853,7 @@ async function renderProfilePage(targetProfileId){
   if(targetId&&hasRealSession(KMD.session)){
     try{
       const followers=await getFollowersCount(targetId);
-      const currentUserId=KMD.session.user.id;
-      const following=await getFollowingCount(currentUserId);
+      const following=await getFollowingCount(targetId);
       const followersEl=document.getElementById('followers-count');
       const followingEl=document.getElementById('following-count');
       if(!followersEl||!followingEl){
@@ -2885,21 +2896,45 @@ async function renderProfilePage(targetProfileId){
 function setPTab(idx){
   document.querySelectorAll('.ptab').forEach((t,i)=>t.classList.toggle('on',i===idx));
   const tc=document.getElementById('prof-tab-content');if(!tc)return;
+  const targetId=getProfileTargetId();
+  const isOwnTarget=targetId===KMD?.user?.id;
   if(idx===0){
     // Products grouped by category
     const grouped={};
-    [...PRODUCT_STORE,...products].forEach(p=>{if(!grouped[p.cat])grouped[p.cat]=[];grouped[p.cat].push(p);});
+    [...PRODUCT_STORE,...products]
+      .filter(p=>(p.sid||p.userId||p.user_id||'')===targetId || (isOwnTarget&&String(p.sid||p.userId||p.user_id||'').startsWith('local')))
+      .forEach(p=>{if(!grouped[p.cat])grouped[p.cat]=[];grouped[p.cat].push(p);});
     const catEmoji={tecnologia:'💻',moda:'👗',hogar:'🏠',deportes:'👟',belleza:'💄',joyeria:'💍',cocina:'🍳'};
     const catName={tecnologia:'Tecnología',moda:'Moda',hogar:'Hogar',deportes:'Deportes',belleza:'Belleza',joyeria:'Joyería',cocina:'Cocina'};
-    tc.innerHTML=Object.entries(grouped).map(([cat,prods])=>`
+    const entries=Object.entries(grouped);
+    tc.innerHTML=entries.length?entries.map(([cat,prods])=>`
       <div style="margin-bottom:24px">
         <div style="font-size:13px;font-weight:800;color:var(--t);margin-bottom:12px;display:flex;align-items:center;gap:7px">${catEmoji[cat]||'📦'} ${catName[cat]||cat}</div>
         <div class="pgrid-inner">${prods.map(p=>buildProdCard(p)).join('')}</div>
-      </div>`).join('');
+      </div>`).join(''):`<div class="empty" style="padding:22px"><div class="empty-t">Sin productos aún</div><div class="empty-s">${isOwnTarget?'Publicá tu primer producto.':'Este perfil todavía no publicó productos.'}</div></div>`;
   }else if(idx===1){
-    tc.innerHTML=renderPostsTab();initPostTab();
+    const profilePosts=[...POSTS_STORE,...(isOwnTarget?getMockPosts():[])].filter(post=>(post.userId||post.user_id||'')===targetId || (isOwnTarget&&String(post.id||'').startsWith('mp')));
+    if(isOwnTarget){
+      tc.innerHTML=renderPostsTab();
+      initPostTab();
+      const feed=document.getElementById('posts-feed');
+      if(feed){
+        feed.innerHTML=profilePosts.length?profilePosts.map(p=>buildPostCard(p)).join(''):`<div style="text-align:center;padding:40px 20px;color:var(--t3)"><div style="font-size:36px;margin-bottom:10px">✍️</div><div style="font-size:14px;font-weight:700;color:var(--t2)">Sin posts aún</div></div>`;
+      }
+    }else{
+      tc.innerHTML=profilePosts.length?`<div id="posts-feed">${profilePosts.map(p=>buildPostCard(p)).join('')}</div>`:`<div class="empty" style="padding:22px"><div class="empty-t">Sin publicaciones aún</div><div class="empty-s">Este perfil todavía no publicó posts.</div></div>`;
+    }
   }else if(idx===2){
-    tc.innerHTML=renderStoriesTab();initStoriesTab();
+    const profileStories=getStoryList().filter(story=>{
+      const storyOwnerId=story.uid==='me'?KMD?.session?.user?.id:story.uid;
+      return storyOwnerId===targetId;
+    });
+    if(isOwnTarget){
+      tc.innerHTML=renderStoriesTab();
+      initStoriesTab();
+    }else{
+      tc.innerHTML=profileStories.length?profileStories.map(story=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="openStory(0)"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid #fb7185">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${escHtml(story.caption||'Historia')}</div><div style="font-size:11px;color:var(--t3)">Disponible por 24 horas</div></div></div>`).join(''):`<div class="empty" style="padding:22px"><div class="empty-t">Sin historias activas</div><div class="empty-s">Este perfil no tiene historias visibles ahora mismo.</div></div>`;
+    }
   }else if(idx===3){
     tc.innerHTML='<div id="aff-panel"></div>';renderAffPanel();
   }
