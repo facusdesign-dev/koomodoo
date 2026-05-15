@@ -2417,7 +2417,21 @@ let messagesHydrated=false;
 let messagesLoading=false;
 let notificationsData=[];
 let notificationsLoading=false;
-let messagesPollIv=null;
+let messagesChannel=null;
+const READ_THREADS=new Set();
+function resolveAvatarDisplayUrl(raw){
+  if(!raw) return '';
+  const value=String(raw);
+  if(value.startsWith('http')||value.startsWith('data:image')||value.startsWith('/')) return value;
+  const sb=getSB();
+  if(!sb) return value;
+  try{
+    const { data } = sb.storage.from('avatars').getPublicUrl(value);
+    return data?.publicUrl || value;
+  }catch{
+    return value;
+  }
+}
 async function loadMessagesFromDB(){
   if(!KMD.loggedIn||!hasRealSession(KMD.session))return;
   const sb=getSB(); if(!sb) return;
@@ -2446,7 +2460,7 @@ async function loadMessagesFromDB(){
       const incomingCount=msgs.filter(msg=>msg.from==='them').length;
       const newIncoming=Math.max(0,incomingCount-prevIncomingCount);
       const threadId=`msg-${pid}`;
-      const unread=activeMsgId===threadId?0:Math.max(0,Number(prevThread?.unread||0)+newIncoming);
+      const unread=READ_THREADS.has(threadId) ? 0 : activeMsgId===threadId ? 0 : Math.max(0,Number(prevThread?.unread||0)+newIncoming);
       return {
         id:threadId,
         wid:pid,
@@ -2454,7 +2468,7 @@ async function loadMessagesFromDB(){
         time:last?.created_at?new Date(last.created_at).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'}):'',
         unread,
         partnerName:profile.first_name||profile.username||'Usuario',
-        partnerAvatar:profile.avatar_url?`<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
+        partnerAvatar:resolveAvatarDisplayUrl(profile.avatar_url)?`<img src="${resolveAvatarDisplayUrl(profile.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
         msgs
       };
     });
@@ -2528,18 +2542,24 @@ function renderMessages(){
   updateBadges();
 }
 function startMessagesPolling(){
-  if(messagesPollIv) clearInterval(messagesPollIv);
-  messagesPollIv=setInterval(async()=>{
-    if(!KMD.loggedIn||!hasRealSession(KMD.session)||messagesLoading) return;
-    messagesLoading=true;
-    try{
+  const sb=getSB();
+  if(messagesChannel){
+    try{messagesChannel.unsubscribe();}catch{}
+    messagesChannel=null;
+  }
+  if(!sb||!KMD.loggedIn||!hasRealSession(KMD.session)) return;
+  messagesChannel = sb.channel('messages-live')
+    .on('postgres_changes',{
+      event:'INSERT',
+      schema:'public',
+      table:'messages',
+      filter:`to_user=eq.${KMD.session.user.id}`
+    },async()=>{
       await loadMessagesFromDB();
       if(currentPage==='mensajes') renderMessages();
       else updateBadges();
-    }finally{
-      messagesLoading=false;
-    }
-  },4000);
+    })
+    .subscribe();
 }
 async function startDirectChat(targetUserId){
   if(!KMD.loggedIn){openAuthModal('login');return;}
@@ -2564,7 +2584,7 @@ async function startDirectChat(targetUserId){
       time:'',
       unread:0,
       partnerName:profile.first_name||profile.username||'Usuario',
-      partnerAvatar:profile.avatar_url?`<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
+      partnerAvatar:resolveAvatarDisplayUrl(profile.avatar_url)?`<img src="${resolveAvatarDisplayUrl(profile.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
       msgs:[]
     };
     msgData.unshift(thread);
@@ -2583,6 +2603,7 @@ async function handleNotificationFollow(actorId){
 }
 function openChat(id){
   activeMsgId=id;
+  READ_THREADS.add(id);
   const m=msgData.find(x=>x.id===id); if(!m)return;
   m.unread=0;
   const seller=getSeller(m.wid)||{};
@@ -2666,7 +2687,6 @@ async function sendMsg(id){
     try{
       const { error } = await getSB().from('messages').insert({from_user:KMD.session.user.id,to_user:m.wid,text:v,created_at:new Date().toISOString()});
       if(error) throw error;
-      messagesHydrated=false;
     }catch(e){
       toast('⚠️ No se pudo enviar el mensaje');
       console.warn('[KMD] send message:',e.message);
@@ -2751,8 +2771,8 @@ async function renderProfilePage(targetProfileId){
     const roleLabel={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
     const location=u.location||'Uruguay';
     const bio=u.bio||'Miembro de KOOMODOO';
-    const avatarUrlCandidate=u.photoUrl||u.avatar_value||u.avatar_url||'';
-    const avatarIsImage=String(avatarUrlCandidate).startsWith('http')||String(avatarUrlCandidate).startsWith('data:image');
+    const avatarUrlCandidate=resolveAvatarDisplayUrl(u.photoUrl||u.avatar_value||u.avatar_url||'');
+    const avatarIsImage=avatarUrlCandidate&&(String(avatarUrlCandidate).startsWith('http')||String(avatarUrlCandidate).startsWith('data:image')||String(avatarUrlCandidate).startsWith('/')||String(avatarUrlCandidate).includes('supabase'));
     const avatarEmoji=!avatarIsImage?(u.avatar_value||u.avatar||'👤'):'';
     const avType=avatarIsImage?'image':'emoji';
     const avValue=avatarIsImage?avatarUrlCandidate:avatarEmoji;
@@ -2876,14 +2896,20 @@ async function renderProfilePage(targetProfileId){
   }
   if(targetId&&hasRealSession(KMD.session)){
     try{
-      const followers=await getFollowersCount(targetId);
-      const following=await getFollowingCount(targetId);
       const followersEl=document.getElementById('followers-count');
       const followingEl=document.getElementById('following-count');
       if(!followersEl||!followingEl){
         console.warn('❌ elementos no encontrados');
         return;
       }
+      if (typeof getFollowersCount !== 'function' || typeof getFollowingCount !== 'function') {
+        console.warn('[KMD] followers.js no está cargado');
+        followersEl.textContent = String(FOLLOW_COUNTS.followers || 0);
+        followingEl.textContent = String(FOLLOW_COUNTS.following || 0);
+        return;
+      }
+      const followers=await getFollowersCount(targetId);
+      const following=await getFollowingCount(targetId);
       console.log('✅ followers:', followers);
       console.log('✅ following:', following);
       const sales=await getSalesCount(targetId);
