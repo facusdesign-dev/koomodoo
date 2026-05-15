@@ -15,6 +15,9 @@ window.FollowersModule = (() => {
     });
     if (error) {
       console.error('[KMD] followUser:', error);
+      if (String(error.message || '').toLowerCase().includes('followers')) {
+        console.warn('[KMD] Verificá la tabla followers en Supabase: id, follower_id, following_id, created_at');
+      }
       return false;
     }
     try {
@@ -43,6 +46,9 @@ window.FollowersModule = (() => {
 
     if (error) {
       console.error('[KMD] unfollowUser:', error);
+      if (String(error.message || '').toLowerCase().includes('followers')) {
+        console.warn('[KMD] Verificá la tabla followers en Supabase: id, follower_id, following_id, created_at');
+      }
       return false;
     }
     return true;
@@ -62,6 +68,9 @@ window.FollowersModule = (() => {
 
     if (error) {
       console.error('[KMD] isFollowing:', error);
+      if (String(error.message || '').toLowerCase().includes('followers')) {
+        console.warn('[KMD] Verificá la tabla followers en Supabase: id, follower_id, following_id, created_at');
+      }
       return false;
     }
     return !!data;
@@ -76,6 +85,9 @@ window.FollowersModule = (() => {
       .eq('following_id', userId);
     if (error) {
       console.error('[KMD] getFollowersCount:', error);
+      if (String(error.message || '').toLowerCase().includes('followers')) {
+        console.warn('[KMD] Verificá la tabla followers en Supabase: id, follower_id, following_id, created_at');
+      }
       return 0;
     }
     return Number((count ?? (data || []).length) || 0);
@@ -92,6 +104,9 @@ window.FollowersModule = (() => {
     console.log('📊 following count result:', (count ?? (data || []).length) || 0);
     if (error) {
       console.error('[KMD] getFollowingCount:', error);
+      if (String(error.message || '').toLowerCase().includes('followers')) {
+        console.warn('[KMD] Verificá la tabla followers en Supabase: id, follower_id, following_id, created_at');
+      }
       return 0;
     }
     return Number((count ?? (data || []).length) || 0);
