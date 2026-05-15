@@ -70,31 +70,31 @@ window.FollowersModule = (() => {
   async function getFollowersCount(userId) {
     const sb = getSB();
     if (!sb || !userId) return 0;
-    const { count, error } = await sb
+    const { data, count, error } = await sb
       .from('followers')
-      .select('id', { count: 'exact', head: true })
+      .select('id', { count: 'exact' })
       .eq('following_id', userId);
     if (error) {
       console.error('[KMD] getFollowersCount:', error);
       return 0;
     }
-    return count || 0;
+    return Number((count ?? (data || []).length) || 0);
   }
 
   async function getFollowingCount(userId) {
     const sb = getSB();
     if (!sb || !userId) return 0;
     console.log('📊 getFollowingCount userId:', userId);
-    const { count, error } = await sb
+    const { data, count, error } = await sb
       .from('followers')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact' })
       .eq('follower_id', userId);
-    console.log('📊 following count result:', count);
+    console.log('📊 following count result:', (count ?? (data || []).length) || 0);
     if (error) {
       console.error('[KMD] getFollowingCount:', error);
       return 0;
     }
-    return count || 0;
+    return Number((count ?? (data || []).length) || 0);
   }
 
   async function getState(viewerId, targetUserId) {
