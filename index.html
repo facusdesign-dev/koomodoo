@@ -1987,7 +1987,7 @@ async function syncFavoritesFromDB(){
 async function updateBadges(){
   const cartCount=cart.reduce((s,i)=>s+i.qty,0);
   const favCount=await syncFavoritesFromDB();
-  const msgCount=msgData.reduce((sum,m)=>sum+Number(m.unread||0),0) || msgData.length;
+  const msgCount=msgData.reduce((sum,m)=>sum+Number(m.unread||0),0);
   setBadgeValue('cart-badge',cartCount);
   setBadgeValue('fav-badge',favCount);
   setBadgeValue('sb-fav',favCount);
@@ -2417,10 +2417,12 @@ let messagesHydrated=false;
 let messagesLoading=false;
 let notificationsData=[];
 let notificationsLoading=false;
+let messagesPollIv=null;
 async function loadMessagesFromDB(){
   if(!KMD.loggedIn||!hasRealSession(KMD.session))return;
   const sb=getSB(); if(!sb) return;
   try{
+    const prevThreadMap=Object.fromEntries((msgData||[]).map(thread=>[thread.wid,thread]));
     const draftThreads=(msgData||[]).filter(m=>m?.wid&&(!Array.isArray(m.msgs)||m.msgs.length===0));
     const { data, error } = await sb.from('messages').select('*').or(`from_user.eq.${KMD.session.user.id},to_user.eq.${KMD.session.user.id}`).order('created_at',{ascending:true}).limit(200);
     if(error) throw error;
@@ -2439,12 +2441,18 @@ async function loadMessagesFromDB(){
       }));
       const last=rows.filter(r=>r.from_user===pid||r.to_user===pid).slice(-1)[0];
       const profile=profileMap[pid]||{};
+      const prevThread=prevThreadMap[pid];
+      const prevIncomingCount=(prevThread?.msgs||[]).filter(msg=>msg.from==='them').length;
+      const incomingCount=msgs.filter(msg=>msg.from==='them').length;
+      const newIncoming=Math.max(0,incomingCount-prevIncomingCount);
+      const threadId=`msg-${pid}`;
+      const unread=activeMsgId===threadId?0:Math.max(0,Number(prevThread?.unread||0)+newIncoming);
       return {
-        id:`msg-${pid}`,
+        id:threadId,
         wid:pid,
         preview:last?.text||'Sin mensajes',
         time:last?.created_at?new Date(last.created_at).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'}):'',
-        unread:0,
+        unread,
         partnerName:profile.first_name||profile.username||'Usuario',
         partnerAvatar:profile.avatar_url?`<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
         msgs
@@ -2519,6 +2527,20 @@ function renderMessages(){
     </div>`;}).join('')||`<div class="empty" style="padding:18px"><div class="empty-t">Sin mensajes aún</div><div class="empty-s">Las respuestas a historias y chats van a aparecer acá</div></div>`;
   updateBadges();
 }
+function startMessagesPolling(){
+  if(messagesPollIv) clearInterval(messagesPollIv);
+  messagesPollIv=setInterval(async()=>{
+    if(!KMD.loggedIn||!hasRealSession(KMD.session)||messagesLoading) return;
+    messagesLoading=true;
+    try{
+      await loadMessagesFromDB();
+      if(currentPage==='mensajes') renderMessages();
+      else updateBadges();
+    }finally{
+      messagesLoading=false;
+    }
+  },4000);
+}
 async function startDirectChat(targetUserId){
   if(!KMD.loggedIn){openAuthModal('login');return;}
   if(!targetUserId||targetUserId===KMD.session?.user?.id){nav('mensajes');return;}
@@ -2580,6 +2602,7 @@ function openChat(id){
       <button class="send-btn" onclick="sendMsg('${id}')">➤</button>
     </div>`;
   setTimeout(()=>{const b=document.getElementById('cmsgs');if(b)b.scrollTop=9999;},50);
+  updateBadges();
 }
 function openMessagesUI(convoId,userId){
   nav('mensajes');
@@ -2636,13 +2659,14 @@ async function sendMsg(id){
   const v=AuthModule.sanitizeText(f?.value||'',500);if(!v)return;
   const m=msgData.find(x=>x.id===id); if(!m)return;
   const now=new Date().toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'});
-  m.preview=v;m.msgs.push({from:'me',text:v,t:now});
+  m.preview=v;m.time=new Date().toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'});m.msgs.push({from:'me',text:v,t:now});
   openChat(id);
   f.value='';
   if(KMD.loggedIn&&hasRealSession(KMD.session)){
     try{
       const { error } = await getSB().from('messages').insert({from_user:KMD.session.user.id,to_user:m.wid,text:v,created_at:new Date().toISOString()});
       if(error) throw error;
+      messagesHydrated=false;
     }catch(e){
       toast('⚠️ No se pudo enviar el mensaje');
       console.warn('[KMD] send message:',e.message);
@@ -2727,13 +2751,15 @@ async function renderProfilePage(targetProfileId){
     const roleLabel={BUYER:'Comprador',SELLER:'Vendedor',BOTH:'Vendedor Pro'}[u.role]||'Miembro';
     const location=u.location||'Uruguay';
     const bio=u.bio||'Miembro de KOOMODOO';
-    const avatar=u.photoUrl||u.avatar_value||'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%25" height="100%25" rx="60" fill="%23111827"/><text x="50%25" y="56%25" text-anchor="middle" font-size="52" fill="%23E5E7EB">👤</text></svg>';
-    const avType=u.avatar_type||((u.photoUrl||String(u.avatar_value||'').startsWith('http')||String(u.avatar_value||'').startsWith('data:image'))?'image':'emoji');
-    const avValue=avatar;
+    const avatarUrlCandidate=u.photoUrl||u.avatar_value||u.avatar_url||'';
+    const avatarIsImage=String(avatarUrlCandidate).startsWith('http')||String(avatarUrlCandidate).startsWith('data:image');
+    const avatarEmoji=!avatarIsImage?(u.avatar_value||u.avatar||'👤'):'';
+    const avType=avatarIsImage?'image':'emoji';
+    const avValue=avatarIsImage?avatarUrlCandidate:avatarEmoji;
     const avEl=document.getElementById('prof-hero-av');
     if(avEl){
       if(avType==='image'&&avValue){avEl.innerHTML=`<img src="${avValue}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="foto">`;}
-      else{avEl.textContent=avValue||'🦁';}
+      else{avEl.textContent=avValue||'👤';}
     }
     setHtml('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
     const hndlEl=document.getElementById('prof-hndl-el');
@@ -2777,9 +2803,10 @@ async function renderProfilePage(targetProfileId){
           firstName:row.first_name||'',
           lastName:row.last_name||'',
           username:row.username||'usuario',
+          avatar_url:row.avatar_url||row.photo_url||'',
           photoUrl:row.avatar_url||row.photo_url||'',
           avatar_type:(row.avatar_url||row.photo_url)?'image':'emoji',
-          avatar_value:row.avatar_url||row.photo_url||row.avatar_value||'👤',
+          avatar_value:row.avatar_url||row.photo_url||row.avatar_value||row.avatar||'👤',
           avatar:'👤',
           bio:row.bio||'',
           location:row.location||'',
@@ -2832,16 +2859,13 @@ async function renderProfilePage(targetProfileId){
         const currentlyFollowing=await window.isFollowing(targetUserId);
         if(currentlyFollowing) await unfollowUser(targetUserId);
         else await followUser(targetUserId);
-        const currentUserId=KMD.session.user.id;
         const followers=await getFollowersCount(targetUserId);
+        const following=await getFollowingCount(targetUserId);
         const followersEl=document.getElementById('followers-count');
+        const followingEl=document.getElementById('following-count');
         if(followersEl) followersEl.textContent=fmtN(followers);
-        if(targetUserId===currentUserId){
-          const following=await getFollowingCount(currentUserId);
-          const followingEl=document.getElementById('following-count');
-          if(followingEl) followingEl.textContent=fmtN(following);
-          console.log('🔁 following actualizado:', following);
-        }
+        if(followingEl) followingEl.textContent=fmtN(following);
+        console.log('🔁 following actualizado:', following);
         await renderProfilePage(targetUserId);
         console.log('🔄 perfil actualizado después de follow');
       };
@@ -4296,6 +4320,7 @@ async function doLogout(){
   const sb=getSB();if(sb){try{await sb.auth.signOut();}catch{}}
   KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();
   messagesHydrated=false;msgData=[];notificationsData=[];
+  if(messagesPollIv){clearInterval(messagesPollIv);messagesPollIv=null;}
   try{localStorage.setItem('kmd_current_page','home');localStorage.removeItem('lastProfileVisited');}catch{}
   _showSection('home');toast('👋 Sesión cerrada. ¡Hasta pronto!');
 }
@@ -4319,6 +4344,7 @@ async function onSignedIn(session,profile){
     activeProfileId=getSavedActiveProfile();
     _showSection(getSavedPage());
   }
+  startMessagesPolling();
   await updateBadges();
 }
 
@@ -4874,6 +4900,7 @@ function listenAuth(){
       setGoogleLoading(false);
       KMD.session=null;KMD.user=null;KMD.loggedIn=false;
       messagesHydrated=false;msgData=[];
+      if(messagesPollIv){clearInterval(messagesPollIv);messagesPollIv=null;}
       saveUser(null);hdrGuest();
     }
   });
