@@ -11,15 +11,16 @@ window.ProfileModule = (() => {
 
   function rowToUser(row, authUser) {
     const avatarUrl = row?.avatar_url || authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || '';
+    const imageAvatar = /^(https?:|data:image|\/)/.test(avatarUrl) || /\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(avatarUrl);
     return {
       id: authUser?.id || row?.id,
       email: row?.email || authUser?.email || '',
       firstName: row?.first_name || '',
       lastName: row?.last_name || '',
       username: row?.username || makeUsername(authUser?.email, authUser?.id),
-      avatar: avatarUrl ? '🦁' : '🦁',
-      photoUrl: avatarUrl,
-      avatar_type: avatarUrl ? 'image' : 'emoji',
+      avatar: imageAvatar ? '🦁' : avatarUrl || '🦁',
+      photoUrl: imageAvatar ? avatarUrl : '',
+      avatar_type: imageAvatar ? 'image' : 'emoji',
       avatar_value: avatarUrl || '🦁',
       bio: row?.bio || '',
       location: row?.location || '',

@@ -20,15 +20,15 @@ window.SearchModule = (() => {
       return;
     }
     const userHtml = users.map(user => {
-      const username = user.username || user.email || 'usuario';
-      return `<button class="gs-item" onclick="openSearchResult('profile','${user.id}')"><div class="gs-emoji">👤</div><div class="gs-body"><div class="gs-title">@${username}</div><div class="gs-sub">${user.email || 'Perfil'}</div></div></button>`;
+      const username = escHtml(user.username || 'usuario');
+      return `<button class="gs-item" onclick="openSearchResult('profile','${encodeURIComponent(user.id)}')"><div class="gs-emoji">👤</div><div class="gs-body"><div class="gs-title">@${username}</div><div class="gs-sub">Perfil</div></div></button>`;
     }).join('');
     const productHtml = products.map(product => {
       const priceLabel = typeof fmt === 'function' ? fmt(Number(product.price || 0)) : `$${product.price || 0}`;
       const media = product.image_url
-        ? `<img src="${product.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
+        ? `<img src="${escHtml(product.image_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`
         : '🛍️';
-      return `<button class="gs-item" onclick="openSearchResult('product','${product.id}')"><div class="gs-emoji">${media}</div><div class="gs-body"><div class="gs-title">${product.title || 'Producto'}</div><div class="gs-sub">${priceLabel}</div></div></button>`;
+      return `<button class="gs-item" onclick="openSearchResult('product','${encodeURIComponent(product.id)}')"><div class="gs-emoji">${media}</div><div class="gs-body"><div class="gs-title">${escHtml(product.title || 'Producto')}</div><div class="gs-sub">${priceLabel}</div></div></button>`;
     }).join('');
     dd.innerHTML = `${users.length ? `<div class="gs-group">${userHtml}</div>` : ''}${products.length ? `<div class="gs-group">${productHtml}</div>` : ''}`;
     dd.classList.add('open');
@@ -46,7 +46,7 @@ window.SearchModule = (() => {
     const [profilesRes, productsRes] = await Promise.all([
       sb
         .from('profiles')
-        .select('id, username, email')
+        .select('id, username')
         .ilike('username', `%${q}%`)
         .limit(5),
       sb

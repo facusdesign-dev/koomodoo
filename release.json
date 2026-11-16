@@ -1,0 +1,7 @@
+{
+  "release": "2026-11-16-commerce-trial",
+  "previousCommit": "a0ed6e939cb91037f388b3750ec046d992c77657",
+  "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation"],
+  "realPaymentsEnabled": false,
+  "realVideoEnabled": false
+}

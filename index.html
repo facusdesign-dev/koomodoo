@@ -1476,7 +1476,7 @@ button,select,input{font-family:inherit}
       <div id="pub-media-preview" style="display:none;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;margin-bottom:16px"></div>
       <div class="fg"><label>Título *</label><input class="fi" id="pub-title" placeholder="Ej: MacBook Pro M3 14 pulgadas"></div>
       <div class="fg2">
-        <div class="fg"><label>Precio *</label><input class="fi" id="pub-price" type="number" placeholder="0"></div>
+        <div class="fg"><label>Precio *</label><input class="fi" id="pub-price" type="number" min="0.01" step="0.01" placeholder="0"></div>
         <div class="fg"><label>Categoría *</label>
           <select class="fi" id="pub-cat" onchange="updateProductCategoryFields()">
             <option value="tecnologia">💻 Tecnología</option>
@@ -1493,6 +1493,7 @@ button,select,input{font-family:inherit}
         <div class="fg"><label>Stock</label><input class="fi" id="pub-stock" type="number" value="1" min="0"></div>
         <div class="fg"><label>Condición</label><select class="fi" id="pub-condition"><option>Nuevo</option><option>Usado</option><option>Reacondicionado</option></select></div>
       </div>
+      <div class="fg"><label>Moneda de venta</label><select class="fi" id="pub-currency"><option value="UYU">Pesos uruguayos (UYU)</option><option value="ARS">Pesos argentinos (ARS)</option><option value="USD">Dolares (USD)</option><option value="BRL">Reales (BRL)</option><option value="CLP">Pesos chilenos (CLP)</option><option value="EUR">Euros (EUR)</option></select></div>
       <div class="fg"><label>Descripción</label><textarea class="fi" id="pub-desc" rows="3" style="resize:none" placeholder="Describí tu producto..."></textarea></div>
       <div class="fg2">
         <div class="fg"><label>Colores</label><input class="fi" id="pub-colors" placeholder="Ej: Negro, Blanco, Azul"></div>
@@ -1511,6 +1512,7 @@ button,select,input{font-family:inherit}
         <div class="fg"><label id="pub-extra2-label">Variante técnica</label><input class="fi" id="pub-extra2" placeholder="Ej: 256GB / 8GB RAM"></div>
       </div>
       <div class="fg"><label id="pub-category-hint-label">Especificaciones por categoría</label><textarea class="fi" id="pub-category-notes" rows="2" style="resize:none" placeholder="Agregá detalles propios de la categoría"></textarea></div>
+      <div class="fg"><button type="button" class="btn-p btn-sec" onclick="CommerceUI.variantEditor()">Generar variantes y stock</button><p style="font-size:12px;color:var(--t3);margin-top:8px">Con colores o talles, genera las combinaciones y asigna precio y stock a cada una. Sin variantes se usa el stock de arriba.</p><div id="pub-inventory"></div></div>
       <button class="pub-btn" onclick="publishProduct()">🚀 Publicar producto</button>
     </div>
     <div class="pub-form-card" id="pub-panel-post" style="display:none">
@@ -1608,6 +1610,7 @@ button,select,input{font-family:inherit}
 <script src="./profile.js"></script>
 <script src="./followers.js"></script>
 <script src="./commerce.js"></script>
+<script src="./commerce-ui.js"></script>
 <script src="./search.js"></script>
 <script src="./services.js"></script>
 <script>
@@ -1662,6 +1665,7 @@ function normalizeProductRecord(row){
     sid:row.user_id||'local',
     title:row.title||'Producto',
     price:Number(row.price||0),
+    currency:row.currency||'UYU',
     orig:null,
     cat:row.category||'tecnologia',
     em:categoryEmoji(row.category||'tecnologia'),
@@ -1670,7 +1674,7 @@ function normalizeProductRecord(row){
     reviews:Number(row.reviews_count||0),
     free:false,
     desc:row.description||'',
-    condition:'Nuevo',
+    condition:row.condition||'Nuevo',
     sellerName:row.seller_name||'Mi tienda',
     media:Array.isArray(row.media_urls)?row.media_urls:(row.image_url?[row.image_url]:[]),
     variants:row.variants||{},
@@ -1745,10 +1749,10 @@ async function loadSupabaseContent(){
   }catch(e){ console.warn('[KMD] Load services:',e.message); }
 }
 const banners=[
-  {t:'Semana Tech 🔥',s:'Hasta 40% OFF en electrónica',b:'⏰ SOLO HOY',em:'💻',bg:'linear-gradient(135deg,#064E3B,#065f46)'},
-  {t:'Nueva Colección 2026',s:'Primavera-Verano disponible',b:'✨ NUEVO',em:'👗',bg:'linear-gradient(135deg,#4a044e,#701a75)'},
-  {t:'Envío Gratis MVD 🚚',s:'En compras mayores a $1.000',b:'📍 MVD',em:'📦',bg:'linear-gradient(135deg,#1e3a5f,#1e40af)'},
-  {t:'12 cuotas sin interés 💳',s:'Con todas las tarjetas',b:'💰 SIN RECARGO',em:'💳',bg:'linear-gradient(135deg,#78350f,#b45309)'},
+  {t:'Prueba de productos',s:'Publicá fotos, variantes, precio y stock',b:'VERSIÓN DE PRUEBA',em:'💻',bg:'linear-gradient(135deg,#064E3B,#065f46)'},
+  {t:'Tu catálogo',s:'Revisá los productos de cada vendedor',b:'PRODUCTOS REALES',em:'👗',bg:'linear-gradient(135deg,#4a044e,#701a75)'},
+  {t:'Entrega a coordinar',s:'Hablá con el vendedor desde tu pedido',b:'SIN ENVÍO INTEGRADO',em:'📦',bg:'linear-gradient(135deg,#1e3a5f,#1e40af)'},
+  {t:'Pedidos sin cobro',s:'Los pagos con tarjeta aún no están habilitados',b:'NO SE COBRA DINERO',em:'💳',bg:'linear-gradient(135deg,#78350f,#b45309)'},
 ];
 const orders=[
   {id:'o1',num:'KMD-2026-00847',date:'26 mar 2026',status:'shipped',total:5349350,items:[{pid:'p1',qty:1,price:5199000}],track:'UY892847123'},
@@ -1839,8 +1843,8 @@ let pendingStoryType='image';
 // UTILS
 // ═══════════════════════════════════════
 const getSeller=id=>sellers.find(s=>s.id===id)||sellers[0];
-const getProduct=id=>[...PRODUCT_STORE,...products].find(p=>p.id===id)||products[0];
-function getAllProducts(){return [...PRODUCT_STORE,...products];}
+const getProduct=id=>PRODUCT_STORE.find(p=>p.id===id);
+function getAllProducts(){return [...PRODUCT_STORE];}
 function getStoryList(){
   const now=Date.now();
   const activeCustom=STORY_STORE.filter(s=>new Date(s.expiresAt||0).getTime()>now);
@@ -2186,7 +2190,7 @@ function setFTab(el,idx){
 }
 function renderFeed(pts){
   currentFeedPosts=pts;
-  document.getElementById('feed-center').innerHTML=[...getHomeSocialPosts().map(buildHomeSocialCard),...pts.map(buildPost)].join('');
+  document.getElementById('feed-center').innerHTML=getHomeSocialPosts().map(buildHomeSocialCard).join('')+'<div class="pgrid-inner">'+getAllProducts().slice(0,12).map(buildProdCard).join('')+'</div>';
 }
 function buildPost(post){
   const s=getSeller(post.sid);
@@ -2232,34 +2236,16 @@ function toggleLike(btn,id){
   else{likes.add(id);btn.classList.add('liked');btn.innerHTML=btn.innerHTML.replace('🤍','❤️');toast('❤️ ¡Te gustó!');}
 }
 function renderRP(){
-  const liveCards=[...(currentLiveSession?[{name:currentLiveSession.sellerName||'Tu live',av:currentLiveSession.sellerAvatar||'📡'}]:[]),...sellers.filter(s=>s.isLive)].slice(0,4);
-  document.getElementById('rp-live').innerHTML=liveCards.map(s=>`
-    <div class="lcard" onclick="nav('live')">
-      <div class="lcard-top">
-        <div class="lcard-av">${s.av}</div>
-        <div><div class="lcard-nm">${s.name}<span class="lbs">● VIVO</span></div><div class="lcard-vc">👁 ${fmtN(Math.floor(Math.random()*2000+500))} viendo</div></div>
-      </div>
-      <div class="lcard-ttl">🔥 Ofertón del día — precios solo en vivo</div>
-      <button class="watch-btn">▶ Ver directo</button>
-    </div>`).join('');
-  document.getElementById('rp-trend').innerHTML=getAllProducts().slice(0,5).map((p,i)=>`
-    <div class="tr-item">
-      <div class="tr-em">${p.em}</div>
-      <div style="flex:1;min-width:0"><div class="tr-nm">${p.title}</div><div class="tr-pr">${fmt(p.price)}</div></div>
-      <div class="tr-rk ${i<3?'gld':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
-    </div>`).join('');
-  document.getElementById('rp-sellers').innerHTML=sellers.filter(s=>!s.isLive).slice(0,4).map(s=>`
-    <div class="sr">
-      <div class="sr-av">${s.av}</div>
-      <div style="flex:1;min-width:0"><div class="sr-nm">${s.name}</div><div class="sr-st">${s.sales.toLocaleString()} ventas · ⭐ ${s.rating}</div></div>
-      <button class="fol-btn" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'✅ Siguiendo':'Dejaste de seguir')">Seguir</button>
-    </div>`).join('');
+  document.getElementById('rp-live').innerHTML='<p style="padding:12px;color:var(--t3)">Transmisiones reales: proxima etapa.</p>';
+  document.getElementById('rp-trend').innerHTML=getAllProducts().slice(0,5).map(p=>`<div class="tr-item" onclick="CommerceUI.showProduct('${p.id}')"><div class="tr-em">${p.em}</div><div><div class="tr-nm">${escHtml(p.title)}</div><div class="tr-pr">${CommerceUI.money(p.price,p.currency)}</div></div></div>`).join('');
+  document.getElementById('rp-sellers').innerHTML='<p style="padding:12px;color:var(--t3)">Busca vendedores por su usuario.</p>';
 }
 
 // ═══════════════════════════════════════
 // MARKETPLACE
 // ═══════════════════════════════════════
-function renderMarketplace(){
+async function renderMarketplace(){
+  try{await CommerceUI.refreshCatalog();}catch(error){console.error('[KMD] catalog:',error);toast('No se pudo actualizar el catalogo. Intenta nuevamente.');return;}
   document.getElementById('mp-cats').innerHTML=CATS.map(c=>`
     <div class="cat ${activeCat===c.slug?'on':''}" onclick="setMpCat(this,'${c.slug}')">${c.em} ${c.name}</div>`).join('');
   renderProdGrid();
@@ -2285,83 +2271,26 @@ function renderProdGrid(){
   g.innerHTML=list.map(buildProdCard).join('');
 }
 function buildProdCard(p){
-  const s=getSeller(p.sid);
-  const sellerName=p.sellerName||s.name;
-  const d=disc(p.price,p.orig);
-  const isFav=favs.has(p.id);
-  return `<div class="pcd" onclick="toast('🛍️ ${p.title}')">
-    <div class="pcd-img" style="background:${catBg(p.cat)}">
-      ${p.media?.[0]?`<img src="${p.media[0]}" style="width:100%;height:100%;object-fit:cover">`:p.em}
-      ${d?`<span style="position:absolute;top:7px;left:7px;background:var(--g2);color:#022C22;font-size:8px;font-weight:900;padding:2px 5px;border-radius:4px">−${d}%</span>`:''}
-      <button class="pcd-wish ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav(this,'${p.id}')">${isFav?'❤️':'🤍'}</button>
-    </div>
-    <div class="pcd-body">
-      <div class="pcd-cat">${p.cat}</div>
-      <div class="pcd-nm">${p.title}</div>
-      <div class="pcd-sl">por ${sellerName}</div>
-      <div class="pcd-pr-row"><span class="pcd-price">${fmt(p.price)}</span>${p.orig?`<span class="pcd-old">${fmt(p.orig)}</span>`:''}</div>
-      <div class="pcd-rat">${'★'.repeat(Math.floor(p.rating))}${'☆'.repeat(5-Math.floor(p.rating))} <span>(${p.reviews})</span></div>
-      <button class="pcd-btn" onclick="event.stopPropagation();addToCart('${p.id}')">🛒 Agregar al carrito</button>
-    </div>
+  return `<div class="pcd" onclick="CommerceUI.showProduct('${p.id}')">
+    <div class="pcd-img" style="background:${catBg(p.cat)}">${p.media?.[0]?`<img src="${escHtml(p.media[0])}" style="width:100%;height:100%;object-fit:cover" loading="lazy">`:p.em}</div>
+    <div class="pcd-body"><div class="pcd-cat">${escHtml(p.cat)}</div><div class="pcd-nm">${escHtml(p.title)}</div>
+    <div class="pcd-sl">Stock: ${p.stock}</div><div class="pcd-pr-row"><span class="pcd-price">${CommerceUI.money(p.price,p.currency)}</span></div>
+    <button class="pcd-btn" onclick="event.stopPropagation();addToCart('${p.id}')">${p.stock>0?'Elegir y comprar':'Ver producto'}</button></div>
   </div>`;
 }
 
 // ═══════════════════════════════════════
 // CART
 // ═══════════════════════════════════════
-function addToCart(pid){
-  const p=getProduct(pid);
-  const ex=cart.find(i=>i.pid===pid);
-  if(ex)ex.qty++;else cart.push({pid,qty:1});
-  updateBadges();toast('🛒 '+p.title.slice(0,22)+'...');
-  if(currentPage==='carrito')renderCart();
-}
+async function addToCart(pid){ await CommerceUI.showProduct(pid); }
 function removeFromCart(pid){cart=cart.filter(i=>i.pid!==pid);updateBadges();renderCart();}
 function changeQty(pid,d){
-  const it=cart.find(i=>i.pid===pid);if(!it)return;
-  it.qty+=d;if(it.qty<=0)removeFromCart(pid);else{updateBadges();renderCart();}
+  const item=cart.find(i=>i.variantId===pid||i.pid===pid);if(!item)return;
+  item.qty=Math.max(0,Math.min(99,item.qty+d));
+  cart=cart.filter(i=>i.qty>0);updateBadges();renderCart();
 }
-function renderCart(){
-  const c=document.getElementById('cart-items');
-  const lbl=document.getElementById('cart-count');
-  if(!cart.length){
-    c.innerHTML=`<div class="empty"><div class="empty-ic">🛒</div><div class="empty-t">Carrito vacío</div><div class="empty-s">Explorá el marketplace</div><button class="btn-go" onclick="nav('marketplace')">🛍️ Explorar</button></div>`;
-    document.getElementById('cart-summary').innerHTML='';lbl.textContent='';return;
-  }
-  const count=cart.reduce((s,i)=>s+i.qty,0);
-  lbl.textContent=`(${count} artículo${count!==1?'s':''})`;
-  c.innerHTML=cart.map(item=>{
-    const p=getProduct(item.pid);
-    return `<div class="ci">
-      <div class="ci-img">${p.em}</div>
-      <div style="flex:1;min-width:0">
-        <div class="ci-nm">${p.title}</div>
-        <div class="ci-sl">por ${getSeller(p.sid).name}</div>
-        <div class="ci-pr">${fmt(p.price*item.qty)}</div>
-      </div>
-      <div class="qty-row">
-        <button class="qb" onclick="changeQty('${item.pid}',-1)">−</button>
-        <span class="qn">${item.qty}</span>
-        <button class="qb" onclick="changeQty('${item.pid}',1)">+</button>
-        <button class="del-btn" onclick="removeFromCart('${item.pid}')">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
-  const sub=cart.reduce((s,i)=>s+getProduct(i.pid).price*i.qty,0);
-  const ship=350;const d=Math.round(sub*.05);const total=sub+ship-d;
-  document.getElementById('cart-summary').innerHTML=`
-    <div class="cs-t">Resumen del pedido</div>
-    <div class="cs-row"><span style="color:var(--t2)">Subtotal</span><span>${fmt(sub)}</span></div>
-    <div class="cs-row"><span style="color:var(--t2)">Envío estimado</span><span>${fmt(ship)}</span></div>
-    <div class="cs-row disc"><span>Descuento 5%</span><span>−${fmt(d)}</span></div>
-    <div class="cs-total"><span class="cs-tl">Total</span><span class="cs-tp">${fmt(total)}</span></div>
-    <button class="ck-btn" onclick="checkout()">🔒 Finalizar compra</button>
-    <div class="cs-sec">🔐 Pago 100% seguro</div>`;
-}
-function checkout(){
-  toast('✅ ¡Compra confirmada! Redirigiendo...');
-  setTimeout(()=>{cart=[];updateBadges();nav('pedidos');},1800);
-}
+function renderCart(){ CommerceUI.renderCart(); }
+async function checkout(){ await CommerceUI.checkout(); }
 
 // ═══════════════════════════════════════
 // FAVORITES
@@ -2382,33 +2311,7 @@ function renderFavs(){
 // ═══════════════════════════════════════
 // ORDERS
 // ═══════════════════════════════════════
-function renderOrders(){
-  const STATUS={pending:{lbl:'⏳ Pendiente',cls:'st-pending',step:0},paid:{lbl:'✅ Pagado',cls:'',step:1},processing:{lbl:'⚙️ Preparación',cls:'',step:2},shipped:{lbl:'🚚 En camino',cls:'st-shipped',step:3},delivered:{lbl:'📦 Entregado',cls:'st-delivered',step:4}};
-  const STEPS=['Pago','Confirmado','Preparación','Enviado','Entregado'];
-  document.getElementById('orders-list').innerHTML=orders.map(o=>{
-    const st=STATUS[o.status]||{lbl:o.status,cls:'',step:0};
-    return `<div class="or-card">
-      <div class="or-top">
-        <div><div class="or-id">PEDIDO #${o.num}</div><div class="or-dt">📅 ${o.date}</div></div>
-        <div style="text-align:right"><div class="or-amt">${fmt(o.total)}</div><span class="st-badge ${st.cls}">${st.lbl}</span></div>
-      </div>
-      <div style="display:flex;gap:7px;overflow-x:auto;margin-bottom:11px;scrollbar-width:none">
-        ${o.items.map(item=>{const p=getProduct(item.pid);return`<div style="display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:9px;background:var(--surf2);border:1px solid var(--b);flex-shrink:0"><span style="font-size:20px">${p.em}</span><div><div style="font-size:11px;font-weight:700">${p.title}</div><div style="font-size:10px;color:var(--t3)">×${item.qty} · ${fmt(item.price)}</div></div></div>`;}).join('')}
-      </div>
-      <div class="tr-bar">
-        <div class="tr-lbl">Seguimiento del envío</div>
-        <div class="tr-steps">
-          ${STEPS.map((sl,i)=>`<div class="tr-step"><div class="tr-dot ${i<st.step?'done':i===st.step-1?'curr':'pend'}">${i<st.step?'✓':i+1}</div><div class="tr-sl">${sl}</div></div>${i<STEPS.length-1?`<div class="tr-line ${i<st.step?'done':''}"></div>`:''}`).join('')}
-        </div>
-      </div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">
-        <button style="padding:5px 11px;border-radius:7px;background:none;border:1px solid var(--b2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer" onclick="toast('💬 Soporte contactado')">💬 Soporte</button>
-        ${o.track?`<button style="padding:5px 11px;border-radius:7px;background:none;border:1px solid var(--b2);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer" onclick="toast('📍 Tracking: ${o.track}')">📍 Tracking</button>`:''}
-        ${o.status==='delivered'?`<button style="padding:5px 11px;border-radius:7px;background:none;border:1px solid var(--b2);color:var(--amber);font-size:11px;font-weight:600;cursor:pointer" onclick="toast('⭐ ¡Gracias!')">⭐ Calificar</button>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
+async function renderOrders(){ await CommerceUI.renderOrders(); }
 
 // ═══════════════════════════════════════
 // MESSAGES
@@ -2423,6 +2326,7 @@ function resolveAvatarDisplayUrl(raw){
   if(!raw) return '';
   const value=String(raw);
   if(value.startsWith('http')||value.startsWith('data:image')||value.startsWith('/')) return value;
+  if(!/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(value)) return value;
   const sb=getSB();
   if(!sb) return value;
   try{
@@ -2432,19 +2336,25 @@ function resolveAvatarDisplayUrl(raw){
     return value;
   }
 }
+function profileAvatarMarkup(profile){
+  const raw=profile?.avatar_url||profile?.photo_url||profile?.avatar_value||profile?.avatar||'👤';
+  const resolved=resolveAvatarDisplayUrl(raw);
+  return /^(https?:|data:image\/|\/)/.test(resolved)?`<img src="${escHtml(resolved)}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:escHtml(raw);
+}
 async function loadMessagesFromDB(){
   if(!KMD.loggedIn||!hasRealSession(KMD.session))return;
   const sb=getSB(); if(!sb) return;
   try{
     const prevThreadMap=Object.fromEntries((msgData||[]).map(thread=>[thread.wid,thread]));
     const draftThreads=(msgData||[]).filter(m=>m?.wid&&(!Array.isArray(m.msgs)||m.msgs.length===0));
-    const { data, error } = await sb.from('messages').select('*').or(`from_user.eq.${KMD.session.user.id},to_user.eq.${KMD.session.user.id}`).order('created_at',{ascending:true}).limit(200);
+    const { data, error } = await sb.from('messages').select('*').or(`from_user.eq.${KMD.session.user.id},to_user.eq.${KMD.session.user.id}`).order('created_at',{ascending:false}).limit(200);
     if(error) throw error;
-    const rows=data||[];
+    const rows=(data||[]).slice().reverse();
     const partnerIds=[...new Set(rows.map(r=>r.from_user===KMD.session.user.id?r.to_user:r.from_user).filter(Boolean))];
     let profileMap={};
     if(partnerIds.length){
-      const { data: profilesData } = await sb.from('profiles').select('id, first_name, username, avatar_url').in('id',partnerIds);
+      const { data: profilesData, error: profilesError } = await sb.from('profiles').select('id, first_name, username, avatar_url').in('id',partnerIds);
+      if(profilesError)throw profilesError;
       profileMap=Object.fromEntries((profilesData||[]).map(p=>[p.id,p]));
     }
     msgData=partnerIds.map(pid=>{
@@ -2460,7 +2370,9 @@ async function loadMessagesFromDB(){
       const incomingCount=msgs.filter(msg=>msg.from==='them').length;
       const newIncoming=Math.max(0,incomingCount-prevIncomingCount);
       const threadId=`msg-${pid}`;
-      const unread=READ_THREADS.has(threadId) ? 0 : activeMsgId===threadId ? 0 : Math.max(0,Number(prevThread?.unread||0)+newIncoming);
+      const chatVisible=currentPage==='mensajes'&&activeMsgId===threadId&&!document.hidden;
+      if(newIncoming>0&&!chatVisible) READ_THREADS.delete(threadId);
+      const unread=chatVisible ? 0 : rows.filter(row=>row.from_user===pid&&row.to_user===KMD.session.user.id&&!row.read_at).length;
       return {
         id:threadId,
         wid:pid,
@@ -2468,7 +2380,7 @@ async function loadMessagesFromDB(){
         time:last?.created_at?new Date(last.created_at).toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'}):'',
         unread,
         partnerName:profile.first_name||profile.username||'Usuario',
-        partnerAvatar:resolveAvatarDisplayUrl(profile.avatar_url)?`<img src="${resolveAvatarDisplayUrl(profile.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
+        partnerAvatar:profileAvatarMarkup(profile),
         msgs
       };
     });
@@ -2556,7 +2468,10 @@ function startMessagesPolling(){
       filter:`to_user=eq.${KMD.session.user.id}`
     },async()=>{
       await loadMessagesFromDB();
-      if(currentPage==='mensajes') renderMessages();
+      if(currentPage==='mensajes') {
+        if(activeMsgId&&msgData.some(thread=>thread.id===activeMsgId)) openChat(activeMsgId);
+        else renderMessages();
+      }
       else updateBadges();
     })
     .subscribe();
@@ -2584,7 +2499,7 @@ async function startDirectChat(targetUserId){
       time:'',
       unread:0,
       partnerName:profile.first_name||profile.username||'Usuario',
-      partnerAvatar:resolveAvatarDisplayUrl(profile.avatar_url)?`<img src="${resolveAvatarDisplayUrl(profile.avatar_url)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'👤',
+      partnerAvatar:profileAvatarMarkup(profile),
       msgs:[]
     };
     msgData.unshift(thread);
@@ -2606,6 +2521,10 @@ function openChat(id){
   READ_THREADS.add(id);
   const m=msgData.find(x=>x.id===id); if(!m)return;
   m.unread=0;
+  if(hasRealSession(KMD.session)){
+    getSB().from('messages').update({read_at:new Date().toISOString()}).eq('to_user',KMD.session.user.id).eq('from_user',m.wid).is('read_at',null)
+      .then(({error})=>{if(error)console.error('[KMD] mark messages read:',error);});
+  }
   const seller=getSeller(m.wid)||{};
   const nm=m.partnerName||seller.name||'Usuario';
   const av=m.partnerAvatar||seller.av||'👤';
@@ -2613,7 +2532,7 @@ function openChat(id){
   document.getElementById('chat-panel').innerHTML=`
     <div class="chat-hdr">
       <div class="chat-hav">${av}</div>
-      <div><div class="chat-nm">${nm}</div><div class="chat-st">● En línea</div></div>
+      <div><div class="chat-nm">${escHtml(nm)}</div><div class="chat-st">Mensajes privados</div></div>
     </div>
     <div class="chat-msgs" id="cmsgs">
       ${m.msgs.map(msg=>`<div class="cmsg ${msg.from}"><div class="cbub">${escHtml(msg.text)}</div><div class="ctm">${msg.t}</div></div>`).join('')}
@@ -2679,18 +2598,23 @@ async function sendMsg(id){
   const f=document.getElementById('chat-field');
   const v=AuthModule.sanitizeText(f?.value||'',500);if(!v)return;
   const m=msgData.find(x=>x.id===id); if(!m)return;
-  const now=new Date().toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'});
-  m.preview=v;m.time=new Date().toLocaleDateString('es-UY',{day:'2-digit',month:'2-digit'});m.msgs.push({from:'me',text:v,t:now});
-  openChat(id);
-  f.value='';
+  if(f.disabled)return;
+  f.disabled=true;
   if(KMD.loggedIn&&hasRealSession(KMD.session)){
     try{
       const { error } = await getSB().from('messages').insert({from_user:KMD.session.user.id,to_user:m.wid,text:v,created_at:new Date().toISOString()});
       if(error) throw error;
+      const now=new Date().toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'});
+      m.preview=v;m.msgs.push({from:'me',text:v,t:now});
+      f.value='';
+      openChat(id);
     }catch(e){
       toast('⚠️ No se pudo enviar el mensaje');
       console.warn('[KMD] send message:',e.message);
-    }
+    }finally{f.disabled=false;}
+  }else{
+    f.disabled=false;
+    toast('Inicia sesion para enviar mensajes.');
   }
 }
 
@@ -2778,6 +2702,9 @@ async function renderProfilePage(targetProfileId){
     const avValue=avatarIsImage?avatarUrlCandidate:avatarEmoji;
     const avEl=document.getElementById('prof-hero-av');
     if(avEl){
+      const wrap=avEl.parentElement;
+      if(wrap){wrap.onclick=isOwn?()=>requireAuth(pickProfilePhoto):null;wrap.title=isOwn?'Cambiar foto':'';}
+      const editOverlay=wrap?.querySelector('.prof-photo-overlay');if(editOverlay)editOverlay.style.display=isOwn?'':'none';
       if(avType==='image'&&avValue){avEl.innerHTML=`<img src="${avValue}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="foto">`;}
       else{avEl.textContent=avValue||'👤';}
     }
@@ -2875,6 +2802,9 @@ async function renderProfilePage(targetProfileId){
         : false;
       followBtn.textContent=followingNow?'Dejar de seguir':'Seguir';
       followBtn.onclick=async()=>{
+        if(followBtn.disabled)return;
+        followBtn.disabled=true;
+        try{
         if(typeof window.isFollowing!=='function')return;
         const currentlyFollowing=await window.isFollowing(targetUserId);
         if(currentlyFollowing) await unfollowUser(targetUserId);
@@ -2888,11 +2818,12 @@ async function renderProfilePage(targetProfileId){
         console.log('🔁 following actualizado:', following);
         await renderProfilePage(targetUserId);
         console.log('🔄 perfil actualizado después de follow');
+        }catch(error){
+          console.error('[KMD] follow action:',error);
+          toast('No se pudo actualizar el seguimiento. Intenta nuevamente.');
+        }finally{followBtn.disabled=false;}
       };
     }
-  }
-  if(!isOwnTarget&&hasRealSession(KMD.session)){
-    loadFollowState(targetId);
   }
   if(targetId&&hasRealSession(KMD.session)){
     try{
@@ -2912,23 +2843,19 @@ async function renderProfilePage(targetProfileId){
       const following=await getFollowingCount(targetId);
       console.log('✅ followers:', followers);
       console.log('✅ following:', following);
+      followersEl.textContent=String(followers || 0);
+      followingEl.textContent=String(following || 0);
       const sales=await getSalesCount(targetId);
       const rating=await getAverageRating(targetId);
       if(isOwnTarget)KMD.user={...KMD.user,followerCount:followers,followingCount:following,salesCount:sales,rating};
-      followersEl.textContent=String(followers || 0);
-      followingEl.textContent=String(following || 0);
-      setTimeout(()=>{
-        followersEl.textContent=String(followers || 0);
-        followingEl.textContent=String(following || 0);
-      },100);
       setTxt('prof-stat-ventas',fmtN(sales));
       setTxt('prof-stat-rating','⭐ '+rating);
     }catch(e){
       console.error('❌ error stats:', e);
       const followersEl=document.getElementById('followers-count');
       const followingEl=document.getElementById('following-count');
-      if(followersEl) followersEl.textContent='0';
-      if(followingEl) followingEl.textContent='0';
+      if(followersEl&&followersEl.textContent==='...') followersEl.textContent='—';
+      if(followingEl&&followingEl.textContent==='...') followingEl.textContent='—';
       setTxt('prof-stat-ventas','0');
       setTxt('prof-stat-rating','⭐ 0.0');
     }
@@ -3076,6 +3003,7 @@ function removeProductMedia(idx){
   renderProductMediaPreview();
 }
 function resetProductComposer(){
+  CommerceUI.resetInventory();
   pendingProductMedia=[];
   ['pub-title','pub-price','pub-desc','pub-colors','pub-sizes','pub-materials','pub-sku','pub-dimensions','pub-weight','pub-extra1','pub-extra2','pub-category-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const stock=document.getElementById('pub-stock');if(stock)stock.value='1';
@@ -3090,7 +3018,10 @@ async function publishProduct(){
   const title=AuthModule.sanitizeText(document.getElementById('pub-title')?.value||'',120);
   const price=Number(document.getElementById('pub-price')?.value||0);
   const cat=document.getElementById('pub-cat')?.value||'tecnologia';
-  if(!title||!price){toast('⚠️ Completá título y precio');return;}
+  if(title.length<3||!Number.isFinite(price)||price<=0){toast('Completa titulo y un precio mayor que cero.');return;}
+  if(!pendingProductMedia.length){toast('Carga al menos una foto del producto.');return;}
+  let inventory;
+  try{inventory=CommerceUI.getInventory();}catch(error){toast(error.message);return;}
   const variantSummary=[
     splitValues(document.getElementById('pub-colors')?.value||'').length?`Colores: ${splitValues(document.getElementById('pub-colors')?.value||'').join(', ')}`:'',
     splitValues(document.getElementById('pub-sizes')?.value||'').length?`Talles/Tamaños: ${splitValues(document.getElementById('pub-sizes')?.value||'').join(', ')}`:'',
@@ -3102,7 +3033,8 @@ async function publishProduct(){
     id:'up_'+Date.now(),
     sid:KMD.session?.user?.id||'local',
     title,
-    price:Math.round(price),
+    price,
+    currency:document.getElementById('pub-currency').value,
     orig:null,
     cat,
     em:categoryEmoji(cat),
@@ -3128,39 +3060,42 @@ async function publishProduct(){
   };
   const btn=document.querySelector('#pub-panel-product .pub-btn'); if(btn){btn.disabled=true;btn.textContent='Publicando...';}
   if(hasRealSession(KMD.session)){
-    product.media=await Promise.all(product.media.map((url,idx)=>uploadUrlToBucket(SB_BUCKETS.products,`products/${KMD.session.user.id}/${product.id}-${idx}.jpg`,url)));
     try{
+      product.media=await Promise.all(product.media.map((url,idx)=>uploadUrlToBucket(SB_BUCKETS.products,`products/${KMD.session.user.id}/${product.id}-${idx}.jpg`,url,true)));
       const savedProduct=await createProduct({
         title:product.title,
         description:product.desc,
         price:product.price,
-        image_url:product.media[0]||''
+        image_url:product.media[0]||'',
+        currency:product.currency,
+        category:product.cat,
+        condition:product.condition,
+        stock:product.stock,
+        media_urls:product.media,
+        variants:product.variants,
+        inventory
       });
-      if(savedProduct)Object.assign(product,normalizeProductRecord(savedProduct));
-    }catch(e){console.warn('[KMD] Save product:',e.message);}
+      if(!savedProduct)throw new Error('No se recibio confirmacion del guardado.');
+      Object.assign(product,normalizeProductRecord(savedProduct));
+    }catch(e){
+      console.error('[KMD] Save product:',e);
+      toast('No se pudo guardar el producto. Conservamos el formulario para reintentar.');
+      if(btn){btn.disabled=false;btn.textContent='Publicar producto';}
+      return;
+    }
+  }else{
+    toast('Necesitas una sesion activa para publicar.');
+    if(btn){btn.disabled=false;btn.textContent='Publicar producto';}
+    return;
   }
   PRODUCT_STORE.unshift(product);
-  POSTS_STORE.unshift({
-    id:'prod_post_'+Date.now(),
-    userId:KMD.session?.user?.id||'local',
-    authorName:[KMD.user.firstName,KMD.user.lastName].filter(Boolean).join(' ')||KMD.user.email?.split('@')[0],
-    authorAvatar:KMD.user.avatar_value||KMD.user.avatar||'🦁',
-    authorAvatarType:KMD.user.avatar_type||'emoji',
-    authorHandle:'@'+(KMD.user.username||KMD.user.email?.split('@')[0]),
-    text:`Nuevo producto disponible: ${title}`,
-    imageUrl:pendingProductMedia[0]?.url||'',
-    videoUrl:'',
-    likes:0,
-    comments:[],
-    timeAgo:'ahora mismo',
-  });
   resetProductComposer();
   renderMarketplace();
   renderPostsFeed();
   renderHome();
   toast('🚀 ¡Producto publicado con variantes y detalles!');
   if(btn){btn.disabled=false;btn.textContent='🚀 Publicar producto';}
-  setTimeout(()=>nav('perfil'),900);
+  nav('marketplace');
 }
 function previewPublishPostImg(input){
   const file=input.files[0];if(!file)return;
@@ -3908,7 +3843,7 @@ function getSB() {
   catch(e) { console.info('[KMD] Demo mode:', e.message); }
   return _sb;
 }
-async function uploadUrlToBucket(bucketName, path, sourceUrl){
+async function uploadUrlToBucket(bucketName, path, sourceUrl,strict=false){
   const sb=getSB();
   if(!sb||!sourceUrl||!hasRealSession(KMD.session))return sourceUrl;
   try{
@@ -3919,6 +3854,7 @@ async function uploadUrlToBucket(bucketName, path, sourceUrl){
     return data.publicUrl+'?t='+Date.now();
   }catch(e){
     console.warn(`[KMD] Upload ${bucketName}:`,e.message);
+    if(strict)throw e;
     return sourceUrl;
   }
 }
@@ -4346,7 +4282,8 @@ async function doLogout(){
   const sb=getSB();if(sb){try{await sb.auth.signOut();}catch{}}
   KMD.session=null;KMD.user=null;KMD.loggedIn=false;saveUser(null);hdrGuest();
   messagesHydrated=false;msgData=[];notificationsData=[];
-  if(messagesPollIv){clearInterval(messagesPollIv);messagesPollIv=null;}
+  if(messagesChannel){await getSB()?.removeChannel(messagesChannel);messagesChannel=null;}
+  READ_THREADS.clear();activeMsgId=null;
   try{localStorage.setItem('kmd_current_page','home');localStorage.removeItem('lastProfileVisited');}catch{}
   _showSection('home');toast('👋 Sesión cerrada. ¡Hasta pronto!');
 }
@@ -4926,7 +4863,8 @@ function listenAuth(){
       setGoogleLoading(false);
       KMD.session=null;KMD.user=null;KMD.loggedIn=false;
       messagesHydrated=false;msgData=[];
-      if(messagesPollIv){clearInterval(messagesPollIv);messagesPollIv=null;}
+      if(messagesChannel){await sb.removeChannel(messagesChannel);messagesChannel=null;}
+      READ_THREADS.clear();activeMsgId=null;
       saveUser(null);hdrGuest();
     }
   });
