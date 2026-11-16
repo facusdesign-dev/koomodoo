@@ -4248,9 +4248,10 @@ async function ensureProfileRecord(session, seed={}){
   }
 }
 async function persistProfileRecord(profile){
-  if(!hasRealSession(KMD.session)||!KMD.session?.user?.id)return null;
+  if(!hasRealSession(KMD.session)||!KMD.session?.user?.id)throw new Error('Iniciá sesión para guardar el perfil.');
   const saved = await ProfileModule.saveProfile(profile);
-  return saved ? { ...profile, ...saved, profileComplete: profileDone(saved) } : profile;
+  if(!saved)throw new Error('No se pudo confirmar el guardado del perfil.');
+  return { ...profile, ...saved, profileComplete: profileDone(saved) };
 }
 
 // ── RECUPERAR PASSWORD ────────────────────────────────────────────────
@@ -4264,13 +4265,12 @@ async function doForgotPw(){
 
   const sb = getSB();
 
-  if(sb){
-    await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.href
-    });
-  }
-
-  afMsg('amsg-l','ok', `📧 Email de recuperación enviado a ${email}`);
+  if(!sb){afMsg('amsg-l','err','No hay conexión para solicitar la recuperación.');return;}
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+    if(error)throw error;
+    afMsg('amsg-l','ok','Si existe una cuenta con ese correo, recibirás las instrucciones de recuperación.');
+  }catch(e){console.error('[KMD] password recovery:',e);afMsg('amsg-l','err','No se pudo procesar la solicitud. Intentá nuevamente.');}
 }
 
 // ── INICIALIZACIÓN GLOBAL ─────────────────────────────────────────────
@@ -4341,16 +4341,16 @@ async function completeProfile(){
     updatedAt: new Date().toISOString(),
   };
 
-  // Persist to Supabase if a real session exists
   const sb = getSB();
-  if(sb && hasRealSession(KMD.session)){
-    try{ await sb.auth.updateUser({ data: updated }); }
-    catch(e){ console.warn('completeProfile: Supabase update failed —', e.message); }
-    try{ await persistProfileRecord(updated); }
-    catch(e){ console.warn('completeProfile: profiles upsert failed —', e.message); }
+  if(!sb||!hasRealSession(KMD.session)){toast('Iniciá sesión para guardar el perfil.');return;}
+  try{
+    const {error}=await sb.auth.updateUser({data:updated});if(error)throw error;
+    await persistProfileRecord(updated);
+  }catch(e){
+    console.error('[KMD] complete profile:',e);
+    toast('No se pudo confirmar el guardado del perfil. Intentá nuevamente.');return;
   }
 
-  // Always update local state
   KMD.user = updated;
   setLocalCurrencyByCountry(updated.country);
   saveUser(updated);
@@ -4396,10 +4396,12 @@ async function saveCompleteProfile(){
     country:(KMD.user?.country||inferCountryCode()).toUpperCase(),
     role:document.querySelector('#cp-roles .role-opt.sel')?.dataset?.role||'BUYER',
     avatar:curAv,avatar_type:'emoji',avatar_value:curAv,profileComplete:true,updatedAt:new Date().toISOString()};
-  const sb=getSB();if(sb&&hasRealSession(KMD.session)){
-    try{await sb.auth.updateUser({data:updated});}catch(e){console.warn('SB:',e.message);}
-    try{await persistProfileRecord(updated);}catch(e){console.warn('[KMD] profiles upsert:',e.message);}
-  }
+  const sb=getSB();
+  if(!sb||!hasRealSession(KMD.session)){afMsg('cp-msg','err','Iniciá sesión para guardar el perfil.');afBtnLoad('cp-save-btn',false,'✅ Guardar y entrar');return;}
+  try{
+    const {error}=await sb.auth.updateUser({data:updated});if(error)throw error;
+    await persistProfileRecord(updated);
+  }catch(e){console.error('[KMD] complete profile save:',e);afMsg('cp-msg','err','No se pudo confirmar el guardado del perfil. Intentá nuevamente.');afBtnLoad('cp-save-btn',false,'✅ Guardar y entrar');return;}
   setLocalCurrencyByCountry(updated.country);
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);closeCompleteProfile();
   _showSection('perfil');renderProfilePage();toast('✅ ¡Perfil completado! Bienvenido a KOOMODOO 🎉');
@@ -4439,10 +4441,11 @@ async function saveEditProfile(){
     avatar:curAv,avatar_type:KMD.user.avatar_type||'emoji',avatar_value:KMD.user.avatar_value||curAv,
     profileComplete:true,updatedAt:new Date().toISOString()};
   const sb=getSB();
-  if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
+  if(!sb||!hasRealSession(KMD.session)){afMsg('ep-msg','err','Iniciá sesión para guardar el perfil.');afBtnLoad('ep-save-btn',false,'💾 Guardar cambios');return;}
+  if(sb&&hasRealSession(KMD.session)){
     try{const payload={data:updated};if(pw1)payload.password=pw1;const{error}=await sb.auth.updateUser(payload);if(error)throw error;}
     catch(e){afMsg('ep-msg','err',authErrMsg(e.message));afBtnLoad('ep-save-btn',false,'💾 Guardar cambios');return;}
-    try{await persistProfileRecord(updated);}catch(e){console.warn('[KMD] profiles upsert:',e.message);}
+    try{await persistProfileRecord(updated);}catch(e){console.error('[KMD] profile save:',e);afMsg('ep-msg','err',pw1?'La contraseña se actualizó, pero no se pudo guardar el perfil. Verificá el acceso y volvé a intentar los datos del perfil.':'No se pudo confirmar el guardado del perfil. Intentá nuevamente.');afBtnLoad('ep-save-btn',false,'💾 Guardar cambios');return;}
   }
   setLocalCurrencyByCountry(updated.country);
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);renderProfilePage();
@@ -4458,20 +4461,24 @@ function pickProfilePhoto(){if(!KMD.loggedIn){openAuthModal('login');return;}
 function closePhotoModal(){document.getElementById('photo-modal').classList.remove('open');}
 function handlePhotoFile(input){
   const file=input.files[0];if(!file)return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)){afMsg('photo-msg','err','Usá una imagen JPG, PNG o WebP.');return;}
   if(file.size>2*1024*1024){afMsg('photo-msg','err','La imagen debe ser menor a 2MB.');return;}
   const reader=new FileReader();reader.onload=e=>{pendingPhotoDataUrl=e.target.result;const prev=document.getElementById('photo-preview');if(prev)prev.innerHTML=`<img src="${pendingPhotoDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;afMsg('photo-msg','ok','Imagen cargada. Click en Guardar.');};reader.readAsDataURL(file);}
 async function saveProfilePhoto(){
   if(!pendingPhotoDataUrl){afMsg('photo-msg','warn','Seleccioná una foto primero.');return;}
   afBtnLoad('photo-save-btn',true,'');let finalUrl=pendingPhotoDataUrl;
-  const sb=getSB();if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
-    try{const blob=await(await fetch(pendingPhotoDataUrl)).blob();const ext=blob.type.split('/')[1]||'jpg';const path=`avatars/${KMD.session.user.id}.${ext}`;
+  const sb=getSB();
+  if(!sb||!hasRealSession(KMD.session)){afMsg('photo-msg','err','Iniciá sesión para guardar la foto.');afBtnLoad('photo-save-btn',false,'✅ Guardar foto');return;}
+  if(sb&&hasRealSession(KMD.session)){
+    try{const blob=await(await fetch(pendingPhotoDataUrl)).blob();if(!['image/jpeg','image/png','image/webp'].includes(blob.type))throw new Error('Usá una imagen JPG, PNG o WebP.');const ext=blob.type.split('/')[1]||'jpg';const path=`avatars/${KMD.session.user.id}/${crypto.randomUUID()}.${ext}`;
       const{error:upErr}=await sb.storage.from('avatars').upload(path,blob,{upsert:true});
-      if(!upErr){const{data}=sb.storage.from('avatars').getPublicUrl(path);finalUrl=data.publicUrl+'?t='+Date.now();}}catch(e){console.warn('Storage:',e.message);}
+      if(upErr)throw upErr;const{data}=sb.storage.from('avatars').getPublicUrl(path);finalUrl=data.publicUrl;
+    }catch(e){console.error('[KMD] profile photo upload:',e);afMsg('photo-msg','err','No se pudo subir la foto. Intentá nuevamente.');afBtnLoad('photo-save-btn',false,'✅ Guardar foto');return;}
   }
   const updated={...KMD.user,photoUrl:finalUrl,avatar_type:'image',avatar_value:finalUrl,updatedAt:new Date().toISOString()};
   if(sb&&KMD.session&&!KMD.session.user?.id?.startsWith('demo')){
-    try{await sb.auth.updateUser({data:updated});}catch{}
-    try{await persistProfileRecord(updated);}catch(e){console.warn('[KMD] profiles upsert:',e.message);}
+    try{const{error}=await sb.auth.updateUser({data:updated});if(error)throw error;await persistProfileRecord(updated);}
+    catch(e){console.error('[KMD] profile photo save:',e);afMsg('photo-msg','err','La foto se subió, pero no se pudo confirmar el perfil. Intentá nuevamente.');afBtnLoad('photo-save-btn',false,'✅ Guardar foto');return;}
   }
   KMD.user=updated;saveUser(updated);hdrLoggedIn(updated);renderProfilePage();
   pendingPhotoDataUrl=null;closePhotoModal();toast('✅ Foto de perfil actualizada');afBtnLoad('photo-save-btn',false,'✅ Guardar foto');}
