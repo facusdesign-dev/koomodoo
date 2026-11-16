@@ -1,5 +1,5 @@
 {
-  "release": "2026-11-16-profile-privacy",
+  "release": "2026-11-16-profile-privacy-notice",
   "previousCommit": "a0ed6e939cb91037f388b3750ec046d992c77657",
   "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation"],
   "realPaymentsEnabled": false,
