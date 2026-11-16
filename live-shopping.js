@@ -320,6 +320,7 @@ window.LiveShopping = (() => {
   async function leave() {
     clearInterval(directoryPoll); directoryPoll = null;
     const previous = active, previousUserId = userId(); active = null; currentLiveSession = null;
+    renderStories();
     await disconnect(); stopPreview();
     if (previous?.user_id === previousUserId) {
       try { await api('end', { roomId: previous.id }); }
