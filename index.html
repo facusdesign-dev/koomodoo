@@ -6,6 +6,7 @@
 <title>KOOMODOO</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./live-shopping.css">
 <style>
 /* ════════════════════════════════════
    TOKENS
@@ -1104,18 +1105,18 @@ button,select,input{font-family:inherit}
   </div>
 </div>
 <div id="live-start-modal" onclick="if(event.target===this)closeLiveModal()">
-  <div class="photo-modal-box">
+  <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Preparar transmision">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:800;color:var(--t)">📡 Iniciar transmisión</div><button onclick="closeLiveModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button></div>
-    <div style="text-align:center;padding:20px 0">
-      <div style="font-size:54px;margin-bottom:14px">📡</div>
-      <div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:6px">¿Listo para ir en vivo?</div>
-      <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:20px">Tu audiencia podrá verte en tiempo real. Podés mostrar productos y chatear con ellos.</div>
-      <div style="padding:12px;background:var(--surf2);border-radius:11px;margin-bottom:16px;font-size:12px;color:var(--t2)">
-        <div style="font-weight:700;color:var(--t);margin-bottom:4px">Título del live</div>
-        <input type="text" class="af-inp" id="live-title-inp" placeholder="Ej: Ofertas de esta semana 🔥" style="margin-bottom:0">
-      </div>
-    </div>
-    <button class="af-btn" onclick="startLiveSession()" style="background:linear-gradient(135deg,var(--rose),#fb923c)">🔴 Ir en vivo ahora</button>
+    <p class="live-explainer">Prepara tu vidriera, proba la camara y despues inicia. Solo se muestran productos de tu tienda.</p>
+    <label for="live-title-inp">Titulo de la transmision</label>
+    <input type="text" class="af-inp" id="live-title-inp" maxlength="100" placeholder="Ej: Novedades de mi tienda">
+    <div id="live-preview" class="live-preview"></div>
+    <button id="live-preview-btn" class="af-btn sec" onclick="LiveShopping.preview()">Probar camara y microfono</button>
+    <p id="live-setup-status" class="live-setup-status" role="status"></p>
+    <strong>Productos del vivo (hasta 12)</strong>
+    <div id="live-product-picker" class="live-product-picker"></div>
+    <p class="live-setup-status">Piloto de hasta 10 personas por sala. Sin grabacion ni cobros reales.</p>
+    <button id="live-start-btn" class="af-btn" onclick="startLiveSession()" disabled>Iniciar transmision</button>
     <button onclick="closeLiveModal()" class="af-btn sec">Cancelar</button>
   </div>
 </div>
@@ -1432,33 +1433,32 @@ button,select,input{font-family:inherit}
 
 <!-- ── LIVE ── -->
 <div class="pg" id="pg-live">
-  <div class="live-wrap">
-    <div class="live-main">
-      <div style="text-align:center"><div style="font-size:76px">🎥</div><div style="font-size:14px;font-weight:700;color:rgba(255,255,255,.5);margin-top:10px">TechStore UY — Directo en Vivo</div></div>
-      <div class="lv-top">
-        <button style="width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.5);border:none;cursor:pointer;color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center" onclick="nav('home')">←</button>
-        <span class="lv-badge">● VIVO</span>
-        <span class="lv-vc">👁 <span id="lv-viewers">2,341</span> viendo</span>
-        <div class="lv-str"><div class="lv-sav">💼</div><span class="lv-snm">TechStore UY</span></div>
-        <button class="lv-close" onclick="nav('home')">✕</button>
+  <p id="live-status" class="live-status" style="padding:8px 18px" role="status"></p>
+  <section id="live-directory" class="live-directory">
+    <h1>Descubri tu proxima compra, en vivo.</h1>
+    <p class="live-explainer">Mira al vendedor, pregunta en el chat y conoce los productos sin salir del video. Estamos preparando las primeras transmisiones del piloto.</p>
+    <button class="btn-p btn-pri" onclick="openLiveModal()">Preparar mi transmision</button>
+    <div id="live-room-list" class="live-room-list"></div>
+  </section>
+  <section id="live-player-layout" class="live-player-layout" hidden aria-label="Transmision y productos">
+    <div class="live-stage">
+      <div class="live-video-frame">
+        <div class="live-topline"><strong id="live-title"></strong><span id="live-audience">Conectando...</span></div>
+        <div id="live-media"></div><div id="live-audio" hidden></div>
       </div>
-      <div class="lv-prods" id="lv-prods"></div>
-      <div class="lv-input-bar">
-        <input class="lv-inp" id="lv-inp" placeholder="Escribí un comentario..." onkeydown="if(event.key==='Enter')sendLive()">
-        <button class="lv-react" onclick="toast('❤️')">❤️</button>
-        <button class="lv-react" onclick="toast('🎉')">🎉</button>
-        <button class="lv-react" onclick="toast('↗️ Compartido')">↗️</button>
-      </div>
+      <div id="live-controls" class="live-controls"></div>
+      <p class="live-status">Elegi un producto para ver variantes y agregarlo al carrito sin cerrar el video. Piloto sin cobros.</p>
+      <div id="live-products" class="live-products" aria-label="Productos del vivo"></div>
     </div>
-    <div class="live-chat-panel">
-      <div class="lc-hdr"><span class="lc-t">Chat</span><span class="lc-vc" id="lc-count"></span></div>
-      <div class="lc-msgs" id="lc-msgs"></div>
-      <div class="lc-inp-row">
-        <input class="lc-field" id="lc-field" placeholder="Comentar..." onkeydown="if(event.key==='Enter')sendChat()">
-        <button class="lc-send" onclick="sendChat()">➤</button>
-      </div>
-    </div>
-  </div>
+    <aside class="live-chat">
+      <h2>Conversa con el vendedor</h2>
+      <div id="live-comments" class="live-comments" aria-live="polite"></div>
+      <form class="live-comment-form" onsubmit="event.preventDefault();LiveShopping.sendComment()">
+        <input id="live-comment" class="fi" maxlength="300" placeholder="Hace tu pregunta..." aria-label="Comentario del vivo" required>
+        <button id="live-comment-send" class="btn-p btn-pri" type="submit">Enviar</button>
+      </form>
+    </aside>
+  </section>
 </div>
 
 <!-- ── PUBLICAR ── -->
@@ -1614,6 +1614,7 @@ button,select,input{font-family:inherit}
 <script src="./commerce-ui.js"></script>
 <script src="./search.js"></script>
 <script src="./services.js"></script>
+<script src="./live-shopping.js"></script>
 <script>
 // ═══════════════════════════════════════
 // DATA
@@ -1741,10 +1742,6 @@ async function loadSupabaseContent(){
     if(Array.isArray(data)){ STORY_STORE.splice(0,STORY_STORE.length,...data.map(normalizeStoryRecord)); }
   }catch(e){ console.warn('[KMD] Load stories:',e.message); }
   try{
-    const { data } = await sb.from('live_sessions').select('*').eq('status','live').order('started_at',{ascending:false}).limit(1).maybeSingle();
-    if(data)currentLiveSession=normalizeLiveRecord(data);
-  }catch(e){ console.warn('[KMD] Load live:',e.message); }
-  try{
     const services = await ServicesModule.list();
     SERVICE_STORE.splice(0,SERVICE_STORE.length,...services);
   }catch(e){ console.warn('[KMD] Load services:',e.message); }
@@ -1826,7 +1823,7 @@ let storyIdx=0;
 let storyTimer=null;
 let chatIv=null;
 let viewerIv=null;
-let liveViewers=2341;
+let liveViewers=0;
 let liveIdx=0;
 let storiesVisible=true;
 let sbCollapsed=false;
@@ -2056,6 +2053,10 @@ function setCurrency(c){
 // ═══════════════════════════════════════
 // ── Navigation — no recursion ────────────────────────────────────────────────
 function _showSection(page){
+  if(page!=='live'&&currentPage==='live'){
+    if(!LiveShopping.canLeave())return;
+    void LiveShopping.leave();
+  }
   closeSidebar();if(typeof closeDd==='function')closeDd();
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.si').forEach(s=>s.classList.remove('on'));
@@ -2237,7 +2238,7 @@ function toggleLike(btn,id){
   else{likes.add(id);btn.classList.add('liked');btn.innerHTML=btn.innerHTML.replace('🤍','❤️');toast('❤️ ¡Te gustó!');}
 }
 function renderRP(){
-  document.getElementById('rp-live').innerHTML='<p style="padding:12px;color:var(--t3)">Transmisiones reales: proxima etapa.</p>';
+  document.getElementById('rp-live').innerHTML='<button class="btn-p btn-sec" style="margin:12px" onclick="nav(\'live\')">Explorar transmisiones</button>';
   document.getElementById('rp-trend').innerHTML=getAllProducts().slice(0,5).map(p=>`<div class="tr-item" onclick="CommerceUI.showProduct('${p.id}')"><div class="tr-em">${p.em}</div><div><div class="tr-nm">${escHtml(p.title)}</div><div class="tr-pr">${CommerceUI.money(p.price,p.currency)}</div></div></div>`).join('');
   document.getElementById('rp-sellers').innerHTML='<p style="padding:12px;color:var(--t3)">Busca vendedores por su usuario.</p>';
 }
@@ -2921,54 +2922,11 @@ function setPTab(idx){
 // ═══════════════════════════════════════
 // LIVE
 // ═══════════════════════════════════════
-const LIVE_BOTS=[
-  {av:'🐱',u:'@laura_uy',msgs:['¿El MacBook tiene garantía?','¡Qué buenos precios!','Comprando ahora 🛒']},
-  {av:'🦊',u:'@pedro_tec',msgs:['¡Precio increíble! 🔥','¿Cuotas sin interés?','KOOMODOO es lo mejor 🇺🇾']},
-  {av:'🦋',u:'@sofia_k',msgs:['¡Me encantan los lives!','¿Envían a Canelones?','Envío rapidísimo!']},
-  {av:'🐺',u:'@martin22',msgs:['¿Cuántas cuotas?','¡Los mejores!','También tienen rebajas en moda']},
-  {av:'🦅',u:'@ana_d',msgs:['¡Ya pedí el mío!','Calidad increíble','Llegó en 2 días ⚡']},
-];
 function renderLivePage(){
-  document.getElementById('lv-prods').innerHTML=getAllProducts().slice(0,5).map(p=>`
-    <div class="lv-prod" onclick="addToCart('${p.id}');toast('🛒 Añadido')">
-      <span class="lv-pe">${p.em}</span>
-      <div><div class="lv-pn">${p.title}</div><div class="lv-pp">${fmt(p.price)}</div><span class="lv-pb">🛒 Comprar</span></div>
-    </div>`).join('');
-  const liveName=currentLiveSession?.sellerName||'TechStore UY';
-  const liveTitle=currentLiveSession?.title||'Directo en Vivo';
-  const nameEl=document.querySelector('.lv-snm'); if(nameEl)nameEl.textContent=liveName;
-  const heroLabel=document.querySelector('#pg-live [style*="font-size:14px;font-weight:700"]'); if(heroLabel)heroLabel.textContent=`${liveName} — ${liveTitle}`;
-  const msgs=document.getElementById('lc-msgs');
-  msgs.innerHTML=`
-    <div class="lcm"><span class="lcm-av">🐱</span><div><div class="lcm-u">@laura_uy</div><div class="lcm-t">¡Hola! 👋</div></div></div>
-    <div class="lcm"><span class="lcm-av">🦊</span><div><div class="lcm-u">@pedro_tec</div><div class="lcm-t">¡Que empiece! 🔥</div></div></div>
-    <div class="lcm"><span class="lcm-av">🦋</span><div><div class="lcm-u">@sofia_k</div><div class="lcm-t">¡Primero! 😄</div></div></div>`;
-  document.getElementById('lc-count').textContent=liveViewers.toLocaleString()+' personas';
-  document.getElementById('lv-viewers').textContent=liveViewers.toLocaleString();
-  chatIv=setInterval(()=>{
-    const bot=LIVE_BOTS[liveIdx%LIVE_BOTS.length];
-    const msg=bot.msgs[Math.floor(Math.random()*bot.msgs.length)];
-    const m=document.getElementById('lc-msgs');
-    if(!m)return;
-    m.innerHTML+=`<div class="lcm"><span class="lcm-av">${bot.av}</span><div><div class="lcm-u">${bot.u}</div><div class="lcm-t">${msg}</div></div></div>`;
-    m.scrollTop=9999;while(m.children.length>25)m.removeChild(m.firstChild);
-    liveIdx++;
-  },2200);
-  viewerIv=setInterval(()=>{
-    liveViewers=Math.max(100,liveViewers+Math.floor(Math.random()*20)-8);
-    const vc=document.getElementById('lv-viewers');
-    const lcc=document.getElementById('lc-count');
-    if(vc)vc.textContent=liveViewers.toLocaleString();
-    if(lcc)lcc.textContent=liveViewers.toLocaleString()+' personas';
-  },2800);
+  void LiveShopping.page();
 }
-function sendLive(){const f=document.getElementById('lv-inp');if(!f.value.trim())return;toast('💬 Enviado');f.value='';}
-function sendChat(){
-  const f=document.getElementById('lc-field');const v=f.value.trim();if(!v)return;
-  const m=document.getElementById('lc-msgs');
-  m.innerHTML+=`<div class="lcm"><span class="lcm-av">🦁</span><div><div class="lcm-u" style="color:var(--amber)">@yo</div><div class="lcm-t">${v}</div></div></div>`;
-  m.scrollTop=9999;f.value='';
-}
+function sendLive(){return LiveShopping.sendComment();}
+function sendChat(){return LiveShopping.sendComment();}
 
 // ═══════════════════════════════════════
 // PUBLISH
@@ -4788,52 +4746,16 @@ async function publishStory(){
 // ════════════════════════════════════════════════════════════════════════════
 let currentLiveSession = null;
 
-function openLiveModal(){ requireAuth(()=>{document.getElementById('live-start-modal').classList.add('open');});}
-function closeLiveModal(){ document.getElementById('live-start-modal').classList.remove('open');}
+function openLiveModal(){ requireAuth(()=>{void LiveShopping.openStudio();});}
+function closeLiveModal(){ LiveShopping.closeStudio(); }
 
 async function startLiveSession(){
-  if(!KMD.loggedIn){openAuthModal('login');return;}
-  const title=(document.getElementById('live-title-inp')?.value||'').trim()||'Live de '+KMD.user.firstName;
-  closeLiveModal();
-  // Optimistic UI: mark as live
-  currentLiveSession={ id:'live-'+Date.now(), userId:KMD.session?.user?.id||'local', title, status:'live', startedAt:new Date().toISOString(), sellerName:[KMD.user?.firstName,KMD.user?.lastName].filter(Boolean).join(' ')||KMD.user?.email?.split('@')[0]||'Tu live', sellerAvatar:KMD.user?.avatar_value||KMD.user?.avatar||'📡', viewerCount:liveViewers };
-  if(hasRealSession(KMD.session)){
-    const sb=getSB();
-    if(sb){
-      try{
-        const payload={user_id:KMD.session.user.id,title,status:'live',started_at:currentLiveSession.startedAt,seller_name:currentLiveSession.sellerName,seller_avatar:currentLiveSession.sellerAvatar,viewer_count:liveViewers};
-        const { data } = await sb.from('live_sessions').insert(payload).select('*').single();
-        if(data)currentLiveSession=normalizeLiveRecord(data);
-      }catch(e){console.warn('[KMD] Save live:',e.message);}
-    }
-  }
-  // Update stories bar to show LIVE badge
-  renderStories();
-  renderRP();
-  _showSection('live');
-  toast('🔴 ¡Estás en vivo! Tu audiencia ya puede verte.');
+  return LiveShopping.start();
 }
 
 // Legacy helper kept separate so it no longer overrides the main live renderer.
 function syncLiveSessionPreview(){
-  // Show the main live player (existing logic)
-  const lp = document.getElementById('lv-prods');
-  if(lp)lp.innerHTML=getAllProducts().slice(0,5).map(p=>`<div class="lv-prod" onclick="addToCart('${p.id}');toast('🛒 Añadido')"><span class="lv-pe">${p.em}</span><div><div class="lv-pn">${p.title}</div><div class="lv-pp">${fmt(p.price)}</div><span class="lv-pb">🛒 Comprar</span></div></div>`).join('');
-  const msgs=document.getElementById('lc-msgs');
-  if(msgs)msgs.innerHTML=`<div class="lcm"><span class="lcm-av">🐱</span><div><div class="lcm-u">@laura_uy</div><div class="lcm-t">¡Hola! 👋</div></div></div><div class="lcm"><span class="lcm-av">🦊</span><div><div class="lcm-u">@pedro_tec</div><div class="lcm-t">¡Que empiece! 🔥</div></div></div>`;
-  const vc=document.getElementById('lc-count');if(vc)vc.textContent=liveViewers.toLocaleString()+' personas';
-  const lv=document.getElementById('lv-viewers');if(lv)lv.textContent=liveViewers.toLocaleString();
-  if(!chatIv)chatIv=setInterval(()=>{
-    const bot=LIVE_BOTS[liveIdx%LIVE_BOTS.length];const msg=bot.msgs[Math.floor(Math.random()*bot.msgs.length)];
-    const m=document.getElementById('lc-msgs');if(!m)return;
-    m.innerHTML+=`<div class="lcm"><span class="lcm-av">${bot.av}</span><div><div class="lcm-u">${bot.u}</div><div class="lcm-t">${msg}</div></div></div>`;
-    m.scrollTop=9999;while(m.children.length>25)m.removeChild(m.firstChild);liveIdx++;
-  },2200);
-  if(!viewerIv)viewerIv=setInterval(()=>{
-    liveViewers=Math.max(100,liveViewers+Math.floor(Math.random()*20)-8);
-    const vc=document.getElementById('lv-viewers');const lcc=document.getElementById('lc-count');
-    if(vc)vc.textContent=liveViewers.toLocaleString();if(lcc)lcc.textContent=liveViewers.toLocaleString()+' personas';
-  },2800);
+  return renderLivePage();
 }
 
 // ── Avatar grid ───────────────────────────────────────────────────────────────
@@ -4868,6 +4790,7 @@ function listenAuth(){
           .finally(()=>{ onSignedIn(session).catch(e=>console.warn('[KMD] SIGNED_IN:',e.message)); });
       },0);
     }else if(event==='SIGNED_OUT'){
+      void LiveShopping.leave();
       setGoogleLoading(false);
       KMD.session=null;KMD.user=null;KMD.loggedIn=false;
       messagesHydrated=false;msgData=[];

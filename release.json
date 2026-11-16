@@ -1,7 +1,8 @@
 {
-  "release": "2026-11-16-pilot-hardening",
-  "previousCommit": "a0ed6e939cb91037f388b3750ec046d992c77657",
-  "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation"],
+  "release": "2026-11-16-live-shopping-integration",
+  "previousCommit": "845912a",
+  "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens"],
+  "videoProviderConfigured": false,
   "realPaymentsEnabled": false,
   "realVideoEnabled": false
 }
