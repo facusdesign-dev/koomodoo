@@ -2705,14 +2705,14 @@ async function renderProfilePage(targetProfileId){
       const wrap=avEl.parentElement;
       if(wrap){wrap.onclick=isOwn?()=>requireAuth(pickProfilePhoto):null;wrap.title=isOwn?'Cambiar foto':'';}
       const editOverlay=wrap?.querySelector('.prof-photo-overlay');if(editOverlay)editOverlay.style.display=isOwn?'':'none';
-      if(avType==='image'&&avValue){avEl.innerHTML=`<img src="${avValue}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="foto">`;}
+      if(avType==='image'&&avValue){avEl.innerHTML=`<img src="${escHtml(avValue)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="foto">`;}
       else{avEl.textContent=avValue||'👤';}
     }
-    setHtml('prof-nm-el',name+(u.role!=='BUYER'?' <span class="vbdg">✓ VERIFICADO</span>':''));
+    setHtml('prof-nm-el',escHtml(name)+' <span style="display:inline-block;font-size:10px;font-weight:600;color:var(--t3)">Identidad no verificada</span>');
     const hndlEl=document.getElementById('prof-hndl-el');
-    if(hndlEl)hndlEl.innerHTML=`<span>${handle}</span><span style="color:var(--b2)">·</span><span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">${roleLabel}</span>`;
+    if(hndlEl)hndlEl.innerHTML=`<span>${escHtml(handle)}</span><span style="color:var(--b2)">·</span><span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">${roleLabel}</span>`;
     const locEl=document.getElementById('prof-location-el');
-    if(locEl)locEl.innerHTML=`<span>📍</span><span>${location}</span>`;
+    if(locEl)locEl.innerHTML=`<span>📍</span><span>${escHtml(location)}</span>`;
     setTxt('prof-bio-el',bio);
     if(isOwn)hdrLoggedIn(ownUser);
     setHtml('prof-acts-el', isOwn ? `
