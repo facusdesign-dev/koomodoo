@@ -45,7 +45,7 @@ window.SearchModule = (() => {
     console.log('🔎 Buscando:', q);
     const [profilesRes, productsRes] = await Promise.all([
       sb
-        .from('profiles')
+        .from('public_profiles')
         .select('id, username')
         .ilike('username', `%${q}%`)
         .limit(5),

@@ -53,7 +53,7 @@ window.FollowersModule = (() => {
     if (error) throw error;
     const ids = [...new Set((data || []).map(row => row.actor_id))];
     if (!ids.length) return [];
-    const result = await sb.from('profiles').select('id, first_name, username, avatar_url').in('id', ids);
+    const result = await sb.from('public_profiles').select('id, first_name, username, avatar_url').in('id', ids);
     if (result.error) throw result.error;
     const profiles = new Map(result.data.map(row => [row.id, row]));
     return data.map(row => ({ id: row.id, actorId: row.actor_id, actorName: profiles.get(row.actor_id)?.first_name || profiles.get(row.actor_id)?.username || 'Usuario', actorAvatar: '\u{1F464}' }));

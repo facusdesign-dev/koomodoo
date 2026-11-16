@@ -1032,7 +1032,7 @@ button,select,input{font-family:inherit}
       <label class="af-lbl">País</label><select class="af-inp" id="rg-country" style="cursor:pointer"><option value="UY">🇺🇾 Uruguay</option><option value="AR">🇦🇷 Argentina</option><option value="CL">🇨🇱 Chile</option></select>
       <button class="af-btn" id="btn-r" onclick="doRegister()"><span>🚀 Crear cuenta gratis</span></button>
     </div>
-    <div class="af-footer">Al continuar aceptás los <span class="af-link" onclick="toast('📄 Términos')">Términos</span> y la <span class="af-link">Privacidad</span></div>
+    <div class="af-footer">Versión de prueba sin cobros. <a class="af-link" href="./estado-legal.html" target="_blank" rel="noopener">Información y límites de esta prueba</a>. No cargues documentos de identidad ni datos biométricos.</div>
   </div>
 </div>
 <div id="complete-profile-screen">
@@ -1069,7 +1069,7 @@ button,select,input{font-family:inherit}
     <div class="cp-2col"><div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="ep-fn" placeholder="Carlos"></div><div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="ep-ln" placeholder="Mendoza"></div></div>
     <label class="af-lbl">Usuario</label><input type="text" class="af-inp" id="ep-user" placeholder="carlosmendoza">
     <label class="af-lbl">Bio</label><textarea class="af-inp" id="ep-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
-    <div class="cp-2col"><div><label class="af-lbl">Ubicación</label><input type="text" class="af-inp" id="ep-loc" placeholder="Montevideo, UY"></div><div><label class="af-lbl">Teléfono</label><input type="tel" class="af-inp" id="ep-phone" placeholder="+598 99 000 000"></div></div>
+    <div class="cp-2col"><div><label class="af-lbl">Ubicación pública (ciudad/país)</label><input type="text" class="af-inp" id="ep-loc" placeholder="Montevideo, UY"></div><div><label class="af-lbl">Teléfono privado</label><input type="tel" class="af-inp" id="ep-phone" placeholder="+598 99 000 000"></div></div>
     <div class="cp-2col">
       <div><label class="af-lbl">País</label><select class="af-inp" id="ep-country" style="cursor:pointer"><option value="UY">🇺🇾 Uruguay</option><option value="AR">🇦🇷 Argentina</option><option value="CL">🇨🇱 Chile</option></select></div>
       <div><label class="af-lbl">Rol</label><select class="af-inp" id="ep-role" style="cursor:pointer"><option value="BUYER">🛒 Comprador</option><option value="BOTH">⚡ Comprador + Vendedor</option><option value="SELLER">🏷️ Vendedor</option></select></div>
@@ -2353,7 +2353,7 @@ async function loadMessagesFromDB(){
     const partnerIds=[...new Set(rows.map(r=>r.from_user===KMD.session.user.id?r.to_user:r.from_user).filter(Boolean))];
     let profileMap={};
     if(partnerIds.length){
-      const { data: profilesData, error: profilesError } = await sb.from('profiles').select('id, first_name, username, avatar_url').in('id',partnerIds);
+      const { data: profilesData, error: profilesError } = await sb.from('public_profiles').select('id, first_name, username, avatar_url').in('id',partnerIds);
       if(profilesError)throw profilesError;
       profileMap=Object.fromEntries((profilesData||[]).map(p=>[p.id,p]));
     }
@@ -2483,7 +2483,7 @@ async function startDirectChat(targetUserId){
   let profile={};
   if(sb){
     try{
-      const { data } = await sb.from('profiles').select('id, first_name, username, avatar_url, phone').eq('id',targetUserId).maybeSingle();
+      const { data } = await sb.from('public_profiles').select('id, first_name, username, avatar_url').eq('id',targetUserId).maybeSingle();
       profile=data||{};
     }catch(e){
       console.warn('[KMD] direct chat profile:',e.message);

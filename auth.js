@@ -9,7 +9,7 @@ window.AuthModule = (() => {
     const sb = getSB();
     if (!sb) return { ok: false, message: 'No hay conexion con la base de datos.' };
     try {
-      const { data, error } = await sb.from('profiles').select('id').eq('username', username).limit(1);
+      const { data, error } = await sb.from('public_profiles').select('id').eq('username', username).limit(1);
       if (error) throw error;
       return data?.some(row => row.id !== userId) ? { ok: false, message: 'Ese usuario ya esta ocupado.' } : { ok: true };
     } catch (error) {

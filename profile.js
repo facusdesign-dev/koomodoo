@@ -98,7 +98,7 @@ window.ProfileModule = (() => {
   async function loadPublicProfileSummary(userId) {
     const sb = getSB();
     if (!sb || !userId) return null;
-    const { data, error } = await sb.from('profiles').select('*').eq('id', userId).maybeSingle();
+    const { data, error } = await sb.from('public_profiles').select('*').eq('id', userId).maybeSingle();
     if (error) throw error;
     return data || null;
   }
