@@ -20,15 +20,13 @@ window.FollowersModule = (() => {
     if (await isFollowing(targetId)) return true;
     const { error } = await client().from('followers').insert({ follower_id: actorId, following_id: targetId });
     if (error && error.code !== '23505') { console.error('[KMD] followUser:', error); throw error; }
-    if (!error) {
-      const { error: notificationError } = await client().from('notifications').insert({ user_id: targetId, actor_id: actorId, type: 'follow' });
-      if (notificationError) console.error('[KMD] follow notification:', notificationError);
-    }
+    window.dispatchEvent(new CustomEvent('kmd:follow-changed'));
     return true;
   }
   async function unfollowUser(targetId) {
     const { error } = await client().from('followers').delete().eq('follower_id', viewer()).eq('following_id', targetId);
     if (error) { console.error('[KMD] unfollowUser:', error); throw error; }
+    window.dispatchEvent(new CustomEvent('kmd:follow-changed'));
     return true;
   }
   async function countBy(column, id) {
@@ -47,18 +45,34 @@ window.FollowersModule = (() => {
     await (state ? followUser(targetId) : unfollowUser(targetId));
     return getState(viewerId, targetId);
   }
-  async function getNotifications(userId) {
+  async function getNotifications(userId, offset = 0) {
     const sb = client();
-    const { data, error } = await sb.from('notifications').select('*').eq('user_id', userId).eq('type', 'follow').order('created_at', { ascending: false }).limit(20);
+    const { data, error } = await sb.from('notifications').select('*').eq('user_id', userId).eq('type', 'follow').order('created_at', { ascending: false }).order('id').range(offset,offset+49);
     if (error) throw error;
     const ids = [...new Set((data || []).map(row => row.actor_id))];
     if (!ids.length) return [];
     const result = await sb.from('public_profiles').select('id, first_name, username, avatar_url').in('id', ids);
     if (result.error) throw result.error;
+    const followed = await sb.from('followers').select('following_id').eq('follower_id',viewer()).in('following_id',ids);
+    if (followed.error) throw followed.error;
     const profiles = new Map(result.data.map(row => [row.id, row]));
-    return data.map(row => ({ id: row.id, actorId: row.actor_id, actorName: profiles.get(row.actor_id)?.first_name || profiles.get(row.actor_id)?.username || 'Usuario', actorAvatar: '\u{1F464}' }));
+    return data.map(row => ({ id: row.id, read: row.read, actorId: row.actor_id, actorName: profiles.get(row.actor_id)?.first_name || profiles.get(row.actor_id)?.username || 'Usuario', avatarUrl: profiles.get(row.actor_id)?.avatar_url || '', following:followed.data.some(f=>f.following_id===row.actor_id), actorAvatar: '\u{1F464}' }));
   }
-  const api = { followUser, unfollowUser, isFollowing, getFollowersCount, getFollowingCount, getNotifications, getState, toggle };
+  async function listConnections(userId, direction = 'followers', offset = 0) {
+    const sb = client(), incoming = direction === 'followers';
+    const column = incoming ? 'follower_id' : 'following_id';
+    const result = await sb.from('followers').select(column).eq(incoming?'following_id':'follower_id', userId).order('created_at',{ascending:false}).order('id').range(offset,offset+49);
+    if (result.error) throw result.error;
+    const ids = result.data.map(row => row[column]);
+    if (!ids.length) return { people:[], hasMore:false };
+    const profiles = await sb.from('public_profiles').select('id,username,first_name,avatar_url').in('id',ids);
+    if (profiles.error) throw profiles.error;
+    const own = KMD.session?.user?.id;
+    const following = own ? await sb.from('followers').select('following_id').eq('follower_id',own).in('following_id',ids) : {data:[]};
+    if (following.error) throw following.error;
+    return { people:ids.map(id => ({...(profiles.data.find(row=>row.id===id)||{id,username:'Usuario'}),following:following.data.some(row=>row.following_id===id)})),hasMore:ids.length===50 };
+  }
+  const api = { followUser, unfollowUser, isFollowing, getFollowersCount, getFollowingCount, getNotifications, listConnections, getState, toggle };
   Object.assign(window, api);
   return api;
 })();

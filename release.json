@@ -1,7 +1,7 @@
 {
-  "release": "2026-11-17-pulso-iphone-sensor-capture",
-  "previousCommit": "f14eb74",
-  "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens"],
+  "release": "2026-11-17-social-app-public-pulso",
+  "previousCommit": "2c6df6b",
+  "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens", "public-pulso-feed", "persisted-stories", "follow-notifications", "followers-lists", "app-navigation"],
   "videoProviderConfigured": true,
   "realPaymentsEnabled": false,
   "realVideoEnabled": true,
@@ -11,5 +11,8 @@
   "cameraFraming": "native-portrait-full-source-9x16",
   "presenterCameraSelection": true,
   "appleMobileSensorCapture": true,
-  "cameraFirstFrameMeasurement": true
+  "cameraFirstFrameMeasurement": true,
+  "publicViewerAccess": true,
+  "storyMediaStorage": "private-signed-expiring",
+  "followNotificationSource": "database-trigger"
 }

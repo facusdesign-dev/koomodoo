@@ -6,6 +6,7 @@ window.LiveShopping = (() => {
   let filter = 'natural', beauty = 0, quality = 'standard', ownsFullscreen = false, effectBusy = false;
   let cameraFacing = 'user', cameraBusy = false, previewBusy = false;
   let liked = false, likeExists = false, likeBusy = false, following = false, productSignature = '';
+  let swipeStart = null;
   const $ = id => document.getElementById(id);
   const userId = () => KMD.session?.user?.id;
   const sdk = () => sdkPromise ||= import('https://cdn.jsdelivr.net/npm/livekit-client@2.24.1/dist/livekit-client.esm.mjs').catch(error => { sdkPromise = null; throw error; });
@@ -168,7 +169,7 @@ window.LiveShopping = (() => {
     } catch { toast('No se pudo ocultar la barra del navegador. El video sigue en modo inmersivo.'); }
   }
   async function api(action, data = {}) {
-    if (!userId()) throw new Error('Inicia sesion para participar de PULSO.');
+    if (!userId() && action !== 'token') throw new Error('Inicia sesion para participar de PULSO.');
     const { data: result, error } = await getSB().functions.invoke('live-access', { body: { action, ...data } });
     if (error) {
       let message;
@@ -359,7 +360,7 @@ window.LiveShopping = (() => {
     const id = active.id, target = active.user_id, version = generation;
     const { data: profile, error } = await getSB().from('public_profiles').select('id,username,first_name,avatar_url').eq('id', target).maybeSingle();
     if (error) throw error;
-    const state = target === userId() ? false : await FollowersModule.isFollowing(target);
+    const state = !userId() || target === userId() ? false : await FollowersModule.isFollowing(target);
     if (version !== generation || active?.id !== id) return;
     $('live-host-name').textContent = profile?.username ? '@' + profile.username : profile?.first_name || 'Vendedor';
     const avatar = typeof resolveAvatarDisplayUrl === 'function' ? resolveAvatarDisplayUrl(profile?.avatar_url || '') : profile?.avatar_url || '';
@@ -368,6 +369,7 @@ window.LiveShopping = (() => {
     else $('live-host-avatar').textContent = avatar || 'K';
     following = state; renderFollow();
     $('live-follow').onclick = async () => {
+      if (!userId()) { openAuthModal('login'); return; }
       const btn = $('live-follow'); if (btn.disabled || active?.id !== id) return;
       btn.disabled = true;
       try {
@@ -383,6 +385,7 @@ window.LiveShopping = (() => {
   }
   async function refreshLikes() {
     if (!active || active.status !== 'live') return;
+    if (!userId()) { labelControl($('live-like-toggle'), 'Me gusta'); return; }
     const id = active.id, version = generation;
     const count = await getSB().from('live_room_likes').select('user_id', { count: 'exact', head: true }).eq('room_id', id).eq('liked', true);
     if (count.error) throw count.error;
@@ -394,6 +397,7 @@ window.LiveShopping = (() => {
     $('live-like-toggle').setAttribute('aria-pressed', String(liked));
   }
   async function toggleLike() {
+    if (!userId()) { openAuthModal('login'); return; }
     if (!active || active.user_id === userId() || likeBusy) return;
     const id = active.id, next = !liked;
     likeBusy = true; $('live-like-toggle').disabled = true;
@@ -408,7 +412,6 @@ window.LiveShopping = (() => {
     finally { likeBusy = false; if (active?.id === id) { $('live-like-toggle').disabled = false; await refreshLikes().catch(showError); } }
   }
   async function join(id) {
-    if (!userId()) { openAuthModal('login'); return; }
     if (busy) return;
     busy = true;
     try {
@@ -531,15 +534,32 @@ window.LiveShopping = (() => {
     } catch (error) { showError(error); }
     finally { submit.disabled = false; }
   }
-  async function directory() {
+  async function publicRooms() {
+    const result = await getSB().from('live_rooms').select('*').eq('status', 'live').gt('lease_until', new Date().toISOString()).order('started_at', { ascending: false }).limit(30);
+    if (result.error) throw result.error;
+    return result.data || [];
+  }
+  async function nextRoom(direction = 1) {
+    if (busy || isPresenter() || !active) return;
+    try {
+      const previous = active.id, rooms = (await publicRooms()).filter(row => row.user_id !== userId());
+      if (!active || active.id !== previous || busy || isPresenter()) return;
+      const index = rooms.findIndex(row => row.id === previous);
+      if (!rooms.length || (rooms.length === 1 && index === 0)) { toast('No hay otro PULSO activo por ahora.'); return; }
+      const base = index < 0 ? (direction > 0 ? -1 : 0) : index;
+      await join(rooms[(base + (direction < 0 ? -1 : 1) + rooms.length) % rooms.length].id);
+    } catch (error) { showError(error); }
+  }
+  async function directory(autoPlay = false) {
     if (!$('live-directory')) return;
     $('live-directory').hidden = false; $('live-player-layout').hidden = true;
     const box = $('live-room-list');
     if (!box.childNodes.length) box.textContent = 'Buscando PULSOS...';
     try {
-      const { data: rooms, error } = await getSB().from('live_rooms').select('*').eq('status', 'live').gt('lease_until', new Date().toISOString()).order('started_at', { ascending: false }).limit(30);
-      if (error) throw error;
+      const rooms = await publicRooms();
       if (currentPage !== 'live' || active) return;
+      const first = rooms.find(row => row.user_id !== userId());
+      if (autoPlay && first) { await join(first.id); return; }
       const ids = [...new Set(rooms.map(room => room.user_id))];
       const { data: profiles, error: profileError } = ids.length ? await getSB().from('public_profiles').select('id,username,first_name').in('id', ids) : { data: [], error: null };
       if (profileError) throw profileError;
@@ -597,13 +617,30 @@ window.LiveShopping = (() => {
     return !active || active.user_id !== userId() || confirm('Al salir se apagara tu camara y se cerrara PULSO. Continuar?');
   }
   async function page() {
-    if (active) return;
-    await directory();
-    if (!directoryPoll) directoryPoll = setInterval(() => { if (currentPage === 'live' && !active) void directory(); }, 15000);
+    if (active || busy) return;
+    await directory(true);
+    if (!directoryPoll) directoryPoll = setInterval(() => { if (currentPage === 'live' && !active) void directory(true); }, 15000);
   }
+  function bindFeedGestures() {
+    const layout = $('live-player-layout'); if (!layout || layout.dataset.gestures) return;
+    layout.dataset.gestures = 'ready';
+    layout.addEventListener('touchstart', event => {
+      swipeStart = null;
+      if (isPresenter() || event.touches.length !== 1 || event.target.closest('button,input,select,textarea,.live-comments,.live-products,.live-settings')) return;
+      const touch = event.touches[0]; swipeStart = { x:touch.clientX, y:touch.clientY };
+    }, { passive:true });
+    layout.addEventListener('touchend', event => {
+      if (!swipeStart || !event.changedTouches.length) return;
+      const start = swipeStart; swipeStart = null;
+      const touch = event.changedTouches[0], dy = touch.clientY - start.y, dx = touch.clientX - start.x;
+      if (Math.abs(dy) > 65 && Math.abs(dy) > Math.abs(dx) * 1.5) void nextRoom(dy < 0 ? 1 : -1);
+    }, { passive:true });
+    layout.addEventListener('touchcancel', () => { swipeStart = null; }, { passive:true });
+  }
+  document.addEventListener('DOMContentLoaded', bindFeedGestures);
   window.addEventListener('pagehide', () => {
     stopPreview(); connection?.localParticipant.trackPublications.forEach(publication => publication.track?.stop());
     // A dropped tab is hidden by its server-time lease; do not trust unload fetches.
   });
-  return { openStudio, closeStudio, preview, start, page, join, sendComment, canLeave, leave, errorText, resumePlayback, setFilter, setBeauty, setQuality, setCamera, toggleFit, toggleSettings, fullscreen };
+  return { openStudio, closeStudio, preview, start, page, join, nextRoom, sendComment, canLeave, leave, errorText, resumePlayback, setFilter, setBeauty, setQuality, setCamera, toggleFit, toggleSettings, fullscreen };
 })();

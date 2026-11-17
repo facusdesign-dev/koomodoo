@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const allowedOrigins = new Set(['https://koomodoo.vercel.app', 'http://127.0.0.1:8765', 'http://localhost:8765']);
 let videoHealthUntil = 0;
+const guestRequests = new Map<string, { until: number; count: number }>();
 function response(req: Request, data: unknown, status = 200) {
   const origin = req.headers.get('Origin') || '';
   return new Response(JSON.stringify(data), { status, headers: {
@@ -42,14 +43,25 @@ export async function handle(req: Request) {
   if (req.headers.has('Origin') && !allowedOrigins.has(req.headers.get('Origin')!)) return response(req, { error: 'Origen no permitido' }, 403);
   try {
     const authorization = req.headers.get('Authorization') || '';
-    if (!authorization.startsWith('Bearer ')) return response(req, { error: 'Inicia sesion para usar PULSO' }, 401);
+    const input = await req.json();
+    const publicViewer = input.action === 'token';
+    if (!authorization.startsWith('Bearer ') && !publicViewer) return response(req, { error: 'Inicia sesion para usar PULSO' }, 401);
     const url = Deno.env.get('SUPABASE_URL')!;
     const client = createClient(url, envKey('SUPABASE_PUBLISHABLE_KEYS', 'SUPABASE_ANON_KEY'), {
       global: { headers: { Authorization: authorization } }, auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: { user }, error: authError } = await client.auth.getUser(authorization.slice(7));
-    if (authError || !user) return response(req, { error: 'Tu sesion vencio. Ingresa nuevamente.' }, 401);
-    const input = await req.json();
+    const auth = authorization.startsWith('Bearer ') ? await client.auth.getUser(authorization.slice(7)) : null;
+    const user = auth?.error ? null : auth?.data.user || null;
+    if (!user && !publicViewer) return response(req, { error: 'Tu sesion vencio. Ingresa nuevamente.' }, 401);
+    if (!user) {
+      // Best-effort pilot throttle; room capacity remains enforced by LiveKit.
+      const ip = req.headers.get('x-real-ip') || req.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+      const now = Date.now(), previous = guestRequests.get(ip);
+      const entry = previous && previous.until > now ? previous : { until: now + 60000, count: 0 };
+      if (entry.count >= 30) return response(req, { error: 'Espera un momento antes de cambiar de PULSO.' }, 429);
+      entry.count++; guestRequests.set(ip, entry);
+      if (guestRequests.size > 1000) guestRequests.delete(guestRequests.keys().next().value!);
+    }
     const videoURL = Deno.env.get('LIVEKIT_URL') || '';
     const apiKey = Deno.env.get('LIVEKIT_API_KEY') || '';
     const secret = Deno.env.get('LIVEKIT_API_SECRET') || '';
@@ -67,6 +79,7 @@ export async function handle(req: Request) {
     if (!configured) return response(req, { error: 'El video todavia no esta configurado. Falta vincular la cuenta del proveedor.', code: 'VIDEO_NOT_CONFIGURED' }, 503);
     const admin = createClient(url, envKey('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false, autoRefreshToken: false } });
     if (input.action === 'prepare') {
+      if (!user) return response(req, { error: 'Inicia sesion para transmitir.' }, 401);
       const title = String(input.title || '').trim();
       if (!Array.isArray(input.productIds)) return response(req, { error: 'Elegi los productos de PULSO.' }, 400);
       const ids = [...new Set(input.productIds || [])] as string[];
@@ -96,7 +109,7 @@ export async function handle(req: Request) {
     const { data: room, error } = await admin.from('live_rooms').select('*').eq('id', input.roomId).maybeSingle();
     if (error) throw error;
     if (!room) return response(req, { error: 'No encontramos este PULSO' }, 404);
-    const owner = room.user_id === user.id;
+    const owner = !!user && room.user_id === user.id;
     const fresh = Date.parse(room.lease_until) > Date.now();
     if (input.action === 'end') {
       if (!owner) return response(req, { error: 'Solo el vendedor puede finalizar PULSO' }, 403);
@@ -109,9 +122,9 @@ export async function handle(req: Request) {
     if (input.action === 'token') {
       if (!owner && (room.status !== 'live' || !fresh)) return response(req, { error: 'Este PULSO no esta disponible' }, 410);
       if (owner && room.status === 'live' && !fresh) return response(req, { error: 'PULSO vencio. Finalizalo y prepara uno nuevo.' }, 410);
-      return response(req, { url: videoURL, hostId: room.user_id, token: await jwt(apiKey, secret, { roomJoin: true, room: room.id, canPublish: owner, canPublishSources: owner ? ['camera', 'microphone'] : [], canSubscribe: true, canPublishData: false, canUpdateOwnMetadata: false }, user.id) });
+      return response(req, { url: videoURL, hostId: room.user_id, token: await jwt(apiKey, secret, { roomJoin: true, room: room.id, canPublish: owner, canPublishSources: owner ? ['camera', 'microphone'] : [], canSubscribe: true, canPublishData: false, canUpdateOwnMetadata: false }, user?.id || `guest-${crypto.randomUUID()}`) });
     }
-    if (!owner) return response(req, { error: 'Accion solo disponible para el vendedor' }, 403);
+    if (!owner || !user) return response(req, { error: 'Accion solo disponible para el vendedor' }, 403);
     if (input.action === 'activate') {
       const participants = await provider(videoURL, apiKey, secret, 'ListParticipants', room.id);
       const publisher = participants.participants?.find((p: { identity: string }) => p.identity === user.id);
