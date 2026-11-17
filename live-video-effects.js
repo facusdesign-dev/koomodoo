@@ -17,6 +17,11 @@ window.LiveVideoEffects = (() => {
     const scale = Math.min(dw / sw, dh / sh), width = sw * scale, height = sh * scale;
     return { x: (dw - width) / 2, y: (dh - height) / 2, width, height };
   }
+  function portraitCrop(sw, sh, dw = 9, dh = 16) {
+    const ratio = dw / dh;
+    const width = Math.min(sw, sh * ratio), height = Math.min(sh, sw / ratio);
+    return { x: (sw - width) / 2, y: (sh - height) / 2, width, height };
+  }
   function colorPixels(data, preset) {
     if (preset === 'natural') return;
     for (let i = 0; i < data.length; i += 4) {
@@ -67,22 +72,22 @@ window.LiveVideoEffects = (() => {
           function draw(time = performance.now()) {
             if (stopped || version !== serial) return;
             const compatible = !nativeFilter && selected.preset !== 'natural';
-            if (video.readyState >= 2 && video.videoWidth && time - lastDraw >= 1000 / (compatible ? 15 : 24)) {
+            if (video.readyState >= 2 && video.videoWidth && video.videoHeight && time - lastDraw >= 1000 / (compatible ? 15 : 24)) {
               lastDraw = time;
               const size = portraitSize(video.videoWidth, video.videoHeight, selected.quality, compatible);
               if (canvas.width !== size.width || canvas.height !== size.height) { canvas.width = size.width; canvas.height = size.height; }
-              const rect = containRect(video.videoWidth, video.videoHeight, canvas.width, canvas.height);
+              const crop = portraitCrop(video.videoWidth, video.videoHeight, canvas.width, canvas.height);
               context.globalAlpha = 1; if (nativeFilter) context.filter = 'none';
               context.fillStyle = '#030807'; context.fillRect(0, 0, canvas.width, canvas.height);
               if (nativeFilter) context.filter = presets[selected.preset];
-              context.drawImage(video, rect.x, rect.y, rect.width, rect.height);
+              context.drawImage(video, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
               if (selected.beauty > 0) {
-                const sw = Math.max(2, Math.round(rect.width * .3)), sh = Math.max(2, Math.round(rect.height * .3));
+                const sw = Math.max(2, Math.round(canvas.width * .3)), sh = Math.max(2, Math.round(canvas.height * .3));
                 if (small.width !== sw || small.height !== sh) { small.width = sw; small.height = sh; }
-                soft.drawImage(video, 0, 0, small.width, small.height);
+                soft.drawImage(video, crop.x, crop.y, crop.width, crop.height, 0, 0, small.width, small.height);
                 context.imageSmoothingEnabled = true; context.imageSmoothingQuality = 'high';
                 context.globalAlpha = selected.beauty / 100 * .55;
-                context.drawImage(small, rect.x, rect.y, rect.width, rect.height); context.globalAlpha = 1;
+                context.drawImage(small, 0, 0, canvas.width, canvas.height); context.globalAlpha = 1;
               }
               if (compatible) {
                 const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -106,5 +111,5 @@ window.LiveVideoEffects = (() => {
     };
     return processor;
   }
-  return { createProcessor, options, qualities, portraitSize, containRect, colorPixels };
+  return { createProcessor, options, qualities, portraitSize, containRect, portraitCrop, colorPixels };
 })();

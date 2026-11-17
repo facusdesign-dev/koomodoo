@@ -102,8 +102,8 @@ window.LiveShopping = (() => {
     } finally { effectBusy = false; $('live-quality').disabled = false; renderEffectControls(); }
   }
   function toggleFit() {
-    // Compatibility helper: PULSO always preserves the complete portrait image.
-    if (isPresenter()) $('live-player-layout').dataset.fit = 'contain';
+    // The outgoing track is center-cropped to portrait; never stretch it.
+    if (isPresenter()) $('live-player-layout').dataset.fit = 'portrait';
   }
   function toggleSettings() {
     if (!isPresenter()) return;
@@ -226,7 +226,7 @@ window.LiveShopping = (() => {
     document.body.classList.add('live-immersive');
     $('live-settings').hidden = true; productSignature = '';
     $('live-player-layout').dataset.presenter = String(isPresenter());
-    $('live-player-layout').dataset.fit = 'contain';
+    $('live-player-layout').dataset.fit = 'portrait';
     filter = active.video_filter || 'natural'; beauty = active.beauty_level || 0; quality = active.video_quality || 'standard';
     renderEffectControls();
     $('live-title').textContent = active.title;

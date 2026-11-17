@@ -1,11 +1,12 @@
 {
-  "release": "2026-11-17-pulso-audio-portrait-compatibility",
-  "previousCommit": "b74270d",
+  "release": "2026-11-17-pulso-portrait-camera-framing",
+  "previousCommit": "0c6b742",
   "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens"],
   "videoProviderConfigured": true,
   "realPaymentsEnabled": false,
   "realVideoEnabled": true,
   "videoEndToEndVerified": false,
   "outgoingEffectGeneratedTrackVerified": true,
-  "storeStockDeduction": "approved-payment-only"
+  "storeStockDeduction": "approved-payment-only",
+  "cameraFraming": "portrait-center-crop-9x16"
 }
