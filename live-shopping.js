@@ -46,7 +46,7 @@ window.LiveShopping = (() => {
     const number = Number(value); if (!Number.isFinite(number)) return;
     audioLevel = Math.max(0, Math.min(100, number)) / 100;
     if (audioLevel > 0) lastAudioLevel = audioLevel;
-    try { applyVolume(); if (audioLevel > 0) await connection?.startAudio(); } catch (error) { showError(error); }
+    try { applyVolume(); if (audioLevel > 0) await Promise.all([connection?.startAudio(), connection?.startVideo()]); } catch (error) { showError(error); }
   }
   async function toggleSound() {
     if (connection && !connection.canPlaybackAudio && audioLevel > 0) {
