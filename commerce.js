@@ -6,7 +6,7 @@ window.CommerceModule = (() => {
     const payload = {
       user_id: userId,
       title: AuthModule.sanitizeText(data.title, 120),
-      description: AuthModule.sanitizeText(data.description, 1200),
+      description: AuthModule.sanitizeText(data.description, 4000),
       price: Number(data.price || 0),
       image_url: data.image_url || '',
       currency: data.currency || 'UYU',
@@ -114,6 +114,11 @@ window.CommerceModule = (() => {
     if (error) { console.error('[KMD] save inventory:', error); throw error; }
     return data;
   }
+  async function savePublication(product, content, inventory, removed) {
+    if(!KMD.session?.user?.id || product.user_id!==KMD.session.user.id)throw new Error('Solo el propietario puede editar.');
+    const {data,error}=await getSB().rpc('edit_publication',{p_id:product.id,p_revision:product.revision,p_content:content,p_inventory:inventory,p_removed:removed});
+    if(error){console.error('[KMD publication edit]',error);throw error;}return data;
+  }
 
   async function reviewCart(items) {
     const details = new Map();
@@ -185,6 +190,7 @@ window.CommerceModule = (() => {
     listOrders,
     cancelOrder,
     saveInventory,
+    savePublication,
     reviewCart,
   };
 })();

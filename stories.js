@@ -41,9 +41,10 @@ window.StoriesModule = (() => {
     if (result.error) throw result.error;
     return hydrate(result.data || []);
   }
-  async function publish({ mediaUrl, caption = '', productId = null }) {
+  async function publish({ mediaUrl, caption = '', productId = null, duration = 15 }) {
     const user = await publishingUser();
     const sb = getSB();
+    duration=Number(duration);if(!Number.isInteger(duration)||duration<15||duration>30)throw new Error('La duracion debe estar entre 15 y 30 segundos.');
     productId = productId ? String(productId).trim() : null;
     if (productId) {
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId)) throw new Error('El producto no es valido. Elegi uno de tu tienda o Sin producto.');
@@ -59,7 +60,7 @@ window.StoriesModule = (() => {
     const path = `stories/${user.id}/${crypto.randomUUID()}.${types[blob.type]}`;
     const upload = await sb.storage.from('story-media').upload(path, blob, { upsert:false, contentType:blob.type });
     if (upload.error) throw upload.error;
-    const result = await sb.from('stories').insert({ user_id:user.id, media_url:path, media_type:blob.type.startsWith('video/')?'video':'image', caption, product_id:productId || null }).select().single();
+    const result = await sb.from('stories').insert({ user_id:user.id, media_url:path, media_type:blob.type.startsWith('video/')?'video':'image', caption, product_id:productId || null, duration_seconds:duration }).select().single();
     if (result.error) {
       await sb.storage.from('story-media').remove([path]).catch(error => console.error('[KMD story cleanup]',error));
       console.error('[KMD story insert]', result.error);
@@ -94,5 +95,34 @@ window.StoriesModule = (() => {
     document.addEventListener('visibilitychange', refreshQuietly);
     refreshQuietly();
   }
-  return { list, publish, refresh, start, getPublishableProducts };
+  async function remove(id){
+    const user=await publishingUser(),sb=getSB();
+    const result=await sb.from('stories').delete().eq('id',id).eq('user_id',user.id).select('id,media_url').maybeSingle();
+    if(result.error)throw result.error;if(!result.data)throw new Error('No podes eliminar esta historia o ya no esta disponible.');
+    try{const cleanup=await sb.storage.from('story-media').remove([result.data.media_url]);if(cleanup.error)console.warn('[KMD deleted story file cleanup]',cleanup.error);}
+    catch(error){console.warn('[KMD deleted story file cleanup]',error);}
+    await refresh().catch(console.error);return true;
+  }
+  async function activity(id){
+    const sb=getSB(),user=KMD.session?.user?.id;
+    const [likes,own,comments]=await Promise.all([
+      sb.from('story_likes').select('user_id',{count:'exact',head:true}).eq('story_id',id),
+      user?sb.from('story_likes').select('user_id').eq('story_id',id).eq('user_id',user).maybeSingle():{data:null},
+      sb.from('story_comments').select('id,user_id,text,created_at').eq('story_id',id).order('created_at',{ascending:false}).limit(50)
+    ]);
+    for(const result of [likes,own,comments])if(result.error)throw result.error;
+    const ids=[...new Set(comments.data.map(row=>row.user_id))];
+    const people=ids.length?await sb.from('public_profiles').select('id,username,first_name,avatar_url').in('id',ids):{data:[]};if(people.error)throw people.error;
+    return {likes:likes.count||0,liked:!!own.data,comments:comments.data.map(row=>({...row,author:people.data.find(p=>p.id===row.user_id)}))};
+  }
+  async function like(id,liked){
+    const user=await publishingUser(),sb=getSB();
+    const result=liked?await sb.from('story_likes').insert({story_id:id,user_id:user.id}):await sb.from('story_likes').delete().eq('story_id',id).eq('user_id',user.id);
+    if(result.error&&result.error.code!=='23505')throw result.error;return liked;
+  }
+  async function comment(id,text){
+    const user=await publishingUser();text=String(text).trim();if(!text||text.length>500)throw new Error('Escribi un comentario de hasta 500 caracteres.');
+    const result=await getSB().from('story_comments').insert({story_id:id,user_id:user.id,text});if(result.error)throw result.error;
+  }
+  return { list, publish, refresh, start, getPublishableProducts, remove, activity, like, comment };
 })();

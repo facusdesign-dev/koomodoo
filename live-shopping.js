@@ -309,6 +309,7 @@ window.LiveShopping = (() => {
     $('live-host-avatar').textContent = 'K';
     void loadHost().catch(error => { console.error('[KMD live host]', error); $('live-follow').textContent = 'Reintentar'; $('live-follow').disabled = false; $('live-follow').onclick = () => void loadHost().catch(showError); });
     $('live-audio-gate').hidden = true;
+    if(window.CartDock)CartDock.render();
   }
   async function connect(row, tracks = []) {
     active = row; drawShell();

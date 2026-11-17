@@ -1,6 +1,6 @@
 {
-  "release": "2026-11-17-story-product-permissions",
-  "previousCommit": "cd3697f",
+  "release": "2026-11-17-catalog-story-actions-full-editor",
+  "previousCommit": "bf91468",
   "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens", "public-pulso-feed", "persisted-stories", "follow-notifications", "followers-lists", "app-navigation"],
   "videoProviderConfigured": true,
   "realPaymentsEnabled": false,
@@ -15,5 +15,13 @@
   "publicViewerAccess": true,
   "storyMediaStorage": "private-signed-expiring",
   "followNotificationSource": "database-trigger",
-  "storyProductValidation": "verified-session-owned-published"
+  "storyProductValidation": "verified-session-owned-published",
+  "storyInteractions": ["likes", "public-comments", "owner-delete"],
+  "storyPlaybackSeconds": [15,30],
+  "catalogCategories": 20,
+  "catalogProductTypes": 84,
+  "fullProductEditor": true,
+  "productPhotoLimit": 8,
+  "floatingCart": true,
+  "storyMusicEnabled": false
 }

@@ -1101,6 +1101,7 @@ button,select,input{font-family:inherit}
     <div id="story-preview" style="width:100%;aspect-ratio:9/16;max-height:280px;border-radius:14px;background:var(--surf2);border:2px dashed rgba(52,211,153,.3);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden;margin-bottom:12px;cursor:pointer" onclick="document.getElementById('story-file-inp').click()">📷<input type="file" id="story-file-inp" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)"></div>
     <input type="text" class="af-inp" id="story-caption-inp" placeholder="Texto opcional para tu historia" style="margin-bottom:10px">
     <select class="af-inp" id="story-product-sel" style="margin-bottom:12px"><option value="">Sin producto destacado</option></select>
+    <label for="story-duration">Duracion de reproduccion</label><select id="story-duration" class="af-inp"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select>
     <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px">La historia dura 24 horas · JPG, PNG, MP4</div>
     <button id="story-publish-btn" onclick="publishStory()" class="af-btn"><span>📤 Publicar historia</span></button>
   </div>
@@ -1549,7 +1550,7 @@ button,select,input{font-family:inherit}
         <div class="fg"><label id="pub-extra2-label">Variante técnica</label><input class="fi" id="pub-extra2" placeholder="Ej: 256GB / 8GB RAM"></div>
       </div>
       <div class="fg"><label id="pub-category-hint-label">Especificaciones por categoría</label><textarea class="fi" id="pub-category-notes" rows="2" style="resize:none" placeholder="Agregá detalles propios de la categoría"></textarea></div>
-      <div class="fg"><button type="button" class="btn-p btn-sec" onclick="CommerceUI.variantEditor()">Generar variantes y stock</button><p style="font-size:12px;color:var(--t3);margin-top:8px">Con colores o talles, genera las combinaciones y asigna precio y stock a cada una. Sin variantes se usa el stock de arriba.</p><div id="pub-inventory"></div></div>
+      <div class="fg"><button type="button" class="btn-p btn-sec" onclick="CommerceUI.variantEditor()">Generar variantes y stock</button><p style="font-size:12px;color:var(--t2);margin-top:8px">Genera las combinaciones de las opciones de tu producto y asigna precio y stock a cada una. Sin opciones se usa el stock principal.</p><div id="pub-inventory"></div></div>
       <button class="pub-btn" onclick="publishProduct()">🚀 Publicar producto</button>
     </div>
     <div class="pub-form-card" id="pub-panel-post" style="display:none">
@@ -1578,6 +1579,7 @@ button,select,input{font-family:inherit}
       </div>
       <div class="fg"><label>Texto opcional</label><input class="fi" id="pub-story-caption" placeholder="Ej: Nuevo ingreso, últimas unidades"></div>
       <div class="fg"><label>Producto destacado (opcional)</label><select class="fi" id="pub-story-product"><option value="">Sin producto</option></select></div>
+      <div class="fg"><label for="pub-story-duration">Duracion de reproduccion</label><select class="fi" id="pub-story-duration"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select></div>
       <button class="pub-btn" id="pub-story-submit-btn" onclick="publishStory()">⭕ Publicar historia</button>
     </div>
   </div></div>
@@ -1618,28 +1620,7 @@ button,select,input{font-family:inherit}
 </nav>
 
 <!-- Story viewer overlay -->
-<div id="sv-overlay" onclick="if(event.target===this)closeSV()">
-  <div style="width:min(320px,90vw);height:min(580px,80vh);border-radius:20px;overflow:hidden;position:relative;background:linear-gradient(135deg,#051a0e,#082a20,#050d18)">
-    <div id="sv-prog" style="position:absolute;top:0;left:0;right:0;display:flex;gap:4px;padding:10px;z-index:10"></div>
-    <div style="position:absolute;top:24px;left:0;right:0;display:flex;align-items:center;gap:10px;padding:10px;z-index:10;background:linear-gradient(to bottom,rgba(0,0,0,.5),transparent)">
-      <div id="sv-av" style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:linear-gradient(135deg,#059669,#2DD4BF);border:2px solid rgba(255,255,255,.3)"></div>
-      <div><div id="sv-user" style="font-size:12px;font-weight:800;color:#fff"></div><div id="sv-time" style="font-size:10px;color:rgba(255,255,255,.6)"></div></div>
-      <button onclick="closeSV()" style="margin-left:auto;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;cursor:pointer;font-size:13px">✕</button>
-    </div>
-    <div id="sv-content" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:84px"></div>
-    <div id="sv-prod-area" style="display:none;position:absolute;bottom:0;left:0;right:0;padding:14px;background:linear-gradient(to top,rgba(0,0,0,.92),transparent);z-index:10">
-      <div style="display:flex;align-items:center;gap:11px;padding:11px;border-radius:12px;margin-bottom:10px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18)">
-        <span id="sv-pemoji" style="font-size:26px"></span>
-        <div><div id="sv-pname" style="font-size:12px;font-weight:700;color:#fff"></div><div id="sv-pprice" style="font-size:15px;font-weight:900;color:var(--amber)"></div><div id="sv-pdesc" style="font-size:10px;color:rgba(255,255,255,.72);margin-top:3px;line-height:1.4"></div></div>
-      </div>
-      <button onclick="addFromStory()" style="width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,#10B981,#2DD4BF);color:#022C22;font-size:13px;font-weight:900;border:none;cursor:pointer">🛒 Comprar ahora</button>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <input id="sv-reply" placeholder="Responder historia..." style="flex:1;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;outline:none">
-        <button onclick="replyToStory()" style="padding:0 14px;border-radius:12px;border:none;background:#fff;color:#051a0e;font-weight:800;cursor:pointer">Enviar</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="sv-overlay" onclick="if(event.target===this)closeSV()"></div>
 
 <div id="toast"></div>
 
@@ -1647,6 +1628,10 @@ button,select,input{font-family:inherit}
 <script src="./profile.js"></script>
 <script src="./followers.js"></script>
 <script src="./stories.js"></script>
+<script src="./catalog.js"></script>
+<script src="./product-editor.js"></script>
+<script src="./story-viewer.js"></script>
+<script src="./cart-dock.js"></script>
 <script src="./community.js"></script>
 <script src="./commerce.js"></script>
 <script src="./commerce-ui.js"></script>
@@ -1751,6 +1736,7 @@ function normalizeStoryRecord(row){
     mediaUrl:row.media_url||'',
     mediaType:row.media_type||'image',
     caption:row.caption||'',
+    durationSeconds:Number(row.duration_seconds)||15,
     authorName:row.author_name||'Usuario',
     authorAvatar:avatar,
     authorAvatarType:avatarIsImage?'image':'emoji',
@@ -1804,16 +1790,7 @@ const orders=[
   {id:'o4',num:'KMD-2026-00901',date:'27 mar 2026',status:'pending',total:1099000,items:[{pid:'p7',qty:1,price:1099000}]},
 ];
 let msgData=[];
-const CATS=[
-  {slug:'all',name:'Todo',em:'🔥'},
-  {slug:'tecnologia',name:'Tecnología',em:'💻'},
-  {slug:'moda',name:'Moda',em:'👗'},
-  {slug:'hogar',name:'Hogar',em:'🏠'},
-  {slug:'deportes',name:'Deportes',em:'👟'},
-  {slug:'belleza',name:'Belleza',em:'💄'},
-  {slug:'joyeria',name:'Joyería',em:'💍'},
-  {slug:'cocina',name:'Cocina',em:'🍳'},
-];
+const CATS=[{slug:'all',name:'Todo',em:'🔥'},...Catalog.categories.map(category=>({slug:category.id,name:category.name,em:categoryEmoji(category.id)}))];
 const USD_RATE=40; // 1 USD ≈ 40 UYU (mock)
 const CURRENCY_RATES_IN_UYU={
   UYU:1,
@@ -1864,8 +1841,6 @@ let activeCat='all';
 let searchQ='';
 let freeOnly=false;
 let sortMode='default';
-let storyIdx=0;
-let storyTimer=null;
 let storiesVisible=true;
 let sbCollapsed=false;
 let sbMobileOpen=false;
@@ -2036,6 +2011,7 @@ async function syncFavoritesFromDB(){
   }
 }
 async function updateBadges(){
+  if(window.CartDock)CartDock.render();
   const cartCount=cart.reduce((s,i)=>s+i.qty,0);
   const favCount=await syncFavoritesFromDB();
   const msgCount=msgData.reduce((sum,m)=>sum+Number(m.unread||0),0);
@@ -2111,6 +2087,7 @@ function _showSection(page){
   const pg=document.getElementById('pg-'+page);const si=document.getElementById('si-'+page);const mn=document.getElementById('mn-'+page);
   if(pg)pg.classList.add('on');if(si)si.classList.add('on');if(mn)mn.classList.add('on');
   currentPage=page;
+  if(window.CartDock)CartDock.render();
   try{localStorage.setItem('kmd_current_page',page);}catch{}
   if(page==='perfil'&&activeProfileId&&activeProfileId!==KMD?.session?.user?.id){try{localStorage.setItem('lastProfileVisited',activeProfileId);}catch{}}
   else if(page!=='perfil'||!activeProfileId||activeProfileId===KMD?.session?.user?.id){try{localStorage.removeItem('lastProfileVisited');}catch{}}
@@ -2957,7 +2934,7 @@ function setPTab(idx){
       tc.innerHTML=renderStoriesTab();
       initStoriesTab();
     }else{
-      tc.innerHTML=profileStories.length?profileStories.map(story=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="openStory(0)"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid #fb7185">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${escHtml(story.caption||'Historia')}</div><div style="font-size:11px;color:var(--t3)">Disponible por 24 horas</div></div></div>`).join(''):`<div class="empty" style="padding:22px"><div class="empty-t">Sin historias activas</div><div class="empty-s">Este perfil no tiene historias visibles ahora mismo.</div></div>`;
+      tc.innerHTML=profileStories.length?profileStories.map(story=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="StoryViewer.open('${story.id}')"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid #fb7185">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${escHtml(story.caption||'Historia')}</div><div style="font-size:11px;color:var(--t3)">Disponible por 24 horas</div></div></div>`).join(''):`<div class="empty" style="padding:22px"><div class="empty-t">Sin historias activas</div><div class="empty-s">Este perfil no tiene historias visibles ahora mismo.</div></div>`;
     }
   }else if(idx===3){
     tc.innerHTML='<div id="aff-panel"></div>';renderAffPanel();
@@ -2989,12 +2966,14 @@ function setPubType(el){
 async function handleProductMedia(input){
   const files=[...(input.files||[])].slice(0,8);
   if(!files.length)return;
-  pendingProductMedia=[];
   for(const file of files){
+    if(pendingProductMedia.length>=8){toast('Maximo 8 fotos por publicacion.');break;}
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)){toast('Usa fotos JPG, PNG o WEBP.');continue;}
     if(file.size>10*1024*1024){toast(`⚠️ ${file.name} supera 10MB`);continue;}
-    pendingProductMedia.push({name:file.name,url:await fileToDataUrl(file)});
+    pendingProductMedia.push({name:file.name,type:file.type,url:await fileToDataUrl(file)});
   }
   renderProductMediaPreview();
+  input.value='';
 }
 function renderProductMediaPreview(){
   const wrap=document.getElementById('pub-media-preview');
@@ -3017,6 +2996,7 @@ function resetProductComposer(){
   const cat=document.getElementById('pub-cat');if(cat)cat.value='tecnologia';
   renderProductMediaPreview();
   updateProductCategoryFields();
+  if(document.getElementById('pub-subcategory'))Catalog.change(true);
 }
 async function publishProduct(){
   if(!KMD.loggedIn){openAuthModal('login');return;}
@@ -3052,6 +3032,7 @@ async function publishProduct(){
     condition:document.getElementById('pub-condition')?.value||'Nuevo',
     media:pendingProductMedia.map(item=>item.url),
     variants:{
+      ...Catalog.publishMetadata(),
       colors:splitValues(document.getElementById('pub-colors')?.value||''),
       sizes:splitValues(document.getElementById('pub-sizes')?.value||''),
       materials:splitValues(document.getElementById('pub-materials')?.value||''),
@@ -3066,7 +3047,7 @@ async function publishProduct(){
   const btn=document.querySelector('#pub-panel-product .pub-btn'); if(btn){btn.disabled=true;btn.textContent='Publicando...';}
   if(hasRealSession(KMD.session)){
     try{
-      product.media=await Promise.all(product.media.map((url,idx)=>uploadUrlToBucket(SB_BUCKETS.products,`products/${KMD.session.user.id}/${product.id}-${idx}.jpg`,url,true)));
+      product.media=await Promise.all(product.media.map((url,idx)=>uploadUrlToBucket(SB_BUCKETS.products,`products/${KMD.session.user.id}/${product.id}-${idx}.${({'image/png':'png','image/webp':'webp'})[pendingProductMedia[idx]?.type]||'jpg'}`,url,true)));
       const savedProduct=await createProduct({
         title:product.title,
         description:product.desc,
@@ -3202,80 +3183,16 @@ function renderAnalytics(){
 // STORIES VIEWER
 // ═══════════════════════════════════════
 function openStory(idx){
-  const nonOwn=getStoryList().filter(s=>!s.isOwn);
-  if(idx>=nonOwn.length)return;
-  const s=nonOwn[idx];
-  if(s.isLive){nav('live');return;}
-  storyIdx=idx;currentSvPid=s.pid||null;
-  currentStoryOwnerId=s.uid==='me'?KMD.session?.user?.id:s.uid;
-  currentStoryRecordId=s.id||null;
-  const content=document.getElementById('sv-content');
-  if(s.mediaType==='video'&&s.mediaUrl){
-    content.innerHTML=`<video src="${s.mediaUrl}" style="width:100%;height:100%;object-fit:cover" autoplay muted controls></video>`;
-  }else if(s.mediaType==='image'&&s.mediaUrl){
-    content.innerHTML=`<img src="${s.mediaUrl}" style="width:100%;height:100%;object-fit:cover" alt="">`;
-  }else{
-    content.textContent=s.em;
-  }
-  document.getElementById('sv-av').innerHTML=s.authorAvatarType==='image'&&s.authorAvatar?`<img src="${escHtml(s.authorAvatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`:escHtml(s.em||'👤');
-  document.getElementById('sv-user').textContent=s.uid==='me'?(KMD.user?.firstName||'Tú'):(s.authorName||'Usuario');
-  document.getElementById('sv-time').textContent=s.time||'';
-  const pb=document.getElementById('sv-prog');
-  pb.innerHTML=nonOwn.map((_,i)=>`<div style="flex:1;height:2.5px;border-radius:2px;background:rgba(255,255,255,.25);overflow:hidden"><div id="svp-${i}" style="height:100%;background:#fff;width:${i<idx?'100%':'0%'}"></div></div>`).join('');
-  setTimeout(()=>{const el=document.getElementById('svp-'+idx);if(el){el.style.transition='width 5s linear';el.style.width='100%';}},50);
-  if(s.pid&&getProduct(s.pid)){
-    const p=getProduct(s.pid);
-    document.getElementById('sv-pemoji').textContent=p.em;
-    document.getElementById('sv-pname').textContent=p.title;
-    document.getElementById('sv-pprice').textContent=fmt(p.price);
-    document.getElementById('sv-pdesc').textContent=p.desc||'';
-    document.getElementById('sv-prod-area').style.display='block';
-  } else {document.getElementById('sv-prod-area').style.display='none';document.getElementById('sv-pdesc').textContent='';}
-  document.getElementById('sv-overlay').classList.add('show');
-  if(storyTimer)clearTimeout(storyTimer);
-  storyTimer=setTimeout(()=>{
-    const no=getStoryList().filter(s=>!s.isOwn);
-    if(idx+1<no.length)openStory(idx+1);else closeSV();
-  },5100);
+  const story=getStoryList().filter(item=>!item.isOwn)[idx];
+  if(!story)return;
+  if(story.isLive){nav('live');return;}
+  StoryViewer.open(story.id);
 }
 function openOwnStoryOrModal(){
-  const own=getStoryList()[0];
-  if(own?.isLive&&!(own.mediaUrl&&own.mediaType)){ nav('live'); return; }
-  if(own&&((own.mediaType==='image'&&own.mediaUrl)||(own.mediaType==='video'&&own.mediaUrl))){
-    const all=getStoryList();
-    const syntheticIdx=Math.max(0,all.filter(s=>!s.isOwn).findIndex(s=>s.id===own.id));
-    currentStoryOwnerId=KMD.session?.user?.id||'me';
-    currentStoryRecordId=own.id||null;
-    document.getElementById('sv-content').innerHTML=own.mediaType==='video'?`<video src="${own.mediaUrl}" style="width:100%;height:100%;object-fit:cover" autoplay muted controls></video>`:`<img src="${own.mediaUrl}" style="width:100%;height:100%;object-fit:cover" alt="">`;
-    document.getElementById('sv-av').innerHTML=KMD.user?.photoUrl?`<img src="${KMD.user.photoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(KMD.user?.avatar||'🦁');
-    document.getElementById('sv-user').textContent=KMD.user?.firstName||'Tú';
-    document.getElementById('sv-time').textContent=own.caption||own.time||'Tu historia';
-    if(own.pid&&getProduct(own.pid)){
-      const p=getProduct(own.pid);
-      currentSvPid=own.pid;
-      document.getElementById('sv-pemoji').textContent=p.em;
-      document.getElementById('sv-pname').textContent=p.title;
-      document.getElementById('sv-pprice').textContent=fmt(p.price);
-      document.getElementById('sv-pdesc').textContent=p.desc||'';
-      document.getElementById('sv-prod-area').style.display='block';
-    }else{
-      document.getElementById('sv-prod-area').style.display='none';
-      document.getElementById('sv-pdesc').textContent='';
-    }
-    document.getElementById('sv-prog').innerHTML=`<div style="flex:1;height:2.5px;border-radius:2px;background:#fff"></div>`;
-    document.getElementById('sv-overlay').classList.add('show');
-    if(storyTimer)clearTimeout(storyTimer);
-    storyTimer=setTimeout(closeSV,5100);
-    return;
-  }
-  openStoryModal();
+  const own=STORY_STORE.find(story=>story.userId===KMD.session?.user?.id&&Date.parse(story.expiresAt)>Date.now());
+  if(own)StoryViewer.open(own.id);else openStoryModal();
 }
-function closeSV(){
-  document.getElementById('sv-overlay').classList.remove('show');
-  if(storyTimer){clearTimeout(storyTimer);storyTimer=null;}
-  currentStoryOwnerId=null;
-  currentStoryRecordId=null;
-}
+function closeSV(){StoryViewer.close();}
 function addFromStory(){
   if(currentSvPid)addToCart(currentSvPid);
   closeSV();
@@ -4729,7 +4646,7 @@ function initStoriesTab(){
     feed.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--t3)"><div style="font-size:40px;margin-bottom:12px">⭕</div><div style="font-size:14px;font-weight:700;color:var(--t2);margin-bottom:4px">Historias activas</div><div style="font-size:12px;line-height:1.6">Las historias aparecen en la barra superior<br>y duran 24 horas.</div></div>`;
     return;
   }
-  feed.innerHTML=active.map((story,idx)=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="${story.isOwn?'openOwnStoryOrModal()':`openStory(${Math.max(0,active.filter(s=>!s.isOwn).findIndex(s=>s.id==='${story.id}'))})`}"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px;border:${story.isOwn&&story.mediaUrl?'2px solid #fb7185':'none'}">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${story.uid==='me'?'Tu historia':(getSeller(story.uid)?.name||'Historia')}</div><div style="font-size:11px;color:var(--t3)">${story.caption||story.time||'Disponible por 24 horas'}</div></div><div style="font-size:10px;color:var(--g);font-weight:800">Ver</div></div>`).join('');
+  feed.innerHTML=active.map(story=>`<button type="button" class="story-list-entry" onclick="${story.isOwn?'openOwnStoryOrModal()':`StoryViewer.open('${story.id}')`}"><span class="community-avatar">${story.mediaType==='image'&&story.mediaUrl?`<img src="${escHtml(story.mediaUrl)}" alt="">`:escHtml(story.em||'K')}</span><span><strong>${story.isOwn?(story.mediaUrl?'Tu historia':'Agregar historia'):escHtml(story.authorName||'Usuario')}</strong><small>${escHtml(story.caption||story.time||'Disponible por 24 horas')}</small></span><span>Ver</span></button>`).join('');
 }
 
 function openStoryModal(){requireAuth(()=>{pendingStoryDataUrl=null;pendingStoryType='image';const prev=document.getElementById('story-preview');if(prev)prev.innerHTML='📷<input type="file" id="story-file-inp" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)">';const pubPrev=document.getElementById('pub-story-preview');if(pubPrev)pubPrev.innerHTML='';const pubWrap=document.getElementById('pub-story-preview-wrap');if(pubWrap)pubWrap.style.display='none';const cap=document.getElementById('pub-story-caption');if(cap)cap.value='';const capModal=document.getElementById('story-caption-inp');if(capModal)capModal.value='';const prodSel=document.getElementById('pub-story-product');if(prodSel)prodSel.value='';const prodModal=document.getElementById('story-product-sel');if(prodModal)prodModal.value='';populateStoryProductOptions();afMsg('story-msg','ok','');document.getElementById('story-create-modal').classList.add('open');});}
@@ -4739,6 +4656,7 @@ function handleStoryFile(input){
   if(file.size>10*1024*1024){afMsg('story-msg','err','Máx 10MB para historias.');return;}
   const isVideo=file.type.startsWith('video/');
   pendingStoryType=isVideo?'video':'image';
+  for(const id of ['story-duration','pub-story-duration']){const select=document.getElementById(id);if(select)select.value=isVideo?'30':'15';}
   const reader=new FileReader();reader.onload=e=>{
     pendingStoryDataUrl=e.target.result;const prev=document.getElementById('story-preview');
     const mediaHtml=isVideo?`<video src="${pendingStoryDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:12px" controls></video>`:`<img src="${pendingStoryDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:12px">`;
@@ -4758,7 +4676,8 @@ async function publishStory(){
   const inModal=document.getElementById('story-create-modal').classList.contains('open');
   const row=await StoriesModule.publish({mediaUrl:pendingStoryDataUrl,
     caption:(document.getElementById(inModal?'story-caption-inp':'pub-story-caption')?.value||'').trim(),
-    productId:document.getElementById(inModal?'story-product-sel':'pub-story-product')?.value||null});
+    productId:document.getElementById(inModal?'story-product-sel':'pub-story-product')?.value||null,
+    duration:Number(document.getElementById(inModal?'story-duration':'pub-story-duration')?.value||15)});
   if(row&&!STORY_STORE.some(story=>story.id===String(row.id)))STORY_STORE.unshift(normalizeStoryRecord(row));
   pendingStoryDataUrl=null;closeStoryModal();renderStories();initStoriesTab();
   const pubWrap=document.getElementById('pub-story-preview-wrap');if(pubWrap)pubWrap.style.display='none';
@@ -4891,6 +4810,7 @@ async function initAuth(){
 async function startApp(){
   await initAuth();
   await loadSupabaseContent();
+  Catalog.mount();
   StoriesModule.start(rows=>{STORY_STORE.splice(0,STORY_STORE.length,...rows.map(normalizeStoryRecord));renderStories();if(currentPage==='perfil')initStoriesTab();});
   CommunityUI.start();
   renderCurrencySwitcher();

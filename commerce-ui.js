@@ -19,6 +19,10 @@ window.CommerceUI = (() => {
       const label = [color, size].filter(Boolean).join(' / ') || 'Unica';
       return previous.get(label) || { label, attributes: { color, size }, price: Number(document.getElementById('pub-price').value), stock: colors.length || sizes.length ? 0 : Number(document.getElementById('pub-stock').value) };
     }));
+    if (window.Catalog && document.getElementById('pub-axis-fields')) {
+      try { const axes=Catalog.publishAxes();inventory=Catalog.combinations(axes,document.getElementById('pub-price').value,axes.length?0:document.getElementById('pub-stock').value).map(row=>previous.get(row.label)||row); }
+      catch(error){toast(error.message);return;}
+    }
     if (inventory.length > 100) { inventory = []; toast('Limite: 100 combinaciones por producto.'); return; }
     const box = document.getElementById('pub-inventory');
     box.replaceChildren();
@@ -34,6 +38,14 @@ window.CommerceUI = (() => {
     }
   }
   function getInventory() {
+    if (window.Catalog && document.getElementById('pub-axis-fields')) {
+      const axes=Catalog.publishAxes();
+      if(!axes.length)return Catalog.combinations([],document.getElementById('pub-price').value,document.getElementById('pub-stock').value);
+      const expected=Catalog.combinations(axes,1).map(row=>row.label);
+      if(JSON.stringify(expected)!==JSON.stringify(inventory.map(row=>row.label)))throw new Error('Genera las variantes de esta categoria antes de publicar.');
+      if(!inventory.some(row=>row.stock>0))throw new Error('Carga stock para al menos una variante.');
+      return inventory.map(row=>({...row}));
+    }
     const colors = splitValues(document.getElementById('pub-colors').value);
     const sizes = splitValues(document.getElementById('pub-sizes').value);
     const expected = (colors.length ? colors : ['']).flatMap(color => (sizes.length ? sizes : ['']).map(size => [color, size].filter(Boolean).join(' / ') || 'Unica'));
@@ -65,6 +77,7 @@ window.CommerceUI = (() => {
         if (!/^https:\/\//.test(url)) continue;
         const img = document.createElement('img'); img.src = url; img.alt = p.title; img.style.cssText = 'width:100%;max-height:260px;object-fit:contain;border-radius:12px;margin-bottom:10px'; content.append(img);
       }
+      if (p.variants?.details) { const specs=document.createElement('dl');specs.className='product-specs';for(const [key,value] of Object.entries(p.variants.details)){if(!value)continue;const term=document.createElement('dt'),description=document.createElement('dd');term.textContent=window.Catalog?Catalog.config(p.category,p.variants.subcategory).details.find(f=>f.key===key)?.label||key:key;description.textContent=String(value);specs.append(term,description);}content.append(specs); }
       const select = document.createElement('select'); select.className = 'fi'; select.setAttribute('aria-label', 'Variante del producto');
       const remaining = variant => Math.max(0, Number(variant.stock) - Number(cart.find(item => item.variantId === variant.id)?.qty || 0));
       for (const variant of variants) {
@@ -135,6 +148,7 @@ window.CommerceUI = (() => {
       };
       const cancel = document.createElement('button'); cancel.className = 'btn-p btn-sec'; cancel.textContent = 'Cancelar seleccion'; cancel.onclick = () => overlay.remove();
       if (p.user_id === KMD.session?.user?.id) {
+        const full = document.createElement('button');full.className='pub-btn';full.textContent='Editar publicacion completa';full.onclick=()=>ProductEditor.open(p.id);content.append(full);
         const edit = document.createElement('button'); edit.className = 'pub-btn'; edit.textContent = 'Editar precio y stock';
         edit.onclick = () => editInventory(p.id); content.append(edit); edit.focus();
       } else { content.append(select, quantityLabel, availability, remove, cancel, add); select.focus(); }
