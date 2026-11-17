@@ -1935,12 +1935,19 @@ function updateProductCategoryFields(){
   if(inp2)inp2.placeholder=`Ej: ${cfg[1]}`;
   if(text)text.placeholder=cfg[2];
 }
-function populateStoryProductOptions(){
-  const options=['<option value=\"\">Sin producto</option>',...getAllProducts().slice(0,40).map(p=>`<option value="${p.id}">${p.title}</option>`)];
-  const pubSel=document.getElementById('pub-story-product');
-  const modalSel=document.getElementById('story-product-sel');
-  if(pubSel)pubSel.innerHTML=options.join('');
-  if(modalSel)modalSel.innerHTML=options.join('');
+let storyProductRequest=0;
+async function populateStoryProductOptions(){
+  const version=++storyProductRequest, userId=KMD.session?.user?.id;
+  const selectors=['pub-story-product','story-product-sel'].map(id=>document.getElementById(id)).filter(Boolean);
+  const option=(value,text)=>{const el=document.createElement('option');el.value=value;el.textContent=text;return el;};
+  for(const select of selectors){select.replaceChildren(option('','Sin producto'));select.disabled=true;}
+  try{
+    const products=await StoriesModule.getPublishableProducts();
+    if(version!==storyProductRequest||userId!==KMD.session?.user?.id)return;
+    for(const select of selectors){select.replaceChildren(option('','Sin producto'),...products.map(product=>option(product.id,product.title)));}
+  }catch(error){
+    if(version===storyProductRequest){console.error('[KMD story products]',error);toast(error.message||'No pudimos cargar tus productos.');}
+  }finally{if(version===storyProductRequest)for(const select of selectors)select.disabled=false;}
 }
 
 function getCurrencyMeta(code){return CURRENCY_META[code]||CURRENCY_META.USD;}
@@ -2977,6 +2984,7 @@ function setPubType(el){
     const panel=document.getElementById('pub-panel-'+key);
     if(panel)panel.style.display=key===type?'':'none';
   });
+  if(type==='story')void populateStoryProductOptions();
 }
 async function handleProductMedia(input){
   const files=[...(input.files||[])].slice(0,8);
@@ -4747,9 +4755,10 @@ async function publishStory(){
   afBtnLoad('story-publish-btn',true,'');
   const pubBtn=document.getElementById('pub-story-submit-btn');if(pubBtn){pubBtn.disabled=true;pubBtn.textContent='Publicando...';}
   try{
+  const inModal=document.getElementById('story-create-modal').classList.contains('open');
   const row=await StoriesModule.publish({mediaUrl:pendingStoryDataUrl,
-    caption:(document.getElementById('story-caption-inp')?.value||document.getElementById('pub-story-caption')?.value||'').trim(),
-    productId:document.getElementById('story-product-sel')?.value||document.getElementById('pub-story-product')?.value||null});
+    caption:(document.getElementById(inModal?'story-caption-inp':'pub-story-caption')?.value||'').trim(),
+    productId:document.getElementById(inModal?'story-product-sel':'pub-story-product')?.value||null});
   if(row&&!STORY_STORE.some(story=>story.id===String(row.id)))STORY_STORE.unshift(normalizeStoryRecord(row));
   pendingStoryDataUrl=null;closeStoryModal();renderStories();initStoriesTab();
   const pubWrap=document.getElementById('pub-story-preview-wrap');if(pubWrap)pubWrap.style.display='none';
