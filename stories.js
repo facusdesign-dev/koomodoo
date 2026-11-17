@@ -1,7 +1,7 @@
 window.StoriesModule = (() => {
   let channel, timer, loading, callback = () => {}, sequence = 0;
   const types = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp', 'image/gif':'gif', 'video/mp4':'mp4', 'video/webm':'webm', 'video/quicktime':'mov' };
-  async function hydrate(rows) {
+  async function hydrate(rows, strict = false) {
     if (!rows.length) return [];
     const sb = getSB(), ids = [...new Set(rows.map(row => row.user_id))];
     const profiles = await sb.from('public_profiles').select('id,username,first_name,avatar_url').in('id', ids);
@@ -10,7 +10,11 @@ window.StoriesModule = (() => {
       const seconds = Math.min(600, Math.floor((Date.parse(row.expires_at) - Date.now()) / 1000));
       if (seconds < 1) return null;
       const signed = await sb.storage.from('story-media').createSignedUrl(row.media_url, seconds);
-      if (signed.error) throw signed.error;
+      if (signed.error) {
+        if (strict) throw signed.error;
+        console.warn('[KMD unavailable story media]', row.id, signed.error.message);
+        return null;
+      }
       const author = profiles.data.find(profile => profile.id === row.user_id);
       return { ...row, storage_path: row.media_url, media_url: signed.data.signedUrl,
         author_name: author?.username || author?.first_name || 'Usuario',
@@ -40,7 +44,12 @@ window.StoriesModule = (() => {
       throw result.error;
     }
     // Publication is confirmed by the database, not by an in-memory preview.
-    const rows = await hydrate([result.data]);
+    let rows;
+    try { rows = await hydrate([result.data], true); }
+    catch (error) {
+      const failure = new Error('La historia se guardo, pero no pudimos cargar su vista previa. Recarga la pagina para comprobarla.');
+      failure.published = true; console.error('[KMD story preview]', error); throw failure;
+    }
     await refresh().catch(error => console.warn('[KMD story published, feed refresh pending]',error));
     return rows[0];
   }

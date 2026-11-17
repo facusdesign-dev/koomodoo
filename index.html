@@ -4759,7 +4759,11 @@ async function publishStory(){
   const prodSel=document.getElementById('pub-story-product');if(prodSel)prodSel.value='';
   const prodModal=document.getElementById('story-product-sel');if(prodModal)prodModal.value='';
   toast('✅ ¡Historia publicada! Dura 24 horas.');
-  }catch(error){console.error('[KMD publish story]',error);afMsg('story-msg','err',error.message||'No se pudo guardar la historia.');toast('No se pudo completar la publicacion. Revisa el mensaje e intenta nuevamente.');}
+  }catch(error){
+    console.error('[KMD publish story]',error);
+    if(error.published){pendingStoryDataUrl=null;toast(error.message);}
+    else{afMsg('story-msg','err',error.message||'No se pudo guardar la historia.');toast('No se pudo completar la publicacion. Revisa el mensaje e intenta nuevamente.');}
+  }
   finally{
   storyPublishing=false;
   afBtnLoad('story-publish-btn',false,'📤 Publicar historia');
