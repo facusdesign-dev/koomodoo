@@ -1,6 +1,6 @@
 {
-  "release": "2026-11-17-pulso-portrait-camera-framing",
-  "previousCommit": "0c6b742",
+  "release": "2026-11-17-pulso-native-camera-no-zoom",
+  "previousCommit": "380593c",
   "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens"],
   "videoProviderConfigured": true,
   "realPaymentsEnabled": false,
@@ -8,5 +8,6 @@
   "videoEndToEndVerified": false,
   "outgoingEffectGeneratedTrackVerified": true,
   "storeStockDeduction": "approved-payment-only",
-  "cameraFraming": "portrait-center-crop-9x16"
+  "cameraFraming": "native-portrait-full-source-9x16",
+  "presenterCameraSelection": true
 }

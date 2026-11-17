@@ -4,6 +4,7 @@ window.LiveShopping = (() => {
   let channel = null, poll = null, heartbeat = null, directoryPoll = null;
   let busy = false, generation = 0, previewGeneration = 0, roomProducts = [], refreshing = false;
   let filter = 'natural', beauty = 0, quality = 'standard', ownsFullscreen = false, effectBusy = false;
+  let cameraFacing = 'user', cameraBusy = false, previewBusy = false;
   let liked = false, likeExists = false, likeBusy = false, following = false, productSignature = '';
   const $ = id => document.getElementById(id);
   const userId = () => KMD.session?.user?.id;
@@ -46,6 +47,45 @@ window.LiveShopping = (() => {
     if (!isPresenter()) return null;
     return [...(connection?.localParticipant.trackPublications.values() || [])].find(publication => publication.track?.kind === 'video')?.track || null;
   }
+  const captureOptions = (facing = cameraFacing, selectedQuality = quality) => ({ facingMode: facing, resolution: { ...LiveVideoEffects.qualities[selectedQuality] } });
+  function syncCameraControls() {
+    for (const id of ['live-camera', 'live-setup-camera']) {
+      const element = $(id);
+      if (element) { element.value = cameraFacing; element.disabled = cameraBusy || previewBusy || effectBusy; }
+    }
+  }
+  async function setCamera(value) {
+    if (!['user', 'environment'].includes(value) || cameraBusy || previewBusy || effectBusy || busy) { syncCameraControls(); return; }
+    if (active && !isPresenter()) return;
+    const track = cameraTrack() || localTracks.find(track => track.kind === 'video');
+    const previous = cameraFacing, version = previewGeneration, roomId = active?.id;
+    cameraBusy = true; syncCameraControls();
+    const previewButton = $('live-preview-btn'); if (previewButton) previewButton.disabled = true;
+    try {
+      if (track) {
+        await track.restartTrack(captureOptions(value));
+        if (version !== previewGeneration || active?.id !== roomId) return;
+        const settings = track.getSourceTrackSettings?.() || {};
+        if (settings.facingMode && settings.facingMode !== value) throw new Error('Este dispositivo no ofrece la camara seleccionada.');
+        await applyOutgoingEffect(track, filter, beauty);
+        if (version !== previewGeneration || active?.id !== roomId) return;
+        console.log('[KMD camera]', { requested: value, source: settings });
+      }
+      cameraFacing = value;
+      const message = value === 'environment' ? 'Camara trasera seleccionada.' : 'Camara frontal seleccionada.';
+      if (isPresenter()) status(message);
+      else if ($('live-setup-status')) $('live-setup-status').textContent = message + ' En PC se usa la camara disponible; algunos equipos no tienen camara trasera.';
+    } catch (error) {
+      if (track && version === previewGeneration && active?.id === roomId) {
+        try { await track.restartTrack(captureOptions(previous)); await applyOutgoingEffect(track, filter, beauty); }
+        catch (rollbackError) { console.error('[KMD camera rollback]', rollbackError); }
+      }
+      showError(error);
+    } finally {
+      cameraBusy = false; syncCameraControls();
+      if (previewButton) previewButton.disabled = false;
+    }
+  }
   async function applyOutgoingEffect(track, preset, amount) {
     const current = track.getProcessor?.();
     if (current?.name === 'koomodoo-color-and-softness' && current.processedTrack && current.processedTrack.readyState !== 'ended') current.setOptions(preset, amount, quality);
@@ -57,12 +97,13 @@ window.LiveShopping = (() => {
     }
   }
   function renderEffectControls() {
+    syncCameraControls();
     $('live-filter').value = filter; $('live-beauty').value = String(beauty);
     $('live-beauty-label').textContent = beauty + '%'; $('live-quality').value = quality;
     $('live-filter-badge').hidden = (active?.video_filter || 'natural') === 'natural' && !active?.beauty_level;
   }
   async function updateEffects(preset, amount) {
-    if (!isPresenter() || effectBusy) return;
+    if (!isPresenter() || effectBusy || cameraBusy) return;
     const track = cameraTrack(); if (!track) { toast('La camara todavia no esta lista.'); return; }
     let values;
     try { values = LiveVideoEffects.options(preset, amount); } catch (error) { showError(error); return; }
@@ -83,11 +124,11 @@ window.LiveShopping = (() => {
   const setFilter = value => updateEffects(value, beauty);
   const setBeauty = value => updateEffects(filter, Number(value));
   async function setQuality(value) {
-    if (!isPresenter() || effectBusy || !Object.hasOwn(LiveVideoEffects.qualities, value)) return;
+    if (!isPresenter() || effectBusy || cameraBusy || !Object.hasOwn(LiveVideoEffects.qualities, value)) return;
     const track = cameraTrack(); if (!track) return;
     const id = active.id, previous = quality; effectBusy = true; $('live-quality').disabled = true;
     try {
-      await track.restartTrack({ resolution: LiveVideoEffects.qualities[value] });
+      await track.restartTrack(captureOptions(cameraFacing, value));
       quality = value;
       await applyOutgoingEffect(track, filter, beauty);
       if (active?.id !== id) return;
@@ -97,12 +138,12 @@ window.LiveShopping = (() => {
       status('Calidad de emision actualizada. Se adapta a tu camara y conexion.');
     } catch (error) {
       quality = previous;
-      try { await track.restartTrack({ resolution: LiveVideoEffects.qualities[previous] }); await applyOutgoingEffect(track, filter, beauty); } catch (rollbackError) { console.error('[KMD quality rollback]', rollbackError); }
+      try { await track.restartTrack(captureOptions(cameraFacing, previous)); await applyOutgoingEffect(track, filter, beauty); } catch (rollbackError) { console.error('[KMD quality rollback]', rollbackError); }
       showError(error);
     } finally { effectBusy = false; $('live-quality').disabled = false; renderEffectControls(); }
   }
   function toggleFit() {
-    // The outgoing track is center-cropped to portrait; never stretch it.
+    // Preserve the complete camera image inside the portrait scene.
     if (isPresenter()) $('live-player-layout').dataset.fit = 'portrait';
   }
   function toggleSettings() {
@@ -137,12 +178,15 @@ window.LiveShopping = (() => {
     if ($('live-preview')) $('live-preview').replaceChildren();
   }
   async function preview() {
+    if (cameraBusy || previewBusy) return;
+    previewBusy = true;
+    syncCameraControls();
     const control = $('live-preview-btn'); if (control) control.disabled = true;
     try {
       stopPreview();
       const version = previewGeneration;
       const { createLocalTracks } = await sdk();
-      const tracks = await createLocalTracks({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: { facingMode: 'user', resolution: { width: 720, height: 1280, frameRate: 24 } } });
+      const tracks = await createLocalTracks({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: captureOptions() });
       if (version !== previewGeneration) { tracks.forEach(track => track.stop()); return; }
       localTracks = tracks;
       try { await applyOutgoingEffect(localTracks.find(track => track.kind === 'video'), 'natural', 0); }
@@ -151,12 +195,13 @@ window.LiveShopping = (() => {
       video.muted = true; video.playsInline = true; $('live-preview').append(video);
       $('live-setup-status').textContent = 'Vista previa privada. Todavia no estas transmitiendo.';
     } catch (error) { stopPreview(); $('live-setup-status').textContent = errorText(error); }
-    finally { if (control) control.disabled = false; }
+    finally { previewBusy = false; syncCameraControls(); if (control) control.disabled = false; }
   }
   async function openStudio() {
     if (!userId()) { openAuthModal('login'); return; }
     if (isPresenter()) { toggleSettings(); return; }
     filter = 'natural'; beauty = 0; quality = 'standard';
+    syncCameraControls();
     const modal = $('live-start-modal'); modal.classList.add('open');
     const list = $('live-product-picker'); list.textContent = 'Cargando tus productos...';
     const start = $('live-start-btn'); start.disabled = true;
@@ -184,7 +229,7 @@ window.LiveShopping = (() => {
     stopPreview(); $('live-start-modal').classList.remove('open');
   }
   async function start() {
-    if (busy) return;
+    if (busy || cameraBusy || previewBusy) return;
     const ids = [...document.querySelectorAll('#live-product-picker input:checked')].map(input => input.value);
     const title = $('live-title-inp').value.trim();
     if (title.length < 3 || title.length > 100) { toast('Escribi un titulo de 3 a 100 caracteres.'); return; }
@@ -553,5 +598,5 @@ window.LiveShopping = (() => {
     stopPreview(); connection?.localParticipant.trackPublications.forEach(publication => publication.track?.stop());
     // A dropped tab is hidden by its server-time lease; do not trust unload fetches.
   });
-  return { openStudio, closeStudio, preview, start, page, join, sendComment, canLeave, leave, errorText, resumePlayback, setFilter, setBeauty, setQuality, toggleFit, toggleSettings, fullscreen };
+  return { openStudio, closeStudio, preview, start, page, join, sendComment, canLeave, leave, errorText, resumePlayback, setFilter, setBeauty, setQuality, setCamera, toggleFit, toggleSettings, fullscreen };
 })();

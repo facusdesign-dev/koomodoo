@@ -1110,6 +1110,8 @@ button,select,input{font-family:inherit}
     <p class="live-explainer">Prepara tu vidriera, proba la camara y despues inicia. Solo se muestran productos de tu tienda.</p>
     <label for="live-title-inp">Titulo de tu PULSO</label>
     <input type="text" class="af-inp" id="live-title-inp" maxlength="100" placeholder="Ej: Novedades de mi tienda">
+    <label for="live-setup-camera">Camara para transmitir</label>
+    <select id="live-setup-camera" class="af-inp" onchange="LiveShopping.setCamera(this.value)"><option value="user">Frontal</option><option value="environment">Trasera</option></select>
     <div id="live-preview" class="live-preview"></div>
     <button id="live-preview-btn" class="af-btn sec" onclick="LiveShopping.preview()">Probar camara y microfono</button>
     <p id="live-setup-status" class="live-setup-status" role="status"></p>
@@ -1458,6 +1460,8 @@ button,select,input{font-family:inherit}
       <nav id="live-controls" class="live-controls" aria-label="Controles de PULSO"></nav>
       <section id="live-settings" class="live-settings" hidden aria-label="Panel del vendedor">
         <div class="live-settings-heading"><strong>Panel del vendedor</strong><button type="button" onclick="LiveShopping.toggleSettings()" aria-label="Cerrar ajustes">&#215;</button></div>
+        <label for="live-camera">Camara para transmitir</label>
+        <select id="live-camera" onchange="LiveShopping.setCamera(this.value)"><option value="user">Frontal</option><option value="environment">Trasera</option></select>
         <label for="live-quality">Calidad de emision</label>
         <select id="live-quality" onchange="LiveShopping.setQuality(this.value)"><option value="economy">Ahorro (hasta 360p)</option><option value="standard" selected>Equilibrada (hasta 720p)</option><option value="high">Alta (hasta 1080p)</option></select>
         <label for="live-filter">Filtro de emision</label>
@@ -1466,7 +1470,7 @@ button,select,input{font-family:inherit}
         <input id="live-beauty" type="range" min="0" max="60" step="10" value="0" onchange="LiveShopping.setBeauty(this.value)">
         <p>Se aplica al video enviado. Suavizado de toda la imagen, sin reconocimiento facial. Puede cambiar colores y texturas de los productos. Calidad limitada por tu camara y conexion.</p>
         <p>Si tu navegador necesita el modo compatible, los filtros de color se procesan hasta 480p y 15 fps para cuidar el dispositivo.</p>
-        <p>Encuadre vertical 9:16. Si la camara entrega imagen horizontal, PULSO recorta los laterales de forma centrada, sin girar ni estirar la imagen. Sostene el celular vertical para aprovechar mejor el angulo de la camara.</p>
+        <p>PULSO usa un marco vertical 9:16 y conserva la imagen completa, sin zoom agregado. Sostene el celular vertical. Si la camara solo entrega otro formato, se muestran bandas para no recortar ni deformar. En PC puede no haber camara trasera.</p>
         <button type="button" onclick="LiveShopping.fullscreen()">Pantalla completa</button>
         <strong>Productos de PULSO</strong>
         <div id="live-product-controls" class="live-product-controls"></div>

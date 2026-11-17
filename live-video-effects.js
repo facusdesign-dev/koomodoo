@@ -1,7 +1,15 @@
 /* Outgoing portrait frames; no face analysis or camera-source ownership. */
 window.LiveVideoEffects = (() => {
   const presets = { natural: 'none', clear: 'brightness(1.09) contrast(1.04) saturate(1.06)', warm: 'brightness(1.04) saturate(1.09) sepia(.12)' };
-  const qualities = { economy: { width: 360, height: 640, frameRate: 20 }, standard: { width: 720, height: 1280, frameRate: 24 }, high: { width: 1080, height: 1920, frameRate: 30 } };
+  const qualities = { economy: { width: 360, height: 640, aspectRatio: 9 / 16, frameRate: 20 }, standard: { width: 720, height: 1280, aspectRatio: 9 / 16, frameRate: 24 }, high: { width: 1080, height: 1920, aspectRatio: 9 / 16, frameRate: 30 } };
+  async function configureCameraSource(track) {
+    const caps = track.getCapabilities?.() || {};
+    const constraints = { aspectRatio: { ideal: 9 / 16 } };
+    if (caps.resizeMode?.includes('none')) constraints.resizeMode = 'none';
+    if (caps.zoom && Number.isFinite(caps.zoom.min)) constraints.advanced = [{ zoom: caps.zoom.min }];
+    try { await track.applyConstraints?.(constraints); }
+    catch (error) { console.warn('[KMD camera constraints]', error); }
+  }
   function options(preset, beauty, quality = 'standard') {
     if (!Object.hasOwn(presets, preset) || !Object.hasOwn(qualities, quality)) throw new Error('Ajuste de imagen no disponible.');
     const amount = Number(beauty);
@@ -16,11 +24,6 @@ window.LiveVideoEffects = (() => {
   function containRect(sw, sh, dw, dh) {
     const scale = Math.min(dw / sw, dh / sh), width = sw * scale, height = sh * scale;
     return { x: (dw - width) / 2, y: (dh - height) / 2, width, height };
-  }
-  function portraitCrop(sw, sh, dw = 9, dh = 16) {
-    const ratio = dw / dh;
-    const width = Math.min(sw, sh * ratio), height = Math.min(sh, sw / ratio);
-    return { x: (sw - width) / 2, y: (sh - height) / 2, width, height };
   }
   function colorPixels(data, preset) {
     if (preset === 'natural') return;
@@ -51,6 +54,8 @@ window.LiveVideoEffects = (() => {
       async init({ track }) {
         await processor.destroy();
         const version = ++serial; stopped = false;
+        await configureCameraSource(track);
+        if (version !== serial || stopped) throw new Error('Se cancelo el ajuste.');
         video = document.createElement('video'); video.muted = true; video.defaultMuted = true; video.volume = 0; video.playsInline = true;
         video.style.cssText = 'position:fixed;left:-10000px;width:2px;height:2px;pointer-events:none';
         video.srcObject = new MediaStream([track]); document.body.append(video);
@@ -76,18 +81,18 @@ window.LiveVideoEffects = (() => {
               lastDraw = time;
               const size = portraitSize(video.videoWidth, video.videoHeight, selected.quality, compatible);
               if (canvas.width !== size.width || canvas.height !== size.height) { canvas.width = size.width; canvas.height = size.height; }
-              const crop = portraitCrop(video.videoWidth, video.videoHeight, canvas.width, canvas.height);
+              const rect = containRect(video.videoWidth, video.videoHeight, canvas.width, canvas.height);
               context.globalAlpha = 1; if (nativeFilter) context.filter = 'none';
               context.fillStyle = '#030807'; context.fillRect(0, 0, canvas.width, canvas.height);
               if (nativeFilter) context.filter = presets[selected.preset];
-              context.drawImage(video, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+              context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, rect.x, rect.y, rect.width, rect.height);
               if (selected.beauty > 0) {
-                const sw = Math.max(2, Math.round(canvas.width * .3)), sh = Math.max(2, Math.round(canvas.height * .3));
+                const sw = Math.max(2, Math.round(rect.width * .3)), sh = Math.max(2, Math.round(rect.height * .3));
                 if (small.width !== sw || small.height !== sh) { small.width = sw; small.height = sh; }
-                soft.drawImage(video, crop.x, crop.y, crop.width, crop.height, 0, 0, small.width, small.height);
+                soft.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, small.width, small.height);
                 context.imageSmoothingEnabled = true; context.imageSmoothingQuality = 'high';
                 context.globalAlpha = selected.beauty / 100 * .55;
-                context.drawImage(small, 0, 0, canvas.width, canvas.height); context.globalAlpha = 1;
+                context.drawImage(small, rect.x, rect.y, rect.width, rect.height); context.globalAlpha = 1;
               }
               if (compatible) {
                 const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -111,5 +116,5 @@ window.LiveVideoEffects = (() => {
     };
     return processor;
   }
-  return { createProcessor, options, qualities, portraitSize, containRect, portraitCrop, colorPixels };
+  return { createProcessor, options, qualities, portraitSize, containRect, colorPixels, configureCameraSource };
 })();
