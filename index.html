@@ -1105,18 +1105,18 @@ button,select,input{font-family:inherit}
   </div>
 </div>
 <div id="live-start-modal" onclick="if(event.target===this)closeLiveModal()">
-  <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Preparar transmision">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:800;color:var(--t)">📡 Iniciar transmisión</div><button onclick="closeLiveModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button></div>
+  <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Preparar PULSO">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:800;color:var(--t)">📡 Iniciar PULSO</div><button onclick="closeLiveModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button></div>
     <p class="live-explainer">Prepara tu vidriera, proba la camara y despues inicia. Solo se muestran productos de tu tienda.</p>
-    <label for="live-title-inp">Titulo de la transmision</label>
+    <label for="live-title-inp">Titulo de tu PULSO</label>
     <input type="text" class="af-inp" id="live-title-inp" maxlength="100" placeholder="Ej: Novedades de mi tienda">
     <div id="live-preview" class="live-preview"></div>
     <button id="live-preview-btn" class="af-btn sec" onclick="LiveShopping.preview()">Probar camara y microfono</button>
     <p id="live-setup-status" class="live-setup-status" role="status"></p>
-    <strong>Productos del vivo (hasta 12)</strong>
+    <strong>Productos de PULSO (hasta 12)</strong>
     <div id="live-product-picker" class="live-product-picker"></div>
     <p class="live-setup-status">Piloto de hasta 10 personas por sala. Sin grabacion ni cobros reales.</p>
-    <button id="live-start-btn" class="af-btn" onclick="startLiveSession()" disabled>Iniciar transmision</button>
+    <button id="live-start-btn" class="af-btn" onclick="startLiveSession()" disabled>Iniciar PULSO</button>
     <button onclick="closeLiveModal()" class="af-btn sec">Cancelar</button>
   </div>
 </div>
@@ -1211,7 +1211,7 @@ button,select,input{font-family:inherit}
   <div class="sb-sec">
     <span class="sb-sec-lbl sb-label">Vender</span>
     <div class="si" id="si-publicar"  onclick="nav('publicar')">  <span class="si-icon">🏷️</span><span class="si-txt">Publicar</span></div>
-    <div class="si" id="si-live"      onclick="openLiveModal()">   <span class="si-icon">📡</span><span class="si-txt">Iniciar Live</span><span class="si-dot"></span></div>
+    <div class="si" id="si-live"      onclick="openLiveModal()">   <span class="si-icon">📡</span><span class="si-txt">Iniciar PULSO</span><span class="si-dot"></span></div>
     <div class="si" id="si-analytics" onclick="nav('analytics')"> <span class="si-icon">📊</span><span class="si-txt">Métricas</span></div>
   </div>
 
@@ -1244,7 +1244,7 @@ button,select,input{font-family:inherit}
     <div class="ftab on" onclick="setFTab(this,0)">Para ti</div>
     <div class="ftab" onclick="setFTab(this,1)">Siguiendo</div>
     <div class="ftab" onclick="setFTab(this,2)">Tendencias 🔥</div>
-    <div class="ftab" onclick="nav('live')">En Vivo 📡</div>
+    <div class="ftab" onclick="nav('live')">PULSO 📡</div>
   </div>
   <!-- Feed scroll -->
   <div id="feed-scroll">
@@ -1252,7 +1252,7 @@ button,select,input{font-family:inherit}
       <div class="feed-center" id="feed-center"></div>
       <aside id="rp">
         <div class="rp-sec">
-          <div class="rp-hdr"><span class="rp-ttl">📡 En Vivo</span><button class="rp-lnk" onclick="nav('live')">Ver todos</button></div>
+          <div class="rp-hdr"><span class="rp-ttl">📡 PULSO</span><button class="rp-lnk" onclick="nav('live')">Ver todos</button></div>
           <div id="rp-live"></div>
         </div>
         <div class="rp-sec">
@@ -1396,7 +1396,7 @@ button,select,input{font-family:inherit}
           <div class="prof-location" id="prof-location-el"><span>📍</span><span>Montevideo, Uruguay</span></div>
           <div class="prof-bio" id="prof-bio-el">Emprendedor digital · Tech &amp; Moda</div>
           <div class="prof-acts" id="prof-acts-el" style="margin-top:10px">
-            <button class="btn-p btn-pri" onclick="openLiveModal()">📡 Live</button>
+            <button class="btn-p btn-pri" onclick="openLiveModal()">📡 PULSO</button>
             <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
             <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
             <button id="follow-btn" class="btn-p btn-sec" onclick="toggleFollow()" style="display:none">➕ Seguir</button>
@@ -1434,12 +1434,13 @@ button,select,input{font-family:inherit}
 <!-- ── LIVE ── -->
 <div class="pg" id="pg-live">
   <section id="live-directory" class="live-directory">
-    <h1>Descubri tu proxima compra, en vivo.</h1>
-    <p class="live-explainer">Mira al vendedor, pregunta en el chat y conoce los productos sin salir del video. Estamos preparando las primeras transmisiones del piloto.</p>
-    <button class="btn-p btn-pri" onclick="openLiveModal()">Preparar mi transmision</button>
+    <h1>Descubri tu proxima compra en PULSO.</h1>
+    <p class="live-explainer">Mira al vendedor, pregunta en el chat y conoce los productos sin salir del video. Conectate a los PULSOS del piloto.</p>
+    <button class="btn-p btn-pri" onclick="openLiveModal()">Preparar mi PULSO</button>
     <div id="live-room-list" class="live-room-list"></div>
   </section>
-  <section id="live-player-layout" class="live-player-layout" hidden aria-label="Transmision y productos">
+  <section id="live-player-layout" class="live-player-layout" hidden aria-label="PULSO y productos">
+    <div class="pulso-portrait">
     <div class="live-stage">
       <div class="live-video-frame">
         <div id="live-media"></div><div id="live-audio" hidden></div>
@@ -1448,13 +1449,13 @@ button,select,input{font-family:inherit}
       <header class="live-topline">
         <div class="live-host-chip"><div id="live-host-avatar" class="live-host-avatar"></div><div><strong id="live-host-name">Vendedor</strong><span id="live-title"></span></div></div>
         <button id="live-follow" class="live-follow" hidden>Seguir</button>
-        <div class="live-room-meta"><span class="live-onair">EN VIVO</span><span id="live-audience">Conectando...</span></div>
-        <button class="live-exit" onclick="nav('home')" aria-label="Salir de la transmision">&#215;</button>
+        <div class="live-room-meta"><span class="live-onair">PULSO</span><span id="live-audience">Conectando...</span></div>
+        <button class="live-exit" onclick="nav('home')" aria-label="Salir de PULSO">&#215;</button>
       </header>
       <p id="live-status" class="live-status" role="status"></p>
       <span id="live-filter-badge" class="live-filter-badge" hidden>Imagen con filtro</span>
-      <button id="live-audio-gate" class="live-audio-gate" onclick="LiveShopping.resumePlayback()" hidden>Toca para escuchar el vivo</button>
-      <nav id="live-controls" class="live-controls" aria-label="Controles del vivo"></nav>
+      <button id="live-audio-gate" class="live-audio-gate" onclick="LiveShopping.resumePlayback()" hidden>Toca para escuchar PULSO</button>
+      <nav id="live-controls" class="live-controls" aria-label="Controles de PULSO"></nav>
       <section id="live-settings" class="live-settings" hidden aria-label="Panel del vendedor">
         <div class="live-settings-heading"><strong>Panel del vendedor</strong><button type="button" onclick="LiveShopping.toggleSettings()" aria-label="Cerrar ajustes">&#215;</button></div>
         <label for="live-quality">Calidad de emision</label>
@@ -1464,12 +1465,13 @@ button,select,input{font-family:inherit}
         <label for="live-beauty">Suavizado estetico <output id="live-beauty-label">0%</output></label>
         <input id="live-beauty" type="range" min="0" max="60" step="10" value="0" onchange="LiveShopping.setBeauty(this.value)">
         <p>Se aplica al video enviado. Suavizado de toda la imagen, sin reconocimiento facial. Puede cambiar colores y texturas de los productos. Calidad limitada por tu camara y conexion.</p>
-        <button id="live-fit" type="button" onclick="LiveShopping.toggleFit()">Ver imagen completa</button>
+        <p>Si tu navegador necesita el modo compatible, los filtros de color se procesan hasta 480p y 15 fps para cuidar el dispositivo.</p>
+        <p>Formato vertical sin recortes. Si la camara entrega una imagen horizontal se conserva completa, con margenes.</p>
         <button type="button" onclick="LiveShopping.fullscreen()">Pantalla completa</button>
-        <strong>Productos del vivo</strong>
+        <strong>Productos de PULSO</strong>
         <div id="live-product-controls" class="live-product-controls"></div>
       </section>
-      <div id="live-products" class="live-products" aria-label="Productos del vivo" aria-live="polite"></div>
+      <div id="live-products" class="live-products" aria-label="Productos de PULSO" aria-live="polite"></div>
       <span class="live-pilot-label">Prueba sin cobros</span>
     </div>
     <aside class="live-chat">
@@ -1477,12 +1479,13 @@ button,select,input{font-family:inherit}
       <div id="live-comments" class="live-comments" aria-live="polite"></div>
       <div class="live-bottom-line">
         <form class="live-comment-form" onsubmit="event.preventDefault();LiveShopping.sendComment()">
-          <input id="live-comment" class="fi" maxlength="300" placeholder="Hace tu pregunta..." aria-label="Comentario del vivo" required>
+          <input id="live-comment" class="fi" maxlength="300" placeholder="Hace tu pregunta..." aria-label="Comentario de PULSO" required>
           <button id="live-comment-send" type="submit" aria-label="Enviar comentario"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 19 9-19 9 4-9-4-9Z M7 12h15"/></svg></button>
         </form>
         <div id="live-like-slot" class="live-like-slot"></div>
       </div>
     </aside>
+    </div>
   </section>
 </div>
 
@@ -1494,7 +1497,7 @@ button,select,input{font-family:inherit}
       <div class="pty on" data-pub="product" onclick="setPubType(this)"><div class="pty-ic">🏷️</div><div class="pty-nm">Producto</div><div class="pty-sub">Para vender</div></div>
       <div class="pty" data-pub="post" onclick="setPubType(this)"><div class="pty-ic">📸</div><div class="pty-nm">Post</div><div class="pty-sub">Contenido</div></div>
       <div class="pty" data-pub="story" onclick="setPubType(this)"><div class="pty-ic">⭕</div><div class="pty-nm">Historia</div><div class="pty-sub">24 horas</div></div>
-      <div class="pty" onclick="nav('live')"><div class="pty-ic">📡</div><div class="pty-nm">Live</div><div class="pty-sub">En vivo</div></div>
+      <div class="pty" onclick="nav('live')"><div class="pty-ic">📡</div><div class="pty-nm">PULSO</div><div class="pty-sub">Conecta y vende</div></div>
     </div>
     <div class="pub-form-card" id="pub-panel-product">
       <input type="file" id="pub-media-inp" accept="image/*" multiple style="display:none" onchange="handleProductMedia(this)">
@@ -1676,11 +1679,11 @@ const posts=[
 ];
 const stories=[
   {id:'st0',uid:'me',isOwn:true,em:'🦁'},
-  {id:'st1',uid:'s1',isLive:true,em:'💼',pid:'p1',time:'EN VIVO'},
+  {id:'st1',uid:'s1',isLive:true,em:'💼',pid:'p1',time:'PULSO'},
   {id:'st2',uid:'s2',em:'👗',pid:'p3',time:'hace 45m'},
   {id:'st3',uid:'s3',em:'🍳',pid:'p5',time:'hace 1h'},
   {id:'st4',uid:'s4',em:'👟',pid:'p4',time:'hace 2h'},
-  {id:'st5',uid:'s7',isLive:true,em:'💄',pid:'p8',time:'EN VIVO'},
+  {id:'st5',uid:'s7',isLive:true,em:'💄',pid:'p8',time:'PULSO'},
   {id:'st6',uid:'s5',seen:true,em:'💍',pid:'p6',time:'hace 5h'},
   {id:'st7',uid:'s6',seen:true,em:'🏠',pid:'p9',time:'hace 9h'},
 ];
@@ -1745,11 +1748,11 @@ function normalizeLiveRecord(row){
   return {
     id:String(row.id),
     userId:row.user_id||'local',
-    title:row.title||'Live',
+    title:row.title||'PULSO',
     status:row.status||'live',
     startedAt:row.started_at||new Date().toISOString(),
     viewerCount:Number(row.viewer_count||0),
-    sellerName:row.seller_name||'Live',
+    sellerName:row.seller_name||'PULSO',
     sellerAvatar:row.seller_avatar||'📡'
   };
 }
@@ -1870,7 +1873,7 @@ function getStoryList(){
   const now=Date.now();
   const activeCustom=STORY_STORE.filter(s=>new Date(s.expiresAt||0).getTime()>now);
   const ownStory=activeCustom.find(s=>s.uid==='me');
-  const ownBase={id:'st0',uid:'me',isOwn:true,isLive:!!currentLiveSession&&currentLiveSession.userId===(KMD.session?.user?.id||'local'),em:'＋',mediaUrl:'',mediaType:'emoji',time:ownStory?'Activa':(currentLiveSession?'EN VIVO':'Agregar historia'),seen:false};
+  const ownBase={id:'st0',uid:'me',isOwn:true,isLive:!!currentLiveSession&&currentLiveSession.userId===(KMD.session?.user?.id||'local'),em:'＋',mediaUrl:'',mediaType:'emoji',time:ownStory?'Activa':(currentLiveSession?'PULSO':'Agregar historia'),seen:false};
   if(ownStory){
     ownBase.mediaUrl=ownStory.mediaUrl;
     ownBase.mediaType=ownStory.mediaType;
@@ -2192,7 +2195,7 @@ function renderStories(){
     <div class="st" onclick="${s.isOwn?"openOwnStoryOrModal()":s.isLive?"nav('live')":"openStory("+i+")"}">
       <div class="st-ring ${s.seen?'seen':s.isOwn&&!s.caption&&!s.mediaUrl?'add':s.isOwn?'own-active':''}">
         <div class="st-in">${s.mediaType==='image'&&s.mediaUrl?`<img src="${s.mediaUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:s.em}</div>
-        ${s.isLive?'<div class="st-live">● VIVO</div>':''}
+        ${s.isLive?'<div class="st-live">● PULSO</div>':''}
       </div>
       <div class="st-nm">${s.isOwn?(s.mediaUrl?'Tu historia':'Agregar'):getSeller(s.uid)?.name?.split(' ')[0]||KMD.user?.firstName||''}</div>
     </div>`).join('');
@@ -2226,7 +2229,7 @@ function buildPost(post){
       <div class="pav${s.verified?' v':''}">${s.av}</div>
       <div style="flex:1;min-width:0">
         <div class="pa">${s.name}</div>
-        <div class="pt2">${isLive?`<span style="color:var(--rose)">🔴 EN VIVO · ${fmtN(post.viewers||0)} viendo</span>`:(post.time||'hace 2h')}</div>
+        <div class="pt2">${isLive?`<span style="color:var(--rose)">🔴 PULSO · ${fmtN(post.viewers||0)} viendo</span>`:(post.time||'hace 2h')}</div>
       </div>
       <button class="pab" style="font-size:17px;line-height:1">⋯</button>
     </div>
@@ -2234,7 +2237,7 @@ function buildPost(post){
     ${(post.tags||[]).length?`<div class="ptags">${post.tags.map(t=>`<span class="ptag">${t}</span>`).join('')}</div>`:''}
     <div class="pmedia" style="background:${bg}">
       ${post.mediaUrl&&post.mediaType==='image'?`<img src="${post.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:`<span style="font-size:60px">${post.em}</span>`}
-      ${isLive?`<div class="live-badge2">● VIVO</div><div class="vcount2">👁 ${fmtN(post.viewers||0)} viendo</div>`:''}
+      ${isLive?`<div class="live-badge2">● PULSO</div><div class="vcount2">👁 ${fmtN(post.viewers||0)} viendo</div>`:''}
       ${prods[0]?`<button class="buy-pill" onclick="${isLive?"nav('live')":`addToCart('${prods[0].id}')`}">${isLive?'📡 Ver directo':'🛒 '+fmt(prods[0].price)}</button>`:''}
     </div>
     ${prods.length?`<div class="pprods">${prods.map(p=>`
@@ -2250,7 +2253,7 @@ function buildPost(post){
       <button class="pab ${isLiked?'liked':''}" onclick="toggleLike(this,'${post.id}')">${isLiked?'❤️':'🤍'} ${fmtN(post.likes)}</button>
       <button class="pab" onclick="toast('💬 Comentarios')">💬 ${post.comments}</button>
       <button class="pab" onclick="toast('↗️ Compartido')">↗️</button>
-      <button class="pab pab-ml" onclick="${isLive?"nav('live')":`toast('🛍️ Tienda de ${s.name}')`}">${isLive?'📡 Ver live':'🛍️ Tienda'}</button>
+      <button class="pab pab-ml" onclick="${isLive?"nav('live')":`toast('🛍️ Tienda de ${s.name}')`}">${isLive?'📡 Ver PULSO':'🛍️ Tienda'}</button>
     </div>
   </div>`;
 }
@@ -2259,7 +2262,7 @@ function toggleLike(btn,id){
   else{likes.add(id);btn.classList.add('liked');btn.innerHTML=btn.innerHTML.replace('🤍','❤️');toast('❤️ ¡Te gustó!');}
 }
 function renderRP(){
-  document.getElementById('rp-live').innerHTML='<button class="btn-p btn-sec" style="margin:12px" onclick="nav(\'live\')">Explorar transmisiones</button>';
+  document.getElementById('rp-live').innerHTML='<button class="btn-p btn-sec" style="margin:12px" onclick="nav(\'live\')">Explorar PULSOS</button>';
   document.getElementById('rp-trend').innerHTML=getAllProducts().slice(0,5).map(p=>`<div class="tr-item" onclick="CommerceUI.showProduct('${p.id}')"><div class="tr-em">${p.em}</div><div><div class="tr-nm">${escHtml(p.title)}</div><div class="tr-pr">${CommerceUI.money(p.price,p.currency)}</div></div></div>`).join('');
   document.getElementById('rp-sellers').innerHTML='<p style="padding:12px;color:var(--t3)">Busca vendedores por su usuario.</p>';
 }
@@ -2739,7 +2742,7 @@ async function renderProfilePage(targetProfileId){
     setTxt('prof-bio-el',bio);
     if(isOwn)hdrLoggedIn(ownUser);
     setHtml('prof-acts-el', isOwn ? `
-      <button class="btn-p btn-pri" onclick="openLiveModal()">📡 Live</button>
+      <button class="btn-p btn-pri" onclick="openLiveModal()">📡 PULSO</button>
       <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
       <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
     ` : `

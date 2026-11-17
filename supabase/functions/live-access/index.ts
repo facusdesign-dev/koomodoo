@@ -42,7 +42,7 @@ export async function handle(req: Request) {
   if (req.headers.has('Origin') && !allowedOrigins.has(req.headers.get('Origin')!)) return response(req, { error: 'Origen no permitido' }, 403);
   try {
     const authorization = req.headers.get('Authorization') || '';
-    if (!authorization.startsWith('Bearer ')) return response(req, { error: 'Inicia sesion para usar los vivos' }, 401);
+    if (!authorization.startsWith('Bearer ')) return response(req, { error: 'Inicia sesion para usar PULSO' }, 401);
     const url = Deno.env.get('SUPABASE_URL')!;
     const client = createClient(url, envKey('SUPABASE_PUBLISHABLE_KEYS', 'SUPABASE_ANON_KEY'), {
       global: { headers: { Authorization: authorization } }, auth: { persistSession: false, autoRefreshToken: false },
@@ -68,7 +68,7 @@ export async function handle(req: Request) {
     const admin = createClient(url, envKey('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false, autoRefreshToken: false } });
     if (input.action === 'prepare') {
       const title = String(input.title || '').trim();
-      if (!Array.isArray(input.productIds)) return response(req, { error: 'Elegi los productos de la transmision.' }, 400);
+      if (!Array.isArray(input.productIds)) return response(req, { error: 'Elegi los productos de PULSO.' }, 400);
       const ids = [...new Set(input.productIds || [])] as string[];
       if (title.length < 3 || title.length > 100 || !ids.length || ids.length > 12 || ids.some(id => !UUID.test(id))) return response(req, { error: 'Escribi un titulo de 3 a 100 caracteres y elegi entre 1 y 12 productos.' }, 400);
       const { count, error: countError } = await admin.from('live_rooms').select('*', { count: 'exact', head: true }).eq('user_id', user.id).gte('created_at', new Date(Date.now() - 86400000).toISOString());
@@ -79,7 +79,7 @@ export async function handle(req: Request) {
       if (products?.length !== ids.length) return response(req, { error: 'Solo podes mostrar tus productos publicados.' }, 403);
       const { data: row, error } = await admin.from('live_rooms').insert({ user_id: user.id, title }).select().single();
       if (error) {
-        if (error.code === '23505') return response(req, { error: 'Ya tenes un vivo abierto. Volve a En vivo y finalizalo antes de crear otro.' }, 409);
+        if (error.code === '23505') return response(req, { error: 'Ya tenes un PULSO abierto. Volve a PULSO y finalizalo antes de crear otro.' }, 409);
         throw error;
       }
       try {
@@ -92,23 +92,23 @@ export async function handle(req: Request) {
       }
       return response(req, { room: row });
     }
-    if (!UUID.test(input.roomId || '')) return response(req, { error: 'Vivo invalido' }, 400);
+    if (!UUID.test(input.roomId || '')) return response(req, { error: 'PULSO invalido' }, 400);
     const { data: room, error } = await admin.from('live_rooms').select('*').eq('id', input.roomId).maybeSingle();
     if (error) throw error;
-    if (!room) return response(req, { error: 'No encontramos este vivo' }, 404);
+    if (!room) return response(req, { error: 'No encontramos este PULSO' }, 404);
     const owner = room.user_id === user.id;
     const fresh = Date.parse(room.lease_until) > Date.now();
     if (input.action === 'end') {
-      if (!owner) return response(req, { error: 'Solo el vendedor puede finalizar el vivo' }, 403);
+      if (!owner) return response(req, { error: 'Solo el vendedor puede finalizar PULSO' }, 403);
       await provider(videoURL, apiKey, secret, 'DeleteRoom', room.id);
       const ended = await admin.from('live_rooms').update({ status: 'ended', ended_at: new Date().toISOString(), lease_until: new Date().toISOString() }).eq('id', room.id);
       if (ended.error) throw ended.error;
       return response(req, { ended: true });
     }
-    if (room.status === 'ended') return response(req, { error: 'Este vivo ya termino' }, 410);
+    if (room.status === 'ended') return response(req, { error: 'Este PULSO ya termino' }, 410);
     if (input.action === 'token') {
-      if (!owner && (room.status !== 'live' || !fresh)) return response(req, { error: 'Este vivo no esta disponible' }, 410);
-      if (owner && room.status === 'live' && !fresh) return response(req, { error: 'El vivo vencio. Finalizalo y prepara uno nuevo.' }, 410);
+      if (!owner && (room.status !== 'live' || !fresh)) return response(req, { error: 'Este PULSO no esta disponible' }, 410);
+      if (owner && room.status === 'live' && !fresh) return response(req, { error: 'PULSO vencio. Finalizalo y prepara uno nuevo.' }, 410);
       return response(req, { url: videoURL, hostId: room.user_id, token: await jwt(apiKey, secret, { roomJoin: true, room: room.id, canPublish: owner, canPublishSources: owner ? ['camera', 'microphone'] : [], canSubscribe: true, canPublishData: false, canUpdateOwnMetadata: false }, user.id) });
     }
     if (!owner) return response(req, { error: 'Accion solo disponible para el vendedor' }, 403);
@@ -123,13 +123,13 @@ export async function handle(req: Request) {
     if (input.action === 'heartbeat') {
       const updated = await admin.from('live_rooms').update({ lease_until: new Date(Date.now() + 90000).toISOString() }).eq('id', room.id).eq('status', 'live').gt('lease_until', new Date().toISOString()).select('id').maybeSingle();
       if (updated.error) throw updated.error;
-      if (!updated.data) return response(req, { error: 'El vivo dejo de estar activo. Finalizalo y volve a iniciar.' }, 410);
+      if (!updated.data) return response(req, { error: 'PULSO dejo de estar activo. Finalizalo y volve a iniciar.' }, 410);
       return response(req, { ok: true });
     }
     return response(req, { error: 'Accion invalida' }, 400);
   } catch (error) {
     console.error('[KMD live-access]', error instanceof Error ? error.message : 'Unexpected error');
-    return response(req, { error: 'No se pudo completar la operacion del vivo. Intenta nuevamente.' }, 500);
+    return response(req, { error: 'No se pudo completar la operacion de PULSO. Intenta nuevamente.' }, 500);
   }
 }
 Deno.serve(handle);

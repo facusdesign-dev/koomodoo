@@ -3,7 +3,7 @@ window.LiveShopping = (() => {
   let sdkPromise, connection = null, localTracks = [], active = null;
   let channel = null, poll = null, heartbeat = null, directoryPoll = null;
   let busy = false, generation = 0, previewGeneration = 0, roomProducts = [], refreshing = false;
-  let filter = 'natural', beauty = 0, quality = 'standard', fit = 'auto', ownsFullscreen = false, effectBusy = false;
+  let filter = 'natural', beauty = 0, quality = 'standard', ownsFullscreen = false, effectBusy = false;
   let liked = false, likeExists = false, likeBusy = false, following = false, productSignature = '';
   const $ = id => document.getElementById(id);
   const userId = () => KMD.session?.user?.id;
@@ -37,6 +37,7 @@ window.LiveShopping = (() => {
   }
   const isPresenter = () => !!active && active.user_id === userId();
   async function resumePlayback() {
+    if (isPresenter()) return;
     try { await Promise.all([connection?.startAudio(), connection?.startVideo()]); }
     catch { status('Toca el video para permitir su reproduccion con audio.'); }
     $('live-audio-gate').hidden = !connection || !!connection.canPlaybackAudio || isPresenter();
@@ -46,14 +47,11 @@ window.LiveShopping = (() => {
     return [...(connection?.localParticipant.trackPublications.values() || [])].find(publication => publication.track?.kind === 'video')?.track || null;
   }
   async function applyOutgoingEffect(track, preset, amount) {
-    if (preset === 'natural' && amount === 0) {
-      if (track.getProcessor?.()) await track.stopProcessor();
-      return;
-    }
     const current = track.getProcessor?.();
-    if (current?.name === 'koomodoo-color-and-softness') current.setOptions(preset, amount);
+    if (current?.name === 'koomodoo-color-and-softness' && current.processedTrack && current.processedTrack.readyState !== 'ended') current.setOptions(preset, amount, quality);
     else {
-      const processor = LiveVideoEffects.createProcessor(preset, amount);
+      if (current?.name === 'koomodoo-color-and-softness') await track.stopProcessor();
+      const processor = LiveVideoEffects.createProcessor(preset, amount, quality);
       try { await track.setProcessor(processor, true); }
       catch (error) { await processor.destroy(); throw error; }
     }
@@ -76,7 +74,7 @@ window.LiveShopping = (() => {
       const result = await getSB().from('live_rooms').update({ video_filter: values.preset, beauty_level: values.beauty }).eq('id', id).select().single();
       if (result.error) throw result.error;
       active = result.data; filter = values.preset; beauty = values.beauty;
-      status('Imagen de emision actualizada para tu audiencia.');
+      status(track.getProcessor?.()?.compatibilityMode ? 'Filtro de PULSO aplicado en modo compatible (hasta 480p, 15 fps).' : 'Imagen de PULSO actualizada para tu audiencia.');
     } catch (error) {
       try { await applyOutgoingEffect(track, previous.filter, previous.beauty); } catch (rollbackError) { console.error('[KMD effects rollback]', rollbackError); }
       showError(error);
@@ -90,6 +88,7 @@ window.LiveShopping = (() => {
     const id = active.id, previous = quality; effectBusy = true; $('live-quality').disabled = true;
     try {
       await track.restartTrack({ resolution: LiveVideoEffects.qualities[value] });
+      quality = value;
       await applyOutgoingEffect(track, filter, beauty);
       if (active?.id !== id) return;
       const result = await getSB().from('live_rooms').update({ video_quality: value }).eq('id', id).select().single();
@@ -97,14 +96,14 @@ window.LiveShopping = (() => {
       active = result.data; quality = value;
       status('Calidad de emision actualizada. Se adapta a tu camara y conexion.');
     } catch (error) {
+      quality = previous;
       try { await track.restartTrack({ resolution: LiveVideoEffects.qualities[previous] }); await applyOutgoingEffect(track, filter, beauty); } catch (rollbackError) { console.error('[KMD quality rollback]', rollbackError); }
       showError(error);
     } finally { effectBusy = false; $('live-quality').disabled = false; renderEffectControls(); }
   }
   function toggleFit() {
-    if (!isPresenter()) return;
-    fit = fit === 'contain' ? 'cover' : 'contain'; $('live-player-layout').dataset.fit = fit;
-    $('live-fit').textContent = fit === 'contain' ? 'Llenar pantalla' : 'Ver imagen completa';
+    // Compatibility helper: PULSO always preserves the complete portrait image.
+    if (isPresenter()) $('live-player-layout').dataset.fit = 'contain';
   }
   function toggleSettings() {
     if (!isPresenter()) return;
@@ -117,16 +116,16 @@ window.LiveShopping = (() => {
       // Fullscreen the document so the existing product modal stays accessible.
       if (document.fullscreenElement) { await document.exitFullscreen(); ownsFullscreen = false; }
       else if (document.documentElement.requestFullscreen) { await document.documentElement.requestFullscreen(); ownsFullscreen = true; }
-      else toast('El vivo ya ocupa la pantalla. Este navegador no permite ocultar sus barras.');
+      else toast('PULSO ya ocupa la pantalla. Este navegador no permite ocultar sus barras.');
     } catch { toast('No se pudo ocultar la barra del navegador. El video sigue en modo inmersivo.'); }
   }
   async function api(action, data = {}) {
-    if (!userId()) throw new Error('Inicia sesion para participar del vivo.');
+    if (!userId()) throw new Error('Inicia sesion para participar de PULSO.');
     const { data: result, error } = await getSB().functions.invoke('live-access', { body: { action, ...data } });
     if (error) {
       let message;
       try { message = (await error.context?.json())?.error; } catch {}
-      throw new Error(message || error.message || 'No pudimos conectar con el servidor del vivo.');
+      throw new Error(message || error.message || 'No pudimos conectar con el servidor de PULSO.');
     }
     if (result?.error) throw new Error(result.error);
     return result;
@@ -143,9 +142,11 @@ window.LiveShopping = (() => {
       stopPreview();
       const version = previewGeneration;
       const { createLocalTracks } = await sdk();
-      const tracks = await createLocalTracks({ audio: { echoCancellation: true, noiseSuppression: true }, video: { facingMode: 'user', resolution: { width: 720, height: 1280, frameRate: 24 } } });
+      const tracks = await createLocalTracks({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: { facingMode: 'user', resolution: { width: 720, height: 1280, frameRate: 24 } } });
       if (version !== previewGeneration) { tracks.forEach(track => track.stop()); return; }
       localTracks = tracks;
+      try { await applyOutgoingEffect(localTracks.find(track => track.kind === 'video'), 'natural', 0); }
+      catch (error) { console.warn('[KMD portrait preview]', error.message); }
       const video = localTracks.find(track => track.kind === 'video').attach();
       video.muted = true; video.playsInline = true; $('live-preview').append(video);
       $('live-setup-status').textContent = 'Vista previa privada. Todavia no estas transmitiendo.';
@@ -154,6 +155,8 @@ window.LiveShopping = (() => {
   }
   async function openStudio() {
     if (!userId()) { openAuthModal('login'); return; }
+    if (isPresenter()) { toggleSettings(); return; }
+    filter = 'natural'; beauty = 0; quality = 'standard';
     const modal = $('live-start-modal'); modal.classList.add('open');
     const list = $('live-product-picker'); list.textContent = 'Cargando tus productos...';
     const start = $('live-start-btn'); start.disabled = true;
@@ -162,7 +165,7 @@ window.LiveShopping = (() => {
       const config = await api('status');
       $('live-setup-status').textContent = config.configured
         ? 'Video disponible. Elegi tus productos y proba la camara antes de iniciar.'
-        : 'Falta vincular LiveKit. Podes probar la camara, pero el vivo aun no esta habilitado.';
+        : 'Falta vincular LiveKit. Podes probar la camara, pero PULSO aun no esta habilitado.';
       const { data, error } = await getSB().from('products').select('id,title,price,currency').eq('user_id', userId()).eq('status', 'published').order('created_at', { ascending: false }).limit(100);
       if (error) throw error;
       list.replaceChildren();
@@ -185,9 +188,9 @@ window.LiveShopping = (() => {
     const ids = [...document.querySelectorAll('#live-product-picker input:checked')].map(input => input.value);
     const title = $('live-title-inp').value.trim();
     if (title.length < 3 || title.length > 100) { toast('Escribi un titulo de 3 a 100 caracteres.'); return; }
-    if (!ids.length || ids.length > 12) { toast('Elegi entre 1 y 12 productos para tu vivo.'); return; }
+    if (!ids.length || ids.length > 12) { toast('Elegi entre 1 y 12 productos para tu PULSO.'); return; }
     busy = true; $('live-start-btn').disabled = true;
-    $('live-setup-status').textContent = 'Preparando la transmision...';
+    $('live-setup-status').textContent = 'Preparando PULSO...';
     let prepared = null;
     try {
       if (!localTracks.length) await preview();
@@ -208,7 +211,7 @@ window.LiveShopping = (() => {
         try { await api('heartbeat', { roomId: active.id }); }
         catch (error) { status(errorText(error)); }
       }, 25000);
-      status('Estas en vivo. Los productos que destaques aparecen abajo para tu audiencia.');
+      status('Tu PULSO esta activo. Los productos destacados aparecen sobre el video.');
       renderStories(); renderRP();
     } catch (error) {
       stopPreview(); await disconnect();
@@ -223,7 +226,7 @@ window.LiveShopping = (() => {
     document.body.classList.add('live-immersive');
     $('live-settings').hidden = true; productSignature = '';
     $('live-player-layout').dataset.presenter = String(isPresenter());
-    $('live-player-layout').dataset.fit = 'auto';
+    $('live-player-layout').dataset.fit = 'contain';
     filter = active.video_filter || 'natural'; beauty = active.beauty_level || 0; quality = active.video_quality || 'standard';
     renderEffectControls();
     $('live-title').textContent = active.title;
@@ -260,17 +263,20 @@ window.LiveShopping = (() => {
     const { Room, RoomEvent } = await sdk();
     const access = await api('token', { roomId: row.id });
     const room = new Room({ adaptiveStream: true, dynacast: true }); connection = room;
-    function attach(track, participant) {
+    function attach(track, participant, local = false) {
       if (participant.identity !== row.user_id) return;
+      // attach() starts playback even for detached audio elements: never create
+      // one for the local microphone or for a presenter-side remote monitor.
+      if (track.kind === 'audio' && (local || isPresenter())) return;
       const element = track.attach();
       if (track.kind === 'video') {
-        element.playsInline = true; element.muted = participant.isLocal;
+        element.playsInline = true; element.muted = true; element.defaultMuted = true; element.volume = 0;
         $('live-media').replaceChildren(element); status('Video conectado');
-      } else if (!participant.isLocal) { $('live-audio').append(element); }
+      } else { $('live-audio').append(element); }
     }
     room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => attach(track, participant));
     room.on(RoomEvent.TrackUnsubscribed, track => track.detach().forEach(element => element.remove()));
-    room.on(RoomEvent.LocalTrackPublished, publication => { if (publication.track) attach(publication.track, room.localParticipant); });
+    room.on(RoomEvent.LocalTrackPublished, publication => { if (publication.track) attach(publication.track, room.localParticipant, true); });
     room.on(RoomEvent.ParticipantConnected, renderAudience);
     room.on(RoomEvent.ParticipantDisconnected, participant => {
       renderAudience(); if (participant.identity === row.user_id) status('El vendedor se desconecto. Esperando reconexion...');
@@ -279,8 +285,14 @@ window.LiveShopping = (() => {
     room.on(RoomEvent.Reconnected, () => status('Video reconectado'));
     room.on(RoomEvent.AudioPlaybackStatusChanged, () => { $('live-audio-gate').hidden = room.canPlaybackAudio || isPresenter(); });
     room.on(RoomEvent.Disconnected, () => { status('Video desconectado. Sali y volve a entrar para reintentar.'); renderAudience(); });
-      await room.connect(access.url, access.token);
-      for (const track of tracks) await room.localParticipant.publishTrack(track);
+      await room.connect(access.url, access.token, { autoSubscribe: !isPresenter() });
+      for (const track of tracks) {
+        if (track.kind === 'video') {
+          try { await applyOutgoingEffect(track, filter, beauty); }
+          catch (error) { status('PULSO usa la camara original en este dispositivo.'); console.warn('[KMD portrait]', error.message); }
+        }
+        await room.localParticipant.publishTrack(track);
+      }
       if (!isPresenter()) await resumePlayback();
       renderAudience();
     } catch (error) { tracks.forEach(track => track.stop()); throw error; }
@@ -351,8 +363,8 @@ window.LiveShopping = (() => {
       await disconnect();
       const { data, error } = await getSB().from('live_rooms').select('*').eq('id', id).single();
       if (error) throw error;
-      if (data.user_id === userId()) throw new Error('Para retomar tu camara, finaliza el vivo anterior y prepara uno nuevo.');
-      if (data.status !== 'live' || Date.parse(data.lease_until) <= Date.now()) throw new Error('Este vivo ya no esta disponible.');
+      if (data.user_id === userId()) throw new Error('Para retomar tu camara, finaliza el PULSO anterior y prepara uno nuevo.');
+      if (data.status !== 'live' || Date.parse(data.lease_until) <= Date.now()) throw new Error('Este PULSO ya no esta disponible.');
       active = data; nav('live'); await connect(data); await watchRoom(); await refreshRoom();
     } catch (error) { await disconnect(); active = null; showError(error); await directory(); }
     finally { busy = false; }
@@ -377,7 +389,7 @@ window.LiveShopping = (() => {
       if (generation !== version || active?.id !== id) return;
       if (!row || row.status === 'ended' || Date.parse(row.lease_until) <= Date.now()) {
         await disconnect(); active = null; currentLiveSession = null;
-        await directory(); status('La transmision termino o perdio conexion.'); return;
+        await directory(); status('PULSO termino o perdio conexion.'); return;
       }
       active = row;
       renderEffectControls();
@@ -471,7 +483,7 @@ window.LiveShopping = (() => {
     if (!$('live-directory')) return;
     $('live-directory').hidden = false; $('live-player-layout').hidden = true;
     const box = $('live-room-list');
-    if (!box.childNodes.length) box.textContent = 'Buscando transmisiones...';
+    if (!box.childNodes.length) box.textContent = 'Buscando PULSOS...';
     try {
       const { data: rooms, error } = await getSB().from('live_rooms').select('*').eq('status', 'live').gt('lease_until', new Date().toISOString()).order('started_at', { ascending: false }).limit(30);
       if (error) throw error;
@@ -480,12 +492,12 @@ window.LiveShopping = (() => {
       const { data: profiles, error: profileError } = ids.length ? await getSB().from('public_profiles').select('id,username,first_name').in('id', ids) : { data: [], error: null };
       if (profileError) throw profileError;
       box.replaceChildren();
-      if (!rooms.length) box.textContent = 'Todavia no hay transmisiones activas. Cuando un vendedor inicie, aparecera aca.';
+      if (!rooms.length) box.textContent = 'Todavia no hay PULSOS activos. Cuando un vendedor inicie, aparecera aca.';
       for (const row of rooms) {
         const card = document.createElement('article'); card.className = 'live-room-card';
         const title = document.createElement('h3'); title.textContent = row.title;
         const seller = document.createElement('p'); seller.textContent = profiles.find(profile => profile.id === row.user_id)?.username || 'Vendedor';
-        card.append(title, seller, button('Entrar al vivo', () => join(row.id), 'btn-p btn-pri')); box.append(card);
+        card.append(title, seller, button('Entrar a PULSO', () => join(row.id), 'btn-p btn-pri')); box.append(card);
       }
       if (userId()) {
         const own = await getSB().from('live_rooms').select('id,title').eq('user_id', userId()).neq('status', 'ended').limit(1).maybeSingle();
@@ -519,18 +531,18 @@ window.LiveShopping = (() => {
     await disconnect(); stopPreview();
     if (previous?.user_id === previousUserId) {
       try { await api('end', { roomId: previous.id }); }
-      catch (error) { console.error('[KMD live end]', error); toast('Camara apagada. No pudimos confirmar el cierre de sala: revisalo en En vivo.'); }
+      catch (error) { console.error('[KMD live end]', error); toast('Camara apagada. No pudimos confirmar el cierre de sala: revisalo en PULSO.'); }
     }
   }
   async function end() {
-    if (busy || !active || !confirm('Finalizar la transmision para todos?')) return;
+    if (busy || !active || !confirm('Finalizar PULSO para todos?')) return;
     busy = true;
     try { await leave(); await directory(); }
     finally { busy = false; }
   }
   function canLeave() {
-    if (busy) { toast('Espera a que termine la conexion del vivo.'); return false; }
-    return !active || active.user_id !== userId() || confirm('Al salir se apagara tu camara y se cerrara el vivo. Continuar?');
+    if (busy) { toast('Espera a que termine la conexion de PULSO.'); return false; }
+    return !active || active.user_id !== userId() || confirm('Al salir se apagara tu camara y se cerrara PULSO. Continuar?');
   }
   async function page() {
     if (active) return;
