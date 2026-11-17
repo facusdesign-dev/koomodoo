@@ -3,6 +3,8 @@ window.LiveShopping = (() => {
   let sdkPromise, connection = null, localTracks = [], active = null;
   let channel = null, poll = null, heartbeat = null, directoryPoll = null;
   let busy = false, generation = 0, previewGeneration = 0, roomProducts = [], refreshing = false;
+  let audioLevel = 0.85, lastAudioLevel = 0.85, filter = 'natural', fit = 'auto', ownsFullscreen = false;
+  let liked = false, likeExists = false, likeBusy = false, following = false, productSignature = '';
   const $ = id => document.getElementById(id);
   const userId = () => KMD.session?.user?.id;
   const sdk = () => sdkPromise ||= import('https://cdn.jsdelivr.net/npm/livekit-client@2.24.1/dist/livekit-client.esm.mjs').catch(error => { sdkPromise = null; throw error; });
@@ -15,6 +17,63 @@ window.LiveShopping = (() => {
   function button(text, handler, className = 'btn-p btn-sec') {
     const element = document.createElement('button'); element.type = 'button'; element.className = className;
     element.textContent = text; element.onclick = handler; return element;
+  }
+  const icons = {
+    heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
+    sound: '<path d="m11 5-6 4H2v6h3l6 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',
+    settings: '<path d="M4 7h16M4 17h16"/><circle cx="8" cy="7" r="3"/><circle cx="16" cy="17" r="3"/>',
+    mic: '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/>',
+    end: '<rect x="5" y="5" width="14" height="14" rx="3"/>',
+  };
+  function control(id, text, icon, handler) {
+    const element = button('', handler, 'live-control'); element.id = id;
+    element.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[icon]}</svg>`;
+    const label = document.createElement('span'); label.textContent = text; element.append(label);
+    element.setAttribute('aria-label', text); return element;
+  }
+  function labelControl(element, text) {
+    if (!element) return;
+    element.querySelector('span').textContent = text; element.setAttribute('aria-label', text);
+  }
+  function applyVolume() {
+    connection?.remoteParticipants.forEach(participant => participant.audioTrackPublications.forEach(publication => publication.track?.setVolume(audioLevel)));
+    $('live-audio')?.querySelectorAll('audio').forEach(audio => { audio.volume = audioLevel; audio.muted = audioLevel === 0; });
+    if ($('live-volume')) $('live-volume').value = String(Math.round(audioLevel * 100));
+    if ($('live-volume-label')) $('live-volume-label').textContent = Math.round(audioLevel * 100) + '%';
+    labelControl($('live-sound-toggle'), audioLevel === 0 ? 'Activar sonido' : 'Silenciar');
+  }
+  async function setVolume(value) {
+    const number = Number(value); if (!Number.isFinite(number)) return;
+    audioLevel = Math.max(0, Math.min(100, number)) / 100;
+    if (audioLevel > 0) lastAudioLevel = audioLevel;
+    try { applyVolume(); if (audioLevel > 0) await connection?.startAudio(); } catch (error) { showError(error); }
+  }
+  async function toggleSound() {
+    if (connection && !connection.canPlaybackAudio && audioLevel > 0) {
+      try { await connection.startAudio(); await connection.startVideo(); applyVolume(); } catch (error) { showError(error); }
+      return;
+    }
+    return setVolume(audioLevel > 0 ? 0 : lastAudioLevel * 100);
+  }
+  function setFilter(value) {
+    if (!['natural', 'clear', 'warm'].includes(value)) return;
+    filter = value; $('live-player-layout').dataset.filter = value; $('live-filter').value = value;
+  }
+  function toggleFit() {
+    fit = fit === 'contain' ? 'cover' : 'contain'; $('live-player-layout').dataset.fit = fit;
+    $('live-fit').textContent = fit === 'contain' ? 'Llenar pantalla' : 'Ver imagen completa';
+  }
+  function toggleSettings() {
+    const panel = $('live-settings'); panel.hidden = !panel.hidden;
+    $('live-settings-toggle')?.setAttribute('aria-expanded', String(!panel.hidden));
+  }
+  async function fullscreen() {
+    try {
+      // Fullscreen the document so the existing product modal stays accessible.
+      if (document.fullscreenElement) { await document.exitFullscreen(); ownsFullscreen = false; }
+      else if (document.documentElement.requestFullscreen) { await document.documentElement.requestFullscreen(); ownsFullscreen = true; }
+      else toast('El vivo ya ocupa la pantalla. Este navegador no permite ocultar sus barras.');
+    } catch { toast('No se pudo ocultar la barra del navegador. El video sigue en modo inmersivo.'); }
   }
   async function api(action, data = {}) {
     if (!userId()) throw new Error('Inicia sesion para participar del vivo.');
@@ -115,25 +174,37 @@ window.LiveShopping = (() => {
   }
   function drawShell() {
     $('live-directory').hidden = true; $('live-player-layout').hidden = false;
+    document.body.classList.add('live-immersive');
+    $('live-settings').hidden = true; productSignature = '';
+    $('live-player-layout').dataset.fit = fit; setFilter(filter);
     $('live-title').textContent = active.title;
     $('live-status').textContent = 'Conectando al video...';
     $('live-products').replaceChildren(); $('live-comments').replaceChildren();
+    delete $('live-comments').dataset.messages;
     $('live-media').replaceChildren(); $('live-audio').replaceChildren();
     const controls = $('live-controls'); controls.replaceChildren();
-    controls.append(button('Activar sonido', async () => {
-      try { await connection?.startAudio(); await connection?.startVideo(); } catch (error) { showError(error); }
-    }));
+    const like = control('live-like-toggle', 'Likes', 'heart', toggleLike);
+    like.disabled = active.user_id === userId(); like.setAttribute('aria-pressed', 'false'); controls.append(like);
+    controls.append(control('live-sound-toggle', 'Activar sonido', 'sound', toggleSound));
+    const settings = control('live-settings-toggle', 'Ajustes', 'settings', toggleSettings);
+    settings.setAttribute('aria-expanded', 'false'); controls.append(settings);
     if (active.user_id === userId()) {
-      const mic = button('Silenciar microfono', async () => {
+      const mic = control('live-mic-toggle', 'Microfono', 'mic', async () => {
         mic.disabled = true;
         try {
           const participant = connection.localParticipant;
           await participant.setMicrophoneEnabled(!participant.isMicrophoneEnabled);
-          mic.textContent = participant.isMicrophoneEnabled ? 'Silenciar microfono' : 'Activar microfono';
+          labelControl(mic, participant.isMicrophoneEnabled ? 'Silenciar microfono' : 'Activar microfono');
         } catch (error) { showError(error); } finally { mic.disabled = false; }
       });
-      controls.append(mic, button('Finalizar vivo', () => end(), 'btn-p btn-pri'));
-    } else controls.append(button('Salir del vivo', () => { nav('home'); }));
+      const finish = control('live-end', 'Finalizar', 'end', () => end()); finish.classList.add('end');
+      controls.append(mic, finish);
+    }
+    $('live-follow').hidden = active.user_id === userId(); $('live-follow').disabled = true;
+    $('live-follow').textContent = 'Cargando...'; $('live-host-name').textContent = 'Vendedor';
+    $('live-host-avatar').textContent = 'K';
+    void loadHost().catch(error => { console.error('[KMD live host]', error); $('live-follow').textContent = 'Reintentar'; $('live-follow').disabled = false; $('live-follow').onclick = () => void loadHost().catch(showError); });
+    applyVolume();
   }
   async function connect(row, tracks = []) {
     active = row; drawShell();
@@ -147,7 +218,7 @@ window.LiveShopping = (() => {
       if (track.kind === 'video') {
         element.playsInline = true; element.muted = participant.isLocal;
         $('live-media').replaceChildren(element); status('Video conectado');
-      } else if (!participant.isLocal) $('live-audio').append(element);
+      } else if (!participant.isLocal) { $('live-audio').append(element); applyVolume(); }
     }
     room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => attach(track, participant));
     room.on(RoomEvent.TrackUnsubscribed, track => track.detach().forEach(element => element.remove()));
@@ -158,6 +229,7 @@ window.LiveShopping = (() => {
     });
     room.on(RoomEvent.Reconnecting, () => status('Reconectando el video...'));
     room.on(RoomEvent.Reconnected, () => status('Video reconectado'));
+    room.on(RoomEvent.AudioPlaybackStatusChanged, () => labelControl($('live-sound-toggle'), room.canPlaybackAudio && audioLevel > 0 ? 'Silenciar' : 'Activar sonido'));
     room.on(RoomEvent.Disconnected, () => { status('Video desconectado. Sali y volve a entrar para reintentar.'); renderAudience(); });
       await room.connect(access.url, access.token);
       for (const track of tracks) await room.localParticipant.publishTrack(track);
@@ -166,7 +238,61 @@ window.LiveShopping = (() => {
   }
   function renderAudience() {
     if ($('live-audience')) $('live-audience').textContent = connection?.state === 'connected'
-      ? `${connection.remoteParticipants.size + 1} personas conectadas (incluye vendedor)` : 'Sin conexion de video';
+      ? `${connection.remoteParticipants.size + 1} conectados` : 'Sin conexion';
+    $('live-audience')?.setAttribute('title', 'Incluye al vendedor y los espectadores conectados');
+  }
+  async function loadHost() {
+    if (!active) return;
+    const id = active.id, target = active.user_id, version = generation;
+    const { data: profile, error } = await getSB().from('public_profiles').select('id,username,first_name,avatar_url').eq('id', target).maybeSingle();
+    if (error) throw error;
+    const state = target === userId() ? false : await FollowersModule.isFollowing(target);
+    if (version !== generation || active?.id !== id) return;
+    $('live-host-name').textContent = profile?.username ? '@' + profile.username : profile?.first_name || 'Vendedor';
+    const avatar = typeof resolveAvatarDisplayUrl === 'function' ? resolveAvatarDisplayUrl(profile?.avatar_url || '') : profile?.avatar_url || '';
+    $('live-host-avatar').replaceChildren();
+    if (/^https:\/\//.test(avatar)) { const image = document.createElement('img'); image.src = avatar; image.alt = ''; $('live-host-avatar').append(image); }
+    else $('live-host-avatar').textContent = avatar || 'K';
+    following = state; renderFollow();
+    $('live-follow').onclick = async () => {
+      const btn = $('live-follow'); if (btn.disabled || active?.id !== id) return;
+      btn.disabled = true;
+      try {
+        await (following ? FollowersModule.unfollowUser(target) : FollowersModule.followUser(target));
+        if (active?.id === id) { following = await FollowersModule.isFollowing(target); renderFollow(); }
+      } catch (error) { showError(error); } finally { if (active?.id === id) btn.disabled = false; }
+    };
+  }
+  function renderFollow() {
+    const btn = $('live-follow'); btn.textContent = following ? 'Siguiendo' : 'Seguir';
+    btn.setAttribute('aria-pressed', String(following)); btn.disabled = false;
+    btn.setAttribute('aria-label', following ? 'Dejar de seguir al vendedor' : 'Seguir al vendedor');
+  }
+  async function refreshLikes() {
+    if (!active || active.status !== 'live') return;
+    const id = active.id, version = generation;
+    const count = await getSB().from('live_room_likes').select('user_id', { count: 'exact', head: true }).eq('room_id', id).eq('liked', true);
+    if (count.error) throw count.error;
+    const own = await getSB().from('live_room_likes').select('liked').eq('room_id', id).eq('user_id', userId()).maybeSingle();
+    if (own.error) throw own.error;
+    if (version !== generation || active?.id !== id || likeBusy) return;
+    likeExists = !!own.data; liked = !!own.data?.liked;
+    labelControl($('live-like-toggle'), `${count.count ?? 0} likes`);
+    $('live-like-toggle').setAttribute('aria-pressed', String(liked));
+  }
+  async function toggleLike() {
+    if (!active || active.user_id === userId() || likeBusy) return;
+    const id = active.id, next = !liked;
+    likeBusy = true; $('live-like-toggle').disabled = true;
+    try {
+      let result = likeExists
+        ? await getSB().from('live_room_likes').update({ liked: next }).eq('room_id', id).eq('user_id', userId()).select('liked').single()
+        : await getSB().from('live_room_likes').insert({ room_id: id, user_id: userId(), liked: next });
+      if (result.error?.code === '23505') result = await getSB().from('live_room_likes').update({ liked: next }).eq('room_id', id).eq('user_id', userId()).select('liked').single();
+      if (result.error) throw result.error;
+      if (active?.id === id) { liked = next; likeExists = true; }
+    } catch (error) { showError(error); }
+    finally { likeBusy = false; if (active?.id === id) { $('live-like-toggle').disabled = false; await refreshLikes().catch(showError); } }
   }
   async function join(id) {
     if (!userId()) { openAuthModal('login'); return; }
@@ -187,6 +313,7 @@ window.LiveShopping = (() => {
     channel = getSB().channel(`shop-live-${id}-${crypto.randomUUID()}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_rooms', filter: `id=eq.${id}` }, () => void refreshRoom())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_room_messages', filter: `room_id=eq.${id}` }, () => void refreshComments().catch(showError))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'live_room_likes', filter: `room_id=eq.${id}` }, () => void refreshLikes().catch(showError))
       .subscribe();
     // Reconcile after missed events/reconnects; media is never polled.
     poll = setInterval(() => void refreshRoom(), 5000);
@@ -211,11 +338,14 @@ window.LiveShopping = (() => {
       if (result.error) throw result.error;
       if (generation !== version || active?.id !== id) return;
       roomProducts = ids.map(productId => result.data.find(product => product.id === productId)).filter(Boolean);
-      drawProducts(); await refreshComments();
+      drawProducts(); await refreshComments(); await refreshLikes();
     } catch (error) { console.error('[KMD live refresh]', error); status('No pudimos actualizar productos/chat. Reintentando...'); }
     finally { refreshing = false; }
   }
   function drawProducts() {
+    const signature = JSON.stringify([active.pinned_product_id, roomProducts]);
+    if (productSignature === signature) return;
+    productSignature = signature;
     const strip = $('live-products'); strip.replaceChildren();
     if (!roomProducts.length) strip.textContent = 'No hay productos disponibles en este vivo.';
     const sorted = [...roomProducts].sort((a, b) => Number(b.id === active.pinned_product_id) - Number(a.id === active.pinned_product_id));
@@ -232,7 +362,7 @@ window.LiveShopping = (() => {
       const pinned = product.id === active.pinned_product_id;
       const action = active.user_id === userId()
         ? button(pinned ? 'En pantalla' : 'Mostrar ahora', () => pin(product.id), 'live-product-action')
-        : button('Ver producto', () => CommerceUI.showProduct(product.id), 'live-product-action');
+        : button('Ver y elegir', () => CommerceUI.showProduct(product.id), 'live-product-action');
       if (pinned) { const label = document.createElement('small'); label.textContent = 'Producto destacado'; content.prepend(label); }
       content.append(action); card.append(content); strip.append(card);
     }
@@ -253,6 +383,9 @@ window.LiveShopping = (() => {
     if (profiles.error) throw profiles.error;
     if (generation !== version || active?.id !== id) return;
     const box = $('live-comments'), nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+    const signature = JSON.stringify(messages);
+    if (box.dataset.messages === signature) return;
+    box.dataset.messages = signature;
     box.replaceChildren();
     for (const message of [...messages].reverse()) {
       const profile = profiles.data.find(person => person.id === message.user_id);
@@ -308,6 +441,9 @@ window.LiveShopping = (() => {
     generation++;
     clearInterval(poll); poll = null; clearInterval(heartbeat); heartbeat = null;
     const previous = connection; connection = null;
+    document.body.classList.remove('live-immersive');
+    $('live-settings').hidden = true;
+    if (ownsFullscreen && document.fullscreenElement) { ownsFullscreen = false; void document.exitFullscreen().catch(() => {}); }
     if (previous) {
       previous.removeAllListeners();
       previous.localParticipant.trackPublications.forEach(publication => publication.track?.stop());
@@ -346,5 +482,5 @@ window.LiveShopping = (() => {
     stopPreview(); connection?.localParticipant.trackPublications.forEach(publication => publication.track?.stop());
     // A dropped tab is hidden by its server-time lease; do not trust unload fetches.
   });
-  return { openStudio, closeStudio, preview, start, page, join, sendComment, canLeave, leave, errorText };
+  return { openStudio, closeStudio, preview, start, page, join, sendComment, canLeave, leave, errorText, setVolume, setFilter, toggleFit, toggleSettings, fullscreen };
 })();

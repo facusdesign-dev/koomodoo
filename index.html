@@ -1433,7 +1433,6 @@ button,select,input{font-family:inherit}
 
 <!-- ── LIVE ── -->
 <div class="pg" id="pg-live">
-  <p id="live-status" class="live-status" style="padding:8px 18px" role="status"></p>
   <section id="live-directory" class="live-directory">
     <h1>Descubri tu proxima compra, en vivo.</h1>
     <p class="live-explainer">Mira al vendedor, pregunta en el chat y conoce los productos sin salir del video. Estamos preparando las primeras transmisiones del piloto.</p>
@@ -1443,15 +1442,32 @@ button,select,input{font-family:inherit}
   <section id="live-player-layout" class="live-player-layout" hidden aria-label="Transmision y productos">
     <div class="live-stage">
       <div class="live-video-frame">
-        <div class="live-topline"><strong id="live-title"></strong><span id="live-audience">Conectando...</span></div>
         <div id="live-media"></div><div id="live-audio" hidden></div>
       </div>
-      <div id="live-controls" class="live-controls"></div>
-      <p class="live-status">Elegi un producto para ver variantes y agregarlo al carrito sin cerrar el video. Piloto sin cobros.</p>
-      <div id="live-products" class="live-products" aria-label="Productos del vivo"></div>
+      <div class="live-shade" aria-hidden="true"></div>
+      <header class="live-topline">
+        <div class="live-host-chip"><div id="live-host-avatar" class="live-host-avatar"></div><div><strong id="live-host-name">Vendedor</strong><span id="live-title"></span></div></div>
+        <button id="live-follow" class="live-follow" hidden>Seguir</button>
+        <div class="live-room-meta"><span class="live-onair">EN VIVO</span><span id="live-audience">Conectando...</span></div>
+        <button class="live-exit" onclick="nav('home')" aria-label="Salir de la transmision">&#215;</button>
+      </header>
+      <p id="live-status" class="live-status" role="status"></p>
+      <nav id="live-controls" class="live-controls" aria-label="Controles del vivo"></nav>
+      <section id="live-settings" class="live-settings" hidden aria-label="Sonido e imagen">
+        <div class="live-settings-heading"><strong>Sonido e imagen</strong><button type="button" onclick="LiveShopping.toggleSettings()" aria-label="Cerrar ajustes">&#215;</button></div>
+        <label for="live-volume">Volumen que escuchas <output id="live-volume-label">85%</output></label>
+        <input id="live-volume" type="range" min="0" max="100" value="85" oninput="LiveShopping.setVolume(this.value)">
+        <label for="live-filter">Mejorar imagen (solo en tu pantalla)</label>
+        <select id="live-filter" onchange="LiveShopping.setFilter(this.value)"><option value="natural">Natural</option><option value="clear">Mas claridad</option><option value="warm">Calido</option></select>
+        <button id="live-fit" type="button" onclick="LiveShopping.toggleFit()">Ver imagen completa</button>
+        <button type="button" onclick="LiveShopping.fullscreen()">Pantalla completa</button>
+        <p>No modifica la camara enviada. En algunos telefonos el volumen tambien se regula con sus botones fisicos.</p>
+      </section>
+      <div id="live-products" class="live-products" aria-label="Productos del vivo" aria-live="polite"></div>
+      <span class="live-pilot-label">Prueba sin cobros</span>
     </div>
     <aside class="live-chat">
-      <h2>Conversa con el vendedor</h2>
+      <h2 class="live-sr-only">Conversa con el vendedor</h2>
       <div id="live-comments" class="live-comments" aria-live="polite"></div>
       <form class="live-comment-form" onsubmit="event.preventDefault();LiveShopping.sendComment()">
         <input id="live-comment" class="fi" maxlength="300" placeholder="Hace tu pregunta..." aria-label="Comentario del vivo" required>
