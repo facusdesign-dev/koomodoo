@@ -1,6 +1,6 @@
 {
-  "release": "2026-11-17-pulso-native-camera-no-zoom",
-  "previousCommit": "380593c",
+  "release": "2026-11-17-pulso-iphone-sensor-capture",
+  "previousCommit": "f14eb74",
   "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens"],
   "videoProviderConfigured": true,
   "realPaymentsEnabled": false,
@@ -9,5 +9,7 @@
   "outgoingEffectGeneratedTrackVerified": true,
   "storeStockDeduction": "approved-payment-only",
   "cameraFraming": "native-portrait-full-source-9x16",
-  "presenterCameraSelection": true
+  "presenterCameraSelection": true,
+  "appleMobileSensorCapture": true,
+  "cameraFirstFrameMeasurement": true
 }

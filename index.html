@@ -1113,6 +1113,7 @@ button,select,input{font-family:inherit}
     <label for="live-setup-camera">Camara para transmitir</label>
     <select id="live-setup-camera" class="af-inp" onchange="LiveShopping.setCamera(this.value)"><option value="user">Frontal</option><option value="environment">Trasera</option></select>
     <div id="live-preview" class="live-preview"></div>
+    <p id="live-setup-camera-info" class="live-setup-status" role="status">Sostene el celular vertical antes de probar la camara.</p>
     <button id="live-preview-btn" class="af-btn sec" onclick="LiveShopping.preview()">Probar camara y microfono</button>
     <p id="live-setup-status" class="live-setup-status" role="status"></p>
     <strong>Productos de PULSO (hasta 12)</strong>
@@ -1462,6 +1463,7 @@ button,select,input{font-family:inherit}
         <div class="live-settings-heading"><strong>Panel del vendedor</strong><button type="button" onclick="LiveShopping.toggleSettings()" aria-label="Cerrar ajustes">&#215;</button></div>
         <label for="live-camera">Camara para transmitir</label>
         <select id="live-camera" onchange="LiveShopping.setCamera(this.value)"><option value="user">Frontal</option><option value="environment">Trasera</option></select>
+        <p id="live-camera-info" role="status">Midiendo la imagen recibida de la camara...</p>
         <label for="live-quality">Calidad de emision</label>
         <select id="live-quality" onchange="LiveShopping.setQuality(this.value)"><option value="economy">Ahorro (hasta 360p)</option><option value="standard" selected>Equilibrada (hasta 720p)</option><option value="high">Alta (hasta 1080p)</option></select>
         <label for="live-filter">Filtro de emision</label>

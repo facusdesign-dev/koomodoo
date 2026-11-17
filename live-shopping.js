@@ -47,7 +47,7 @@ window.LiveShopping = (() => {
     if (!isPresenter()) return null;
     return [...(connection?.localParticipant.trackPublications.values() || [])].find(publication => publication.track?.kind === 'video')?.track || null;
   }
-  const captureOptions = (facing = cameraFacing, selectedQuality = quality) => ({ facingMode: facing, resolution: { ...LiveVideoEffects.qualities[selectedQuality] } });
+  const captureOptions = (facing = cameraFacing, selectedQuality = quality) => ({ facingMode: facing, resolution: LiveVideoEffects.captureResolution(selectedQuality) });
   function syncCameraControls() {
     for (const id of ['live-camera', 'live-setup-camera']) {
       const element = $(id);
@@ -69,7 +69,7 @@ window.LiveShopping = (() => {
         if (settings.facingMode && settings.facingMode !== value) throw new Error('Este dispositivo no ofrece la camara seleccionada.');
         await applyOutgoingEffect(track, filter, beauty);
         if (version !== previewGeneration || active?.id !== roomId) return;
-        console.log('[KMD camera]', { requested: value, source: settings });
+        console.log('[KMD camera]', { requested: value, width: settings.width, height: settings.height, facing: settings.facingMode });
       }
       cameraFacing = value;
       const message = value === 'environment' ? 'Camara trasera seleccionada.' : 'Camara frontal seleccionada.';
@@ -86,15 +86,22 @@ window.LiveShopping = (() => {
       if (previewButton) previewButton.disabled = false;
     }
   }
+  function renderCameraInfo(info) {
+    const text = info
+      ? `Captura real: ${info.sourceWidth} x ${info.sourceHeight} (${info.sourceHeight > info.sourceWidth ? 'vertical' : 'horizontal'}). Emision: ${info.outputWidth} x ${info.outputHeight}.` + (info.appleMobile && info.sourceWidth > info.sourceHeight ? ' Sostene el iPhone vertical y volve a probar la camara.' : '')
+      : 'No se pudo medir la captura procesada. Se esta usando la camara original.';
+    for (const id of ['live-camera-info', 'live-setup-camera-info']) if ($(id)) $(id).textContent = text;
+  }
   async function applyOutgoingEffect(track, preset, amount) {
     const current = track.getProcessor?.();
     if (current?.name === 'koomodoo-color-and-softness' && current.processedTrack && current.processedTrack.readyState !== 'ended') current.setOptions(preset, amount, quality);
     else {
       if (current?.name === 'koomodoo-color-and-softness') await track.stopProcessor();
-      const processor = LiveVideoEffects.createProcessor(preset, amount, quality);
+      const processor = LiveVideoEffects.createProcessor(preset, amount, quality, { onFrameInfo: renderCameraInfo });
       try { await track.setProcessor(processor, true); }
       catch (error) { await processor.destroy(); throw error; }
     }
+    renderCameraInfo(track.getProcessor?.()?.frameInfo);
   }
   function renderEffectControls() {
     syncCameraControls();
@@ -190,7 +197,7 @@ window.LiveShopping = (() => {
       if (version !== previewGeneration) { tracks.forEach(track => track.stop()); return; }
       localTracks = tracks;
       try { await applyOutgoingEffect(localTracks.find(track => track.kind === 'video'), 'natural', 0); }
-      catch (error) { console.warn('[KMD portrait preview]', error.message); }
+      catch (error) { renderCameraInfo(null); console.warn('[KMD portrait preview]', error.message); }
       const video = localTracks.find(track => track.kind === 'video').attach();
       video.muted = true; video.playsInline = true; $('live-preview').append(video);
       $('live-setup-status').textContent = 'Vista previa privada. Todavia no estas transmitiendo.';
