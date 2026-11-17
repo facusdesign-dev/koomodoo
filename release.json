@@ -1,8 +1,9 @@
 {
-  "release": "2026-11-16-live-shopping-integration",
-  "previousCommit": "845912a",
+  "release": "2026-11-17-livekit-connected",
+  "previousCommit": "11e9b91",
   "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens"],
-  "videoProviderConfigured": false,
+  "videoProviderConfigured": true,
   "realPaymentsEnabled": false,
-  "realVideoEnabled": false
+  "realVideoEnabled": true,
+  "videoEndToEndVerified": false
 }

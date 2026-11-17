@@ -2,6 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const allowedOrigins = new Set(['https://koomodoo.vercel.app', 'http://127.0.0.1:8765', 'http://localhost:8765']);
+let videoHealthUntil = 0;
 function response(req: Request, data: unknown, status = 200) {
   const origin = req.headers.get('Origin') || '';
   return new Response(JSON.stringify(data), { status, headers: {
@@ -19,15 +20,15 @@ const base64 = (value: Uint8Array) => btoa(String.fromCharCode(...value)).replac
 async function jwt(key: string, secret: string, grants: Record<string, unknown>, identity?: string) {
   const now = Math.floor(Date.now() / 1000);
   const encode = (value: unknown) => base64(new TextEncoder().encode(JSON.stringify(value)));
-  const body = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ iss: key, ...(identity ? { sub: identity } : {}), nbf: now - 5, exp: now + 60, jti: crypto.randomUUID(), video: grants })}`;
+  const body = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ iss: key, ...(identity ? { sub: identity } : {}), iat: now, nbf: now - 5, exp: now + 60, jti: crypto.randomUUID(), video: grants })}`;
   const signing = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   return `${body}.${base64(new Uint8Array(await crypto.subtle.sign('HMAC', signing, new TextEncoder().encode(body))))}`;
 }
 async function provider(url: string, key: string, secret: string, action: string, room: string, extra = {}) {
-  const grant = action === 'CreateRoom' ? { roomCreate: true } : action === 'ListParticipants' ? { roomList: true, roomAdmin: true, room } : { roomCreate: true, roomAdmin: true, room };
+  const grant = action === 'ListRooms' ? { roomList: true } : action === 'CreateRoom' ? { roomCreate: true } : action === 'ListParticipants' ? { roomAdmin: true, room } : { roomCreate: true, roomAdmin: true, room };
   const result = await fetch(`${url.replace(/^wss:/, 'https:')}/twirp/livekit.RoomService/${action}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await jwt(key, secret, grant)}` },
-    body: JSON.stringify({ ...(action === 'CreateRoom' ? { name: room } : { room }), ...extra }), signal: AbortSignal.timeout(12000),
+    body: JSON.stringify({ ...(action === 'ListRooms' ? { names: [] } : action === 'CreateRoom' ? { name: room } : { room }), ...extra }), signal: AbortSignal.timeout(12000),
   });
   if (!result.ok) {
     if (action === 'DeleteRoom' && result.status === 404) return {};
@@ -53,7 +54,16 @@ export async function handle(req: Request) {
     const apiKey = Deno.env.get('LIVEKIT_API_KEY') || '';
     const secret = Deno.env.get('LIVEKIT_API_SECRET') || '';
     const configured = /^wss:\/\/[a-z0-9.-]+(?::\d+)?$/i.test(videoURL) && !!apiKey && !!secret;
-    if (input.action === 'status') return response(req, { configured });
+    if (input.action === 'status') {
+      if (!configured) return response(req, { configured: false });
+      // A syntactically valid key is not proof the provider accepts it.
+      if (Date.now() >= videoHealthUntil) {
+        try { await provider(videoURL, apiKey, secret, 'ListRooms', ''); }
+        catch { return response(req, { error: 'LiveKit no respondio o rechazo las credenciales. Revisa la configuracion del servidor.', code: 'VIDEO_UNAVAILABLE' }, 503); }
+        videoHealthUntil = Date.now() + 30000;
+      }
+      return response(req, { configured: true, providerChecked: true });
+    }
     if (!configured) return response(req, { error: 'El video todavia no esta configurado. Falta vincular la cuenta del proveedor.', code: 'VIDEO_NOT_CONFIGURED' }, 503);
     const admin = createClient(url, envKey('SUPABASE_SECRET_KEYS', 'SUPABASE_SERVICE_ROLE_KEY'), { auth: { persistSession: false, autoRefreshToken: false } });
     if (input.action === 'prepare') {
