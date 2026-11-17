@@ -3,7 +3,7 @@ window.LiveShopping = (() => {
   let sdkPromise, connection = null, localTracks = [], active = null;
   let channel = null, poll = null, heartbeat = null, directoryPoll = null;
   let busy = false, generation = 0, previewGeneration = 0, roomProducts = [], refreshing = false;
-  let audioLevel = 0.85, lastAudioLevel = 0.85, filter = 'natural', fit = 'auto', ownsFullscreen = false;
+  let filter = 'natural', beauty = 0, quality = 'standard', fit = 'auto', ownsFullscreen = false, effectBusy = false;
   let liked = false, likeExists = false, likeBusy = false, following = false, productSignature = '';
   const $ = id => document.getElementById(id);
   const userId = () => KMD.session?.user?.id;
@@ -35,39 +35,84 @@ window.LiveShopping = (() => {
     if (!element) return;
     element.querySelector('span').textContent = text; element.setAttribute('aria-label', text);
   }
-  function applyVolume() {
-    connection?.remoteParticipants.forEach(participant => participant.audioTrackPublications.forEach(publication => publication.track?.setVolume(audioLevel)));
-    $('live-audio')?.querySelectorAll('audio').forEach(audio => { audio.volume = audioLevel; audio.muted = audioLevel === 0; });
-    if ($('live-volume')) $('live-volume').value = String(Math.round(audioLevel * 100));
-    if ($('live-volume-label')) $('live-volume-label').textContent = Math.round(audioLevel * 100) + '%';
-    labelControl($('live-sound-toggle'), audioLevel === 0 ? 'Activar sonido' : 'Silenciar');
+  const isPresenter = () => !!active && active.user_id === userId();
+  async function resumePlayback() {
+    try { await Promise.all([connection?.startAudio(), connection?.startVideo()]); }
+    catch { status('Toca el video para permitir su reproduccion con audio.'); }
+    $('live-audio-gate').hidden = !connection || !!connection.canPlaybackAudio || isPresenter();
   }
-  async function setVolume(value) {
-    const number = Number(value); if (!Number.isFinite(number)) return;
-    audioLevel = Math.max(0, Math.min(100, number)) / 100;
-    if (audioLevel > 0) lastAudioLevel = audioLevel;
-    try { applyVolume(); if (audioLevel > 0) await Promise.all([connection?.startAudio(), connection?.startVideo()]); } catch (error) { showError(error); }
+  function cameraTrack() {
+    if (!isPresenter()) return null;
+    return [...(connection?.localParticipant.trackPublications.values() || [])].find(publication => publication.track?.kind === 'video')?.track || null;
   }
-  async function toggleSound() {
-    if (connection && !connection.canPlaybackAudio && audioLevel > 0) {
-      try { await connection.startAudio(); await connection.startVideo(); applyVolume(); } catch (error) { showError(error); }
+  async function applyOutgoingEffect(track, preset, amount) {
+    if (preset === 'natural' && amount === 0) {
+      if (track.getProcessor?.()) await track.stopProcessor();
       return;
     }
-    return setVolume(audioLevel > 0 ? 0 : lastAudioLevel * 100);
+    const current = track.getProcessor?.();
+    if (current?.name === 'koomodoo-color-and-softness') current.setOptions(preset, amount);
+    else {
+      const processor = LiveVideoEffects.createProcessor(preset, amount);
+      try { await track.setProcessor(processor, true); }
+      catch (error) { await processor.destroy(); throw error; }
+    }
   }
-  function setFilter(value) {
-    if (!['natural', 'clear', 'warm'].includes(value)) return;
-    filter = value; $('live-player-layout').dataset.filter = value; $('live-filter').value = value;
+  function renderEffectControls() {
+    $('live-filter').value = filter; $('live-beauty').value = String(beauty);
+    $('live-beauty-label').textContent = beauty + '%'; $('live-quality').value = quality;
+    $('live-filter-badge').hidden = (active?.video_filter || 'natural') === 'natural' && !active?.beauty_level;
+  }
+  async function updateEffects(preset, amount) {
+    if (!isPresenter() || effectBusy) return;
+    const track = cameraTrack(); if (!track) { toast('La camara todavia no esta lista.'); return; }
+    let values;
+    try { values = LiveVideoEffects.options(preset, amount); } catch (error) { showError(error); return; }
+    const id = active.id, previous = { filter, beauty };
+    effectBusy = true; $('live-filter').disabled = true; $('live-beauty').disabled = true;
+    try {
+      await applyOutgoingEffect(track, values.preset, values.beauty);
+      if (active?.id !== id) return;
+      const result = await getSB().from('live_rooms').update({ video_filter: values.preset, beauty_level: values.beauty }).eq('id', id).select().single();
+      if (result.error) throw result.error;
+      active = result.data; filter = values.preset; beauty = values.beauty;
+      status('Imagen de emision actualizada para tu audiencia.');
+    } catch (error) {
+      try { await applyOutgoingEffect(track, previous.filter, previous.beauty); } catch (rollbackError) { console.error('[KMD effects rollback]', rollbackError); }
+      showError(error);
+    } finally { effectBusy = false; $('live-filter').disabled = false; $('live-beauty').disabled = false; renderEffectControls(); }
+  }
+  const setFilter = value => updateEffects(value, beauty);
+  const setBeauty = value => updateEffects(filter, Number(value));
+  async function setQuality(value) {
+    if (!isPresenter() || effectBusy || !Object.hasOwn(LiveVideoEffects.qualities, value)) return;
+    const track = cameraTrack(); if (!track) return;
+    const id = active.id, previous = quality; effectBusy = true; $('live-quality').disabled = true;
+    try {
+      await track.restartTrack({ resolution: LiveVideoEffects.qualities[value] });
+      await applyOutgoingEffect(track, filter, beauty);
+      if (active?.id !== id) return;
+      const result = await getSB().from('live_rooms').update({ video_quality: value }).eq('id', id).select().single();
+      if (result.error) throw result.error;
+      active = result.data; quality = value;
+      status('Calidad de emision actualizada. Se adapta a tu camara y conexion.');
+    } catch (error) {
+      try { await track.restartTrack({ resolution: LiveVideoEffects.qualities[previous] }); await applyOutgoingEffect(track, filter, beauty); } catch (rollbackError) { console.error('[KMD quality rollback]', rollbackError); }
+      showError(error);
+    } finally { effectBusy = false; $('live-quality').disabled = false; renderEffectControls(); }
   }
   function toggleFit() {
+    if (!isPresenter()) return;
     fit = fit === 'contain' ? 'cover' : 'contain'; $('live-player-layout').dataset.fit = fit;
     $('live-fit').textContent = fit === 'contain' ? 'Llenar pantalla' : 'Ver imagen completa';
   }
   function toggleSettings() {
+    if (!isPresenter()) return;
     const panel = $('live-settings'); panel.hidden = !panel.hidden;
     $('live-settings-toggle')?.setAttribute('aria-expanded', String(!panel.hidden));
   }
   async function fullscreen() {
+    if (!isPresenter()) return;
     try {
       // Fullscreen the document so the existing product modal stays accessible.
       if (document.fullscreenElement) { await document.exitFullscreen(); ownsFullscreen = false; }
@@ -155,6 +200,7 @@ window.LiveShopping = (() => {
       nav('live');
       await connect(prepared, tracks);
       const activated = await api('activate', { roomId: prepared.id }); active = activated.room;
+      if (ids.length) await pin(ids[0]);
       currentLiveSession = normalizeLiveRecord(active);
       await watchRoom(); await refreshRoom();
       heartbeat = setInterval(async () => {
@@ -176,7 +222,10 @@ window.LiveShopping = (() => {
     $('live-directory').hidden = true; $('live-player-layout').hidden = false;
     document.body.classList.add('live-immersive');
     $('live-settings').hidden = true; productSignature = '';
-    $('live-player-layout').dataset.fit = fit; setFilter(filter);
+    $('live-player-layout').dataset.presenter = String(isPresenter());
+    $('live-player-layout').dataset.fit = 'auto';
+    filter = active.video_filter || 'natural'; beauty = active.beauty_level || 0; quality = active.video_quality || 'standard';
+    renderEffectControls();
     $('live-title').textContent = active.title;
     $('live-status').textContent = 'Conectando al video...';
     $('live-products').replaceChildren(); $('live-comments').replaceChildren();
@@ -184,11 +233,10 @@ window.LiveShopping = (() => {
     $('live-media').replaceChildren(); $('live-audio').replaceChildren();
     const controls = $('live-controls'); controls.replaceChildren();
     const like = control('live-like-toggle', 'Likes', 'heart', toggleLike);
-    like.disabled = active.user_id === userId(); like.setAttribute('aria-pressed', 'false'); controls.append(like);
-    controls.append(control('live-sound-toggle', 'Activar sonido', 'sound', toggleSound));
-    const settings = control('live-settings-toggle', 'Ajustes', 'settings', toggleSettings);
-    settings.setAttribute('aria-expanded', 'false'); controls.append(settings);
+    like.disabled = isPresenter(); like.setAttribute('aria-pressed', 'false'); $('live-like-slot').replaceChildren(like);
     if (active.user_id === userId()) {
+      const settings = control('live-settings-toggle', 'Mi panel', 'settings', toggleSettings);
+      settings.setAttribute('aria-expanded', 'false'); controls.append(settings);
       const mic = control('live-mic-toggle', 'Microfono', 'mic', async () => {
         mic.disabled = true;
         try {
@@ -204,7 +252,7 @@ window.LiveShopping = (() => {
     $('live-follow').textContent = 'Cargando...'; $('live-host-name').textContent = 'Vendedor';
     $('live-host-avatar').textContent = 'K';
     void loadHost().catch(error => { console.error('[KMD live host]', error); $('live-follow').textContent = 'Reintentar'; $('live-follow').disabled = false; $('live-follow').onclick = () => void loadHost().catch(showError); });
-    applyVolume();
+    $('live-audio-gate').hidden = true;
   }
   async function connect(row, tracks = []) {
     active = row; drawShell();
@@ -218,7 +266,7 @@ window.LiveShopping = (() => {
       if (track.kind === 'video') {
         element.playsInline = true; element.muted = participant.isLocal;
         $('live-media').replaceChildren(element); status('Video conectado');
-      } else if (!participant.isLocal) { $('live-audio').append(element); applyVolume(); }
+      } else if (!participant.isLocal) { $('live-audio').append(element); }
     }
     room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => attach(track, participant));
     room.on(RoomEvent.TrackUnsubscribed, track => track.detach().forEach(element => element.remove()));
@@ -229,10 +277,11 @@ window.LiveShopping = (() => {
     });
     room.on(RoomEvent.Reconnecting, () => status('Reconectando el video...'));
     room.on(RoomEvent.Reconnected, () => status('Video reconectado'));
-    room.on(RoomEvent.AudioPlaybackStatusChanged, () => labelControl($('live-sound-toggle'), room.canPlaybackAudio && audioLevel > 0 ? 'Silenciar' : 'Activar sonido'));
+    room.on(RoomEvent.AudioPlaybackStatusChanged, () => { $('live-audio-gate').hidden = room.canPlaybackAudio || isPresenter(); });
     room.on(RoomEvent.Disconnected, () => { status('Video desconectado. Sali y volve a entrar para reintentar.'); renderAudience(); });
       await room.connect(access.url, access.token);
       for (const track of tracks) await room.localParticipant.publishTrack(track);
+      if (!isPresenter()) await resumePlayback();
       renderAudience();
     } catch (error) { tracks.forEach(track => track.stop()); throw error; }
   }
@@ -331,6 +380,7 @@ window.LiveShopping = (() => {
         await directory(); status('La transmision termino o perdio conexion.'); return;
       }
       active = row;
+      renderEffectControls();
       const { data: links, error: linksError } = await getSB().from('live_room_products').select('product_id,position').eq('room_id', id).order('position');
       if (linksError) throw linksError;
       const ids = (links || []).map(link => link.product_id);
@@ -347,9 +397,17 @@ window.LiveShopping = (() => {
     if (productSignature === signature) return;
     productSignature = signature;
     const strip = $('live-products'); strip.replaceChildren();
-    if (!roomProducts.length) strip.textContent = 'No hay productos disponibles en este vivo.';
-    const sorted = [...roomProducts].sort((a, b) => Number(b.id === active.pinned_product_id) - Number(a.id === active.pinned_product_id));
-    for (const product of sorted) {
+    const picker = $('live-product-controls'); picker.replaceChildren();
+    for (const product of roomProducts) {
+      const row = document.createElement('div'); const label = document.createElement('span'); label.textContent = product.title;
+      const selected = product.id === active.pinned_product_id;
+      const action = button(selected ? 'Dejar de mostrar' : 'Mostrar ahora', () => pin(selected ? null : product.id), 'live-product-action');
+      row.append(label, action); picker.append(row);
+    }
+    const shown = roomProducts.filter(product => product.id === active.pinned_product_id);
+    $('live-player-layout').dataset.hasProduct = String(shown.length > 0);
+    strip.hidden = !shown.length;
+    for (const product of shown) {
       const card = document.createElement('article'); card.className = 'live-shop-product';
       if (product.id === active.pinned_product_id) card.classList.add('featured');
       if (/^https:\/\//.test(product.image_url || '')) {
@@ -361,13 +419,14 @@ window.LiveShopping = (() => {
       content.append(name, price);
       const pinned = product.id === active.pinned_product_id;
       const action = active.user_id === userId()
-        ? button(pinned ? 'En pantalla' : 'Mostrar ahora', () => pin(product.id), 'live-product-action')
+        ? button('Dejar de mostrar', () => pin(null), 'live-product-action')
         : button('Ver y elegir', () => CommerceUI.showProduct(product.id), 'live-product-action');
       if (pinned) { const label = document.createElement('small'); label.textContent = 'Producto destacado'; content.prepend(label); }
       content.append(action); card.append(content); strip.append(card);
     }
   }
   async function pin(id) {
+    if (!isPresenter()) return;
     try {
       const { data, error } = await getSB().from('live_rooms').update({ pinned_product_id: id }).eq('id', active.id).select().single();
       if (error) throw error; active = data; drawProducts();
@@ -482,5 +541,5 @@ window.LiveShopping = (() => {
     stopPreview(); connection?.localParticipant.trackPublications.forEach(publication => publication.track?.stop());
     // A dropped tab is hidden by its server-time lease; do not trust unload fetches.
   });
-  return { openStudio, closeStudio, preview, start, page, join, sendComment, canLeave, leave, errorText, setVolume, setFilter, toggleFit, toggleSettings, fullscreen };
+  return { openStudio, closeStudio, preview, start, page, join, sendComment, canLeave, leave, errorText, resumePlayback, setFilter, setBeauty, setQuality, toggleFit, toggleSettings, fullscreen };
 })();

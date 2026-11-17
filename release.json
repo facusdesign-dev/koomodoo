@@ -1,9 +1,11 @@
 {
-  "release": "2026-11-17-live-immersive-overlay",
-  "previousCommit": "e05afed",
+  "release": "2026-11-17-presenter-viewer-stock",
+  "previousCommit": "e90e2de",
   "features": ["variant-inventory", "order-reservations", "automatic-expiry", "price-confirmation", "live-shopping-studio", "live-products", "live-chat", "livekit-server-tokens"],
   "videoProviderConfigured": true,
   "realPaymentsEnabled": false,
   "realVideoEnabled": true,
-  "videoEndToEndVerified": false
+  "videoEndToEndVerified": false,
+  "outgoingEffectGeneratedTrackVerified": true,
+  "storeStockDeduction": "approved-payment-only"
 }

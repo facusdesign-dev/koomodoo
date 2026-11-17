@@ -1452,16 +1452,22 @@ button,select,input{font-family:inherit}
         <button class="live-exit" onclick="nav('home')" aria-label="Salir de la transmision">&#215;</button>
       </header>
       <p id="live-status" class="live-status" role="status"></p>
+      <span id="live-filter-badge" class="live-filter-badge" hidden>Imagen con filtro</span>
+      <button id="live-audio-gate" class="live-audio-gate" onclick="LiveShopping.resumePlayback()" hidden>Toca para escuchar el vivo</button>
       <nav id="live-controls" class="live-controls" aria-label="Controles del vivo"></nav>
-      <section id="live-settings" class="live-settings" hidden aria-label="Sonido e imagen">
-        <div class="live-settings-heading"><strong>Sonido e imagen</strong><button type="button" onclick="LiveShopping.toggleSettings()" aria-label="Cerrar ajustes">&#215;</button></div>
-        <label for="live-volume">Volumen que escuchas <output id="live-volume-label">85%</output></label>
-        <input id="live-volume" type="range" min="0" max="100" value="85" oninput="LiveShopping.setVolume(this.value)">
-        <label for="live-filter">Mejorar imagen (solo en tu pantalla)</label>
+      <section id="live-settings" class="live-settings" hidden aria-label="Panel del vendedor">
+        <div class="live-settings-heading"><strong>Panel del vendedor</strong><button type="button" onclick="LiveShopping.toggleSettings()" aria-label="Cerrar ajustes">&#215;</button></div>
+        <label for="live-quality">Calidad de emision</label>
+        <select id="live-quality" onchange="LiveShopping.setQuality(this.value)"><option value="economy">Ahorro (hasta 360p)</option><option value="standard" selected>Equilibrada (hasta 720p)</option><option value="high">Alta (hasta 1080p)</option></select>
+        <label for="live-filter">Filtro de emision</label>
         <select id="live-filter" onchange="LiveShopping.setFilter(this.value)"><option value="natural">Natural</option><option value="clear">Mas claridad</option><option value="warm">Calido</option></select>
+        <label for="live-beauty">Suavizado estetico <output id="live-beauty-label">0%</output></label>
+        <input id="live-beauty" type="range" min="0" max="60" step="10" value="0" onchange="LiveShopping.setBeauty(this.value)">
+        <p>Se aplica al video enviado. Suavizado de toda la imagen, sin reconocimiento facial. Puede cambiar colores y texturas de los productos. Calidad limitada por tu camara y conexion.</p>
         <button id="live-fit" type="button" onclick="LiveShopping.toggleFit()">Ver imagen completa</button>
         <button type="button" onclick="LiveShopping.fullscreen()">Pantalla completa</button>
-        <p>No modifica la camara enviada. En algunos telefonos el volumen tambien se regula con sus botones fisicos.</p>
+        <strong>Productos del vivo</strong>
+        <div id="live-product-controls" class="live-product-controls"></div>
       </section>
       <div id="live-products" class="live-products" aria-label="Productos del vivo" aria-live="polite"></div>
       <span class="live-pilot-label">Prueba sin cobros</span>
@@ -1469,10 +1475,13 @@ button,select,input{font-family:inherit}
     <aside class="live-chat">
       <h2 class="live-sr-only">Conversa con el vendedor</h2>
       <div id="live-comments" class="live-comments" aria-live="polite"></div>
-      <form class="live-comment-form" onsubmit="event.preventDefault();LiveShopping.sendComment()">
-        <input id="live-comment" class="fi" maxlength="300" placeholder="Hace tu pregunta..." aria-label="Comentario del vivo" required>
-        <button id="live-comment-send" class="btn-p btn-pri" type="submit">Enviar</button>
-      </form>
+      <div class="live-bottom-line">
+        <form class="live-comment-form" onsubmit="event.preventDefault();LiveShopping.sendComment()">
+          <input id="live-comment" class="fi" maxlength="300" placeholder="Hace tu pregunta..." aria-label="Comentario del vivo" required>
+          <button id="live-comment-send" type="submit" aria-label="Enviar comentario"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 19 9-19 9 4-9-4-9Z M7 12h15"/></svg></button>
+        </form>
+        <div id="live-like-slot" class="live-like-slot"></div>
+      </div>
     </aside>
   </section>
 </div>
@@ -1630,6 +1639,7 @@ button,select,input{font-family:inherit}
 <script src="./commerce-ui.js"></script>
 <script src="./search.js"></script>
 <script src="./services.js"></script>
+<script src="./live-video-effects.js"></script>
 <script src="./live-shopping.js"></script>
 <script>
 // ═══════════════════════════════════════
@@ -1688,6 +1698,7 @@ function normalizeProductRecord(row){
     cat:row.category||'tecnologia',
     em:categoryEmoji(row.category||'tecnologia'),
     stock:Number(row.stock||0),
+    availableStock:Number(row.available_stock ?? row.stock ?? 0),
     rating:Number(row.rating||5),
     reviews:Number(row.reviews_count||0),
     free:false,
@@ -2286,8 +2297,8 @@ function buildProdCard(p){
   return `<div class="pcd" onclick="CommerceUI.showProduct('${p.id}')">
     <div class="pcd-img" style="background:${catBg(p.cat)}">${p.media?.[0]?`<img src="${escHtml(p.media[0])}" style="width:100%;height:100%;object-fit:cover" loading="lazy">`:p.em}</div>
     <div class="pcd-body"><div class="pcd-cat">${escHtml(p.cat)}</div><div class="pcd-nm">${escHtml(p.title)}</div>
-    <div class="pcd-sl">Stock: ${p.stock}</div><div class="pcd-pr-row"><span class="pcd-price">${CommerceUI.money(p.price,p.currency)}</span></div>
-    <button class="pcd-btn" onclick="event.stopPropagation();addToCart('${p.id}')">${p.stock>0?'Elegir y comprar':'Ver producto'}</button></div>
+    <div class="pcd-sl">Stock total: ${p.stock}${p.availableStock<p.stock?' · Disponibles: '+p.availableStock:''}</div><div class="pcd-pr-row"><span class="pcd-price">${CommerceUI.money(p.price,p.currency)}</span></div>
+    <button class="pcd-btn" onclick="event.stopPropagation();addToCart('${p.id}')">${(p.availableStock??p.stock)>0?'Elegir y comprar':'Sin disponibilidad'}</button></div>
   </div>`;
 }
 

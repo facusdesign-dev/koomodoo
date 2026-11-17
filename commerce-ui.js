@@ -66,25 +66,52 @@ window.CommerceUI = (() => {
         const img = document.createElement('img'); img.src = url; img.alt = p.title; img.style.cssText = 'width:100%;max-height:260px;object-fit:contain;border-radius:12px;margin-bottom:10px'; content.append(img);
       }
       const select = document.createElement('select'); select.className = 'fi'; select.setAttribute('aria-label', 'Variante del producto');
+      const remaining = variant => Math.max(0, Number(variant.stock) - Number(cart.find(item => item.variantId === variant.id)?.qty || 0));
       for (const variant of variants) {
-        const option = document.createElement('option'); option.value = variant.id; option.disabled = variant.stock <= 0;
-        option.textContent = `${variant.label} · ${money(variant.price, p.currency)} · ${variant.stock} disponibles`; select.append(option);
+        const option = document.createElement('option'); option.value = variant.id; option.disabled = remaining(variant) <= 0;
+        option.textContent = `${variant.label} · ${money(variant.price, p.currency)} · ${remaining(variant)} para agregar`; select.append(option);
       }
-      const available = variants.find(v => v.stock > 0); if (available) select.value = available.id;
-      const add = document.createElement('button'); add.className = 'pub-btn'; add.style.marginTop = '15px'; add.textContent = available ? 'Agregar al carrito' : 'Sin stock'; add.disabled = !available;
-      add.onclick = () => {
-        const v = variants.find(row => row.id === select.value); if (!v || v.stock < 1) return;
+      const available = variants.find(v => remaining(v) > 0); if (available) select.value = available.id;
+      const quantityLabel = document.createElement('label'); quantityLabel.textContent = 'Cantidad';
+      const quantity = document.createElement('input'); quantity.type = 'number'; quantity.min = '1'; quantity.step = '1'; quantity.value = '1'; quantity.className = 'fi'; quantity.setAttribute('aria-label', 'Cantidad para agregar'); quantityLabel.append(quantity);
+      const availability = document.createElement('p'); availability.setAttribute('role', 'status'); availability.style.cssText = 'font-size:12px;line-height:1.6;margin:10px 0';
+      const add = document.createElement('button'); add.className = 'pub-btn'; add.style.marginTop = '15px';
+      function updateSelection() {
+        const variant = variants.find(row => row.id === select.value), count = remaining(variant || { id: '', stock: 0 });
+        const inCart = Number(cart.find(item => item.variantId === variant?.id)?.qty || 0);
+        const amount = Number(quantity.value), valid = Number.isInteger(amount) && amount > 0 && amount <= count && inCart + amount <= 99;
+        quantity.max = String(Math.max(0, Math.min(99 - inCart, count))); quantity.disabled = count === 0 || inCart >= 99;
+        add.disabled = !valid;
+        add.textContent = count > 0 ? 'Confirmar y agregar al carrito' : 'Sin unidades para agregar';
+        availability.textContent = variant?.stock > 0
+          ? `Stock total en tienda: ${variant.total_stock ?? variant.stock}. Disponible para pedidos: ${variant.stock}. En tu carrito: ${inCart}. Si agregas ${valid ? amount : 0}, quedaran ${Math.max(0, count - (valid ? amount : 0))} para agregar. El carrito no reserva stock; el total de tienda solo baja con pago aprobado.`
+          : (Number(variant?.reserved_stock || 0) > 0 ? 'Sin disponibilidad: unidades reservadas en otros pedidos pendientes, aun no vendidas.' : 'Agotado en tienda.');
+      }
+      select.onchange = () => { quantity.value = '1'; updateSelection(); };
+      quantity.oninput = updateSelection; updateSelection();
+      add.onclick = async () => {
+        if (checkingOut) { toast('Espera a que termine de confirmarse el pedido actual.'); return; }
+        const v = variants.find(row => row.id === select.value), amount = Number(quantity.value);
+        if (!v || !Number.isInteger(amount) || amount < 1 || amount > remaining(v) || amount + Number(cart.find(item => item.variantId === v.id)?.qty || 0) > 99) { updateSelection(); return; }
         if (p.user_id === KMD.session?.user?.id) { toast('No puedes comprar tu propio producto.'); return; }
+        add.disabled = true; add.textContent = 'Verificando disponibilidad...';
+        try {
+          const fresh = await CommerceModule.getProductDetails(p.id);
+          const current = fresh.variants.find(row => row.id === v.id);
+          if (!current || fresh.product.status !== 'published' || current.stock - Number(cart.find(item => item.variantId === v.id)?.qty || 0) < amount) throw new Error('El stock cambio. Volve a abrir el producto para actualizarlo.');
+          if (Number(current.price) !== Number(v.price)) throw new Error('El precio cambio. Volve a abrir el producto para revisar el nuevo precio.');
+          if (!overlay.isConnected) return;
         const previous = cart.find(item => item.variantId === v.id);
-        if (previous && previous.qty >= v.stock) { toast('No hay mas stock disponible.'); return; }
-        if (previous) previous.qty++;
-        else cart.push({ pid: p.id, variantId: v.id, variantLabel: v.label, title: p.title, price: Number(v.price), currency: p.currency, sellerId: p.user_id, qty: 1 });
+        if (previous) previous.qty += amount;
+        else cart.push({ pid: p.id, variantId: v.id, variantLabel: v.label, title: p.title, price: Number(v.price), currency: p.currency, sellerId: p.user_id, qty: amount });
         intent = null; updateBadges(); overlay.remove(); toast('Producto agregado al carrito.'); if (currentPage === 'carrito') renderCart();
+        } catch (error) { availability.textContent = errorMessage(error); add.disabled = false; add.textContent = 'Reintentar agregar'; }
       };
+      const cancel = document.createElement('button'); cancel.className = 'btn-p btn-sec'; cancel.textContent = 'Cancelar seleccion'; cancel.onclick = () => overlay.remove();
       if (p.user_id === KMD.session?.user?.id) {
         const edit = document.createElement('button'); edit.className = 'pub-btn'; edit.textContent = 'Editar precio y stock';
         edit.onclick = () => editInventory(p.id); content.append(edit); edit.focus();
-      } else { content.append(select, add); add.focus(); }
+      } else { content.append(select, quantityLabel, availability, cancel, add); select.focus(); }
     } catch (error) { content.textContent = errorMessage(error); console.error('[KMD] product details:', error); }
   }
   async function editInventory(id) {
@@ -96,7 +123,7 @@ window.CommerceUI = (() => {
       if (product.user_id !== KMD.session?.user?.id) throw new Error('Solo el vendedor puede editar el inventario.');
       content.replaceChildren();
       const title = document.createElement('h2'); title.textContent = product.title; title.style.margin = '16px 0'; content.append(title);
-      const note = document.createElement('p'); note.textContent = 'Stock disponible para nuevas compras. Las unidades ya reservadas no estan incluidas; si un pedido se cancela o vence, vuelven a sumarse. Los precios de pedidos existentes no cambian.';
+      const note = document.createElement('p'); note.textContent = 'Editas disponibilidad para nuevos pedidos. El stock total de tienda incluye tambien las reservas pendientes y solo baja al aprobarse el pago. Cancelar o vencer libera disponibilidad, sin aumentar el total. Los precios de pedidos existentes no cambian.';
       note.style.cssText = 'font-size:12px;color:var(--t3);line-height:1.6;margin:12px 0'; content.append(note);
       const form = document.createElement('form');
       const fields = variants.map(variant => {
@@ -144,10 +171,13 @@ window.CommerceUI = (() => {
         if (delta === 1) { const qty = document.createElement('span'); qty.textContent = String(item.qty); line.append(qty); }
         line.append(btn);
       }
+      const remove = document.createElement('button'); remove.className = 'btn-p btn-sec'; remove.textContent = 'Quitar';
+      remove.onclick = () => { if (checkingOut) return; cart.splice(cart.indexOf(item), 1); intent = null; renderCart(); updateBadges(); };
+      line.append(remove);
       box.append(line);
     }
     const currencies = [...new Set(cart.map(row => row.currency))];
-    summary.innerHTML = `<div class="cs-t">Resumen del pedido</div>${currencies.map(code => `<div class="cs-row"><span>Total ${code}</span><strong>${money(cart.filter(row => row.currency === code).reduce((n, row) => n + row.price * row.qty, 0), code)}</strong></div>`).join('')}<p style="font-size:12px;color:var(--t3);line-height:1.6;margin:12px 0">Primera prueba: se crea un pedido pendiente de pago y se reserva stock por 15 minutos. Al vencer se libera automaticamente. No se realiza ningun cobro. Envio a coordinar con el vendedor.</p>`;
+    summary.innerHTML = `<div class="cs-t">Resumen del pedido</div>${currencies.map(code => `<div class="cs-row"><span>Total ${code}</span><strong>${money(cart.filter(row => row.currency === code).reduce((n, row) => n + row.price * row.qty, 0), code)}</strong></div>`).join('')}<p style="font-size:12px;color:var(--t3);line-height:1.6;margin:12px 0">El carrito no reserva unidades. Crear un pedido retiene disponibilidad por 15 minutos, pero no descuenta el stock total de tienda: eso sucede solo con pago aprobado. Al cancelar o vencer se libera la reserva. Prueba sin cobros; envio a coordinar.</p>`;
     const btn = document.createElement('button'); btn.id = 'create-order-btn'; btn.className = 'ck-btn'; btn.textContent = 'Crear pedido sin pagar'; btn.disabled = checkingOut; btn.onclick = checkout; summary.append(btn);
   }
   async function checkout() {
