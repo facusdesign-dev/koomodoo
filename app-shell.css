@@ -97,6 +97,8 @@ body.has-cart-dock .live-player-layout[data-presenter="false"][data-has-product=
 #story-comments header{display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:10px}
 #story-comment-list{font-size:12px;line-height:1.6;margin:12px 0;max-height:180px;overflow:auto}
 #story-comment-list p{padding:8px 0;overflow-wrap:anywhere}
-#story-comment-form{display:flex;gap:8px;margin:12px 0}
+#story-comment-form{display:flex;flex:1;min-width:0;gap:6px;margin:0}
+#story-comment-form[hidden]{display:none}
+.story-media{user-select:none;-webkit-touch-callout:none}
 #story-comment-form input{min-width:0;flex:1;border:1px solid #ffffff40;border-radius:12px;background:#ffffff10;color:white;padding:10px;font:inherit;font-size:12px}
 @media(max-width:768px){#cart-dock{bottom:calc(77px + env(safe-area-inset-bottom,0px))}.publication-editor{max-height:92dvh;padding:18px;border-radius:22px 22px 0 0}.story-card{height:100dvh;width:100vw;border:0;border-radius:0;padding-bottom:env(safe-area-inset-bottom)}.story-actions{padding-bottom:14px}}

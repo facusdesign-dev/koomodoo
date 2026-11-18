@@ -15,7 +15,9 @@ window.StoriesModule = (() => {
     if (result.error) throw new Error('No pudimos cargar tus productos. Intenta nuevamente.');
     return result.data || [];
   }
+  const urls=new Map();
   async function hydrate(rows, strict = false) {
+    for(const [id,item] of urls)if(item.until<=Date.now()+10000)urls.delete(id);
     if (!rows.length) return [];
     const sb = getSB(), ids = [...new Set(rows.map(row => row.user_id))];
     const profiles = await sb.from('public_profiles').select('id,username,first_name,avatar_url').in('id', ids);
@@ -23,7 +25,9 @@ window.StoriesModule = (() => {
     return Promise.all(rows.map(async row => {
       const seconds = Math.min(600, Math.floor((Date.parse(row.expires_at) - Date.now()) / 1000));
       if (seconds < 1) return null;
-      const signed = await sb.storage.from('story-media').createSignedUrl(row.media_url, seconds);
+      const cached=urls.get(row.media_url);
+      const signed=cached?{data:{signedUrl:cached.url}}:await sb.storage.from('story-media').createSignedUrl(row.media_url, seconds);
+      if(!cached&&!signed.error)urls.set(row.media_url,{url:signed.data.signedUrl,until:Date.now()+seconds*1000});
       if (signed.error) {
         if (strict) throw signed.error;
         console.warn('[KMD unavailable story media]', row.id, signed.error.message);

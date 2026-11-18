@@ -47,7 +47,7 @@ window.FollowersModule = (() => {
   }
   async function getNotifications(userId, offset = 0) {
     const sb = client();
-    const { data, error } = await sb.from('notifications').select('*').eq('user_id', userId).eq('type', 'follow').order('created_at', { ascending: false }).order('id').range(offset,offset+49);
+    const { data, error } = await sb.from('notifications').select('*').eq('user_id', userId).in('type',['follow','story_like']).order('created_at', { ascending: false }).order('id').range(offset,offset+49);
     if (error) throw error;
     const ids = [...new Set((data || []).map(row => row.actor_id))];
     if (!ids.length) return [];
@@ -56,7 +56,7 @@ window.FollowersModule = (() => {
     const followed = await sb.from('followers').select('following_id').eq('follower_id',viewer()).in('following_id',ids);
     if (followed.error) throw followed.error;
     const profiles = new Map(result.data.map(row => [row.id, row]));
-    return data.map(row => ({ id: row.id, read: row.read, actorId: row.actor_id, actorName: profiles.get(row.actor_id)?.first_name || profiles.get(row.actor_id)?.username || 'Usuario', avatarUrl: profiles.get(row.actor_id)?.avatar_url || '', following:followed.data.some(f=>f.following_id===row.actor_id), actorAvatar: '\u{1F464}' }));
+    return data.map(row => ({ id: row.id, read: row.read, type:row.type, actorId: row.actor_id, actorName: profiles.get(row.actor_id)?.first_name || profiles.get(row.actor_id)?.username || 'Usuario', avatarUrl: profiles.get(row.actor_id)?.avatar_url || '', following:followed.data.some(f=>f.following_id===row.actor_id), actorAvatar: '\u{1F464}' }));
   }
   async function listConnections(userId, direction = 'followers', offset = 0) {
     const sb = client(), incoming = direction === 'followers';

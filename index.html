@@ -1246,7 +1246,7 @@ button,select,input{font-family:inherit}
   </div>
   <!-- Feed tabs -->
   <div class="ftabs">
-    <div class="ftab on" onclick="setFTab(this,0)">Para ti</div>
+    <div class="ftab on" onclick="setFTab(this,0)">Inicio</div>
     <div class="ftab" onclick="setFTab(this,1)">Siguiendo</div>
     <div class="ftab" onclick="setFTab(this,2)">Tendencias 🔥</div>
     <div class="ftab" onclick="nav('live')">PULSO 📡</div>
@@ -2150,7 +2150,7 @@ function openSearchResult(kind,id){
 // ═══════════════════════════════════════
 // HOME
 // ═══════════════════════════════════════
-let currentFeedPosts=null;
+let currentFeedPosts=null,homeTab=0,feedVersion=0;
 function renderHome(){
   renderStories();
   renderBanners();
@@ -2161,19 +2161,19 @@ function getHomeSocialPosts(){
   return POSTS_STORE.slice(0,12);
 }
 function buildHomeSocialCard(post){
-  const avHtml=post.authorAvatarType==='image'&&post.authorAvatar?`<img src="${post.authorAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:post.authorAvatar||'👤';
+  const avHtml=post.authorAvatarType==='image'&&post.authorAvatar?`<img src="${escHtml(post.authorAvatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:escHtml(post.authorAvatar||'👤');
   return `<div class="pc">
     <div class="ph">
       <div class="pav">${avHtml}</div>
       <div style="flex:1;min-width:0">
-        <div class="pa">${post.authorName}</div>
-        <div class="pt2">${post.authorHandle} · ${post.timeAgo||'ahora'}</div>
+        <div class="pa">${escHtml(post.authorName)}</div>
+        <div class="pt2">${escHtml(post.authorHandle)} · ${post.timeAgo||'ahora'}</div>
       </div>
       <button class="pab" onclick="sharePost('${post.id}')">📤</button>
     </div>
     <div class="ptxt">${escHtml(post.text||'')}</div>
-    ${post.imageUrl?`<div style="padding:0 14px 12px"><img src="${post.imageUrl}" style="width:100%;border-radius:14px;max-height:420px;object-fit:cover;display:block"></div>`:''}
-    ${post.videoUrl?`<div style="padding:0 14px 12px"><video src="${post.videoUrl}" style="width:100%;border-radius:14px;max-height:420px;display:block" controls></video></div>`:''}
+    ${post.imageUrl?`<div style="padding:0 14px 12px"><img src="${escHtml(post.imageUrl)}" style="width:100%;border-radius:14px;max-height:420px;object-fit:cover;display:block"></div>`:''}
+    ${post.videoUrl?`<div style="padding:0 14px 12px"><video src="${escHtml(post.videoUrl)}" style="width:100%;border-radius:14px;max-height:420px;display:block" controls></video></div>`:''}
     <div class="pacts">
       <button class="pab ${LIKED_POSTS.has(post.id)?'liked':''}" onclick="togglePostLike('${post.id}',this)">${LIKED_POSTS.has(post.id)?'❤️':'🤍'} <span id="lc-home-${post.id}">${post.likes||0}</span></button>
       <button class="pab" onclick="toggleComments('${post.id}')">💬 ${(post.comments||[]).length}</button>
@@ -2189,7 +2189,10 @@ function buildHomeSocialCard(post){
 }
 function renderStories(){
   const activeStories=getStoryList();
-  document.getElementById('story-row').innerHTML=activeStories.map((s,i)=>`
+  const row=document.getElementById('story-row');
+  const key=JSON.stringify(activeStories.map(s=>[s.id,s.mediaUrl,s.authorAvatar,s.seen,s.authorName,s.isOwn,s.isLive,s.em]));
+  if(row.dataset.renderKey===key)return;
+  row.dataset.renderKey=key;row.innerHTML=activeStories.map((s,i)=>`
     <div class="st" onclick="${s.isOwn?"openOwnStoryOrModal()":s.isLive?"nav('live')":"openStory("+(i-1)+")"}">
       <div class="st-ring ${s.seen?'seen':s.isOwn&&!s.caption&&!s.mediaUrl?'add':s.isOwn?'own-active':''}">
         <div class="st-in">${s.authorAvatarType==='image'&&s.authorAvatar?`<img src="${escHtml(s.authorAvatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`:s.mediaType==='image'&&s.mediaUrl?`<img src="${escHtml(s.mediaUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`:escHtml(s.em)}</div>
@@ -2208,13 +2211,25 @@ function renderBanners(){
 function setFTab(el,idx){
   document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
-  const pts=idx===2?[...posts].reverse():posts;
-  currentFeedPosts=pts;
-  renderFeed(pts);
+  homeTab=idx;void renderFeed(posts);
 }
-function renderFeed(pts){
+async function renderFeed(pts){
   currentFeedPosts=pts;
-  document.getElementById('feed-center').innerHTML=getHomeSocialPosts().map(buildHomeSocialCard).join('')+'<div class="pgrid-inner">'+getAllProducts().slice(0,12).map(buildProdCard).join('')+'</div>';
+  const version=++feedVersion,box=document.getElementById('feed-center');
+  let social=POSTS_STORE.slice(),products=getAllProducts();
+  try{
+    if(homeTab===1){
+      const uid=KMD.session?.user?.id;if(!uid){box.textContent='Iniciá sesión para ver a quienes seguís.';return;}
+      const {data,error}=await getSB().from('followers').select('following_id').eq('follower_id',uid);if(error)throw error;
+      const ids=new Set(data.map(r=>r.following_id));social=social.filter(p=>ids.has(p.userId));products=products.filter(p=>ids.has(p.sid));
+    }else if(homeTab===2){
+      const {data,error}=await getSB().from('trending_products').select('product_id,units').order('units',{ascending:false}).limit(30);if(error)throw error;
+      social=[];products=data.map(r=>products.find(p=>p.id===r.product_id)).filter(Boolean);
+    }
+    if(version!==feedVersion)return;
+    box.innerHTML=social.map(buildHomeSocialCard).join('')+'<div class="pgrid-inner">'+products.map(buildProdCard).join('')+'</div>';
+    if(!social.length&&!products.length)box.textContent=homeTab===2?'Todavía no hay productos con ventas pagadas este mes.':'Todavía no hay publicaciones para mostrar.';
+  }catch(e){if(version===feedVersion)box.textContent='No pudimos cargar esta pestaña.';console.error('[KMD feed]',e);}
 }
 function buildPost(post){
   const s=getSeller(post.sid);
@@ -2447,7 +2462,7 @@ function renderNotificationsPanel(){
         <div class="mt-av">${n.avatarUrl?`<img src="${escHtml(resolveAvatarDisplayUrl(n.avatarUrl))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`:n.actorAvatar||'👤'}</div>
         <div style="flex:1;min-width:0">
           <div class="mt-nm">${escHtml(n.actorName||'Usuario')}</div>
-          <div class="mt-pr">te comenzó a seguir</div>
+          <div class="mt-pr">${n.type==='story_like'?'indicó que le gusta tu historia':'te comenzó a seguir'}</div>
         </div>
         <button class="btn-p btn-sec" style="padding:7px 10px;font-size:11px" onclick="handleNotificationFollow('${n.actorId}')">${n.following?'Siguiendo':'Seguir'}</button>
       </div>
@@ -3137,9 +3152,10 @@ async function publishPostFromComposer(){
           author_name:post.authorName,author_handle:post.authorHandle,author_avatar:post.authorAvatar,
           author_avatar_type:post.authorAvatarType,created_at:new Date().toISOString()
         };
-        const { data } = await sb.from('posts').insert(payload).select('*').single();
-        if(data)Object.assign(post,normalizePostRecord(data));
-      }catch(e){console.warn('[KMD] Save post:',e.message);}
+        if(uploaded && !uploaded.startsWith('https://'))throw new Error('No se pudo subir el archivo.');
+        const { data,error } = await sb.from('posts').insert(payload).select('*').single();
+        if(error)throw error;Object.assign(post,normalizePostRecord(data));
+      }catch(e){console.error('[KMD post]',e);toast('No se publicó: '+e.message);if(btn){btn.disabled=false;btn.textContent='Publicar';}return;}
     }
   }
   POSTS_STORE.unshift(post);
@@ -3770,7 +3786,7 @@ async function uploadUrlToBucket(bucketName, path, sourceUrl,strict=false){
   if(!sb||!sourceUrl||!hasRealSession(KMD.session))return sourceUrl;
   try{
     const blob=await (await fetch(sourceUrl)).blob();
-    const { error } = await sb.storage.from(bucketName).upload(path,blob,{upsert:true});
+    const { error } = await sb.storage.from(bucketName).upload(path,blob,{upsert:bucketName!==SB_BUCKETS.posts});
     if(error)throw error;
     const { data } = sb.storage.from(bucketName).getPublicUrl(path);
     return data.publicUrl+'?t='+Date.now();
@@ -4539,9 +4555,10 @@ async function submitPost(){
     if(sb){
       try{
         const payload={user_id:post.userId,content:text,media_url:uploaded,media_type:post.mediaType,author_name:post.authorName,author_handle:post.authorHandle,author_avatar:post.authorAvatar,author_avatar_type:post.authorAvatarType,created_at:new Date().toISOString()};
-        const { data } = await sb.from('posts').insert(payload).select('*').single();
-        if(data)Object.assign(post,normalizePostRecord(data));
-      }catch(e){console.warn('[KMD] Save post:',e.message);}
+        if(uploaded && !uploaded.startsWith('https://'))throw new Error('No se pudo subir el archivo.');
+        const { data,error } = await sb.from('posts').insert(payload).select('*').single();
+        if(error)throw error;Object.assign(post,normalizePostRecord(data));
+      }catch(e){console.error('[KMD post]',e);toast('No se publicó: '+e.message);if(btn){btn.disabled=false;btn.textContent='Publicar';}return;}
     }
   }
   POSTS_STORE.unshift(post);
@@ -4568,21 +4585,21 @@ function getMockPosts(){
 function buildPostCard(post){
   const isLiked=LIKED_POSTS.has(post.id);
   const avHtml=post.authorAvatarType==='image'&&post.authorAvatar?.startsWith('http')
-    ?`<img src="${post.authorAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
-    :post.authorAvatar||'👤';
+    ?`<img src="${escHtml(post.authorAvatar)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    :escHtml(post.authorAvatar||'👤');
   return`<div class="post-card" id="post-${post.id}">
     <div style="display:flex;align-items:center;gap:10px;padding:13px 14px 0">
       <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden">${avHtml}</div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:700;color:var(--t)">${post.authorName}</div>
-        <div style="font-size:11px;color:var(--t3)">${post.authorHandle} · ${post.timeAgo}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--t)">${escHtml(post.authorName)}</div>
+        <div style="font-size:11px;color:var(--t3)">${escHtml(post.authorHandle)} · ${post.timeAgo}</div>
       </div>
       ${KMD.loggedIn&&post.userId===(KMD.session?.user?.id||'local')?`<button onclick="deletePost('${post.id}')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:15px;padding:4px 7px">🗑</button>`:''}
     </div>
     <div style="padding:10px 14px">
       ${post.text?`<div style="font-size:14px;line-height:1.65;color:rgba(237,242,255,.9);margin-bottom:10px">${escHtml(post.text)}</div>`:''}
-      ${post.imageUrl?`<img style="width:100%;border-radius:12px;max-height:380px;object-fit:cover;margin-bottom:10px;display:block" src="${post.imageUrl}" loading="lazy">`:
-        post.videoUrl?`<video style="width:100%;border-radius:12px;max-height:380px;margin-bottom:10px;display:block" src="${post.videoUrl}" controls></video>`:''}
+      ${post.imageUrl?`<img style="width:100%;border-radius:12px;max-height:380px;object-fit:cover;margin-bottom:10px;display:block" src="${escHtml(post.imageUrl)}" loading="lazy">`:
+        post.videoUrl?`<video style="width:100%;border-radius:12px;max-height:380px;margin-bottom:10px;display:block" src="${escHtml(post.videoUrl)}" controls></video>`:''}
     </div>
     <div class="post-card-actions">
       <button class="pca-btn ${isLiked?'liked':''}" onclick="togglePostLike('${post.id}',this)">${isLiked?'❤️':'🤍'} <span id="lc-${post.id}">${post.likes}</span></button>

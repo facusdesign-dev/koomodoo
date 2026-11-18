@@ -230,6 +230,13 @@ window.LiveShopping = (() => {
         label.append(input, text); list.append(label);
       }
       start.disabled = !config.configured || !data.length;
+      const quota=await getSB().from('live_rooms').select('created_at').eq('user_id',userId()).gte('created_at',new Date(Date.now()-86400000).toISOString()).order('created_at',{ascending:true});
+      if(!quota.error){
+        const used=quota.data.length,remaining=Math.max(0,12-used);
+        const note=document.createElement('p');note.textContent=remaining+' de 12 preparaciones disponibles en las últimas 24 horas. Probar la cámara no consume cupo.';
+        if(!remaining){start.disabled=true;note.textContent+=' Próximo cupo: '+new Date(Date.parse(quota.data[used-12].created_at)+86400000).toLocaleString()+'. Volvé a abrir este panel a esa hora.';}
+        list.append(note);
+      }
     } catch (error) { list.textContent = 'No se pudieron cargar los productos.'; $('live-setup-status').textContent = errorText(error); }
   }
   function closeStudio() {

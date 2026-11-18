@@ -67,7 +67,7 @@ window.CommunityUI = (() => {
       const notifications=await FollowersModule.getNotifications(id,offset);
       if(token!==version)return;
       if(!append)box.replaceChildren();
-      for(const n of notifications)box.append(row({id:n.actorId,username:n.actorName,avatar_url:n.avatarUrl,following:n.following},'te comenzo a seguir'));
+      for(const n of notifications)box.append(row({id:n.actorId,username:n.actorName,avatar_url:n.avatarUrl,following:n.following},n.type==='story_like'?'indicó que le gusta tu historia':'te comenzó a seguir'));
       offset+=notifications.length;more.hidden=notifications.length<50;more.onclick=()=>void loadNotifications(true);
       if(!offset)box.textContent='Todavia no tenes notificaciones.';
       const unread=notifications.filter(n=>!n.read).map(n=>n.id);
@@ -96,7 +96,7 @@ window.CommunityUI = (() => {
     channel=getSB().channel(`community-${id}`)
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:`user_id=eq.${id}`},()=>{
         if(currentUser!==id)return;
-        toast('Tenes un nuevo seguidor.');reconcile();if(modalKind==='notifications')void loadNotifications();
+        toast('Tenés una notificación nueva.');reconcile();if(modalKind==='notifications')void loadNotifications();
       })
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'notifications',filter:`user_id=eq.${id}`},reconcile)
       .on('postgres_changes',{event:'*',schema:'public',table:'followers',filter:`following_id=eq.${id}`},reconcile)
