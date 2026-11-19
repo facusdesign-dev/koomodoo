@@ -1165,7 +1165,7 @@ button,select,input{font-family:inherit}
         <div style="padding:6px 8px">
           <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px">Vendedor</div>
           <div class="dd-item" onclick="ddNav('publicar')">🏷️ Vender</div>
-          <div class="dd-item" onclick="ddNav('analytics')">📊 Centro de ventas</div>
+          <div class="dd-item" onclick="ddNav('analytics')">📊 MI LOCAL</div>
           <div class="dd-item" onclick="toast('⭐ Reputación próximamente')">⭐ Reputación</div>
         </div>
         <div style="height:1px;background:var(--b);margin:0 8px"></div>
@@ -1212,7 +1212,7 @@ button,select,input{font-family:inherit}
     </details>
     <div class="si" id="si-publicar"  onclick="nav('publicar')">  <span class="si-icon">🏷️</span><span class="si-txt">Publicar</span></div>
 
-    <div class="si" id="si-analytics" onclick="nav('analytics')"> <span class="si-icon">📊</span><span class="si-txt">Centro de ventas</span></div>
+    <div class="si" id="si-analytics" onclick="nav('analytics')"> <span class="si-icon">📊</span><span class="si-txt">MI LOCAL</span></div>
   </div>
 
   <div class="sb-sec">
@@ -1585,13 +1585,13 @@ button,select,input{font-family:inherit}
 <!-- ── ANALYTICS ── -->
 <div class="pg" id="pg-analytics">
   <div style="overflow-y:auto;flex:1"><div class="an-wrap">
-    <p class="sb-sec-lbl">Mi local · Panel privado</p><h1 class="pg-h1">Centro de ventas</h1>
+    <p class="sb-sec-lbl">Panel privado del vendedor</p><h1 class="pg-h1">MI LOCAL</h1>
     <p>Gestioná tus pedidos y publicaciones. En el piloto no se realizan cobros reales.</p>
     <nav class="seller-actions" aria-label="Gestión de mi local">
-      <button type="button" onclick="SellerCenter.show('orders')">Pedidos recibidos</button>
+      <button type="button" onclick="SellerCenter.show('orders')">Mis pedidos</button>
       <button type="button" onclick="SellerCenter.show('products')">Mi catálogo</button>
-      <button type="button" onclick="nav('publicar')">Publicar</button>
-      <button type="button" onclick="nav('perfil')">Ver mi local</button>
+
+      <button type="button" onclick="SellerCenter.show('metrics')">Métricas</button>
     </nav>
     <section id="seller-work" aria-live="polite"></section>
   </div></div>
