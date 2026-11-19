@@ -5,6 +5,24 @@ window.SellerCenter = (() => {
   function clear(){version++;box()?.replaceChildren();}
   function node(tag,text){const el=document.createElement(tag);el.textContent=text;return el;}
   function action(label,run){const b=node('button',label);b.type='button';b.className='btn-p btn-sec';b.onclick=run;return b;}
+  function iconButton(label,symbol,run){
+    const b=action(symbol,run);b.className='shop-icon';b.title=label;b.setAttribute('aria-label',label);return b;
+  }
+  function charts(root,{months,ranking}){
+    const graph=node('section','');graph.className='chart-card';
+    graph.append(node('h3','Ventas por mes'),node('p','Pedidos pagados por mes de creación · últimos 6 meses'));
+    const bars=node('div','');bars.className='shop-bars';const max=Math.max(1,...months.map(m=>m.sales));
+    for(const m of months){
+      const col=node('div',''),bar=node('i','');
+      bar.style.height=(80*m.sales/max)+'px';
+      const label=new Intl.DateTimeFormat('es-UY',{month:'short',timeZone:'UTC'}).format(new Date(m.month+'-01T12:00:00Z'));
+      col.title=m.month+': '+m.sales;col.append(node('strong',String(m.sales)),bar,node('small',label));bars.append(col);
+    }
+    graph.append(bars);root.append(graph);
+    const panel=node('section','');panel.className='chart-card';panel.append(node('h3','Productos más vendidos'),node('p','Top 5 histórico · por unidades vendidas'));
+    const list=node('ol','');for(const r of ranking){const item=node('li','');item.append(node('strong',r.title),node('span',' · '+r.units+' uds.'));list.append(item);}
+    panel.append(ranking.length?list:node('p','Con tu primera venta pagada empieza el ranking.'));root.append(panel);
+  }
   function orderCard(order){
     const card=node('article','');card.className='chart-card';
     const state=CommerceUI.orderDisplayState(order);
@@ -25,27 +43,30 @@ window.SellerCenter = (() => {
     root.textContent='Cargando '+title.toLowerCase()+'…';
     try{
       if(tab==='metrics'){
-        const {data,error}=await getSB().rpc('my_shop_metrics');
+        const [{data,error},detail]=await Promise.all([getSB().rpc('my_shop_metrics'),getSB().rpc('my_shop_charts')]);
         if(version!==token||id!==KMD.session?.user?.id||currentPage!=='analytics')return;
         if(error)throw error;
         root.replaceChildren(node('h2','Ventas de mi local'),node('p','Histórico de pedidos pagados. No incluye reservas ni descuenta comisiones.'),action('Actualizar',()=>show(tab)));
         for(const [label,value] of [['Ventas confirmadas',data.reduce((s,r)=>s+Number(r.sales),0)],['Unidades vendidas',data.reduce((s,r)=>s+Number(r.units),0)],['Importe bruto',data.map(r=>r.currency+' '+CommerceUI.money(r.gross,r.currency)).join(' · ')||'0']]){
           const card=node('article','');card.className='chart-card';card.append(node('p',label),node('h3',String(value)));root.append(card);
         }
-        return;
+        if(detail.error)throw detail.error;
+        charts(root,detail.data);return;
       }
       const query=catalog?getSB().from('products').select('id,title,category,image_url,price,currency,stock,available_stock').eq('user_id',id).order('category'):
         getSB().from('orders').select('id,buyer_id,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity)').eq('seller_id',id);
       const {data,error}=await query.order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*limit,(page+1)*limit);
       if(token!==version||id!==KMD.session?.user?.id||currentPage!=='analytics')return;
       if(error)throw error;
-      root.replaceChildren(node('h2',title),action('Actualizar',()=>show(tab,page)));
+      root.replaceChildren(node('h2',title));if(!catalog)root.append(action('Actualizar',()=>show(tab,page)));
       if(!data.length)root.append(node('p',catalog?'Todavía no publicaste productos.':'Cuando alguien haga un pedido en tu local, acá vas a ver qué compró, el estado del pago y tu próximo paso.'));
-      if(catalog&&data.length){
+      if(catalog){
         const controls=node('div',''),groups=node('div','');root.append(controls,groups);
-        const views=['grid','list'].map((mode,i)=>action(['Cuadros','Lista'][i],()=>{layout=mode;draw();}));controls.append(...views);
+        controls.className='shop-tools';
+        const views=['grid','list'].map((mode,i)=>iconButton(['Vista en cuadros','Vista en lista'][i],['▦','☷'][i],()=>{layout=mode;draw();}));
+        controls.append(iconButton('Actualizar catálogo','↻',()=>show(tab,page)),...views);
         function draw(){
-          views.forEach((b,i)=>b.disabled=layout===['grid','list'][i]);groups.replaceChildren();
+          views.forEach((b,i)=>b.setAttribute('aria-pressed',String(layout===['grid','list'][i])));groups.replaceChildren();
           const sections=new Map();
           for(const row of data.slice(0,limit)){
             const category=row.category||'otros';

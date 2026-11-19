@@ -1,5 +1,8 @@
 /* Keep the existing palette and components, with an app-style navigation shell. */
 .seller-actions{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.shop-tools{display:flex;flex-wrap:nowrap;gap:6px}.shop-icon{width:44px;height:44px;font-size:24px;line-height:1;color:var(--t);background:var(--surf);border:1px solid var(--b);border-radius:10px;cursor:pointer}.shop-icon[aria-pressed=true]{color:var(--g);border-color:currentColor}
+.shop-bars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;align-items:end;padding:16px 0 0}.shop-bars>div{display:grid;justify-items:center;gap:6px}.shop-bars i{width:min(70%,44px);background:var(--g);border-radius:5px 5px 0 0}.shop-bars small{border-top:1px solid var(--b);text-align:center;width:100%}
+#seller-work ol{padding-left:2em}#seller-work li{padding:8px 4px;border-bottom:1px solid var(--b)}#seller-work li::marker{color:var(--g);font-weight:700}
 .shop-products.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(155px,100%),1fr));gap:10px}
 .shop-products .chart-card{min-width:0;overflow-wrap:anywhere}.shop-products img{width:100%;height:112px;object-fit:contain}
 .shop-products.list .chart-card{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.shop-products.list img{width:52px;height:52px}

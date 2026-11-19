@@ -1,9 +1,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 function setup(rows,user='seller'){
-  function element(){return {children:[],textContent:'',append(...nodes){this.children.push(...nodes)},replaceChildren(...nodes){this.children=nodes;this.textContent=''}};}
+  function element(){return {children:[],style:{},setAttribute(k,v){this[k]=v},textContent:'',append(...nodes){this.children.push(...nodes)},replaceChildren(...nodes){this.children=nodes;this.textContent=''}};}
   const root=element(),calls=[];
   const query={select(){return this},eq(key,id){calls.push([key,id]);return this},order(){return this},range:async()=>({data:rows})};
-  const ctx={window:{},Catalog:{categories:[]},document:{getElementById:()=>root,createElement:element},KMD:{session:user?{user:{id:user}}:null},getSB:()=>({rpc:async()=>({data:rows}),from(t){calls.push(t);return query}}),currentPage:'analytics',CommerceUI:{money:String,orderDisplayState:()=>({text:'Estado'})}};
+  const ctx={window:{},Catalog:{categories:[]},document:{getElementById:()=>root,createElement:element},KMD:{session:user?{user:{id:user}}:null},getSB:()=>({rpc:async(name)=>({data:name==='my_shop_charts'?{months:[{month:'2026-01',sales:0}],ranking:[]}:rows}),from(t){calls.push(t);return query}}),currentPage:'analytics',CommerceUI:{money:String,orderDisplayState:()=>({text:'Estado'})}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../seller-center.js'),'utf8'),ctx);
   return {panel:ctx.window.SellerCenter,root,calls};
 }
