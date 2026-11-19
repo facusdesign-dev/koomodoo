@@ -1,4 +1,8 @@
 /* Keep the existing palette and components, with an app-style navigation shell. */
+.seller-actions{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.seller-actions button{font:inherit;font-size:13px;min-height:44px;padding:8px 14px;background:var(--surf);border:1px solid var(--b);border-radius:12px;color:var(--t);cursor:pointer}
+#seller-work h2{font-size:18px}#seller-work .chart-card{margin-top:12px}#seller-work p{margin:8px 0}#seller-work button{margin:4px 4px 4px 0}
+
 .pulso-mark{display:inline-block;width:1.4em;height:1.4em;background:center/contain no-repeat url('./pulso.svg');vertical-align:middle;flex:none}
 .side-disclosure summary{list-style:none;cursor:pointer;min-height:44px}
 .side-disclosure summary::-webkit-details-marker{display:none}

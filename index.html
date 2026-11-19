@@ -1165,7 +1165,7 @@ button,select,input{font-family:inherit}
         <div style="padding:6px 8px">
           <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px">Vendedor</div>
           <div class="dd-item" onclick="ddNav('publicar')">🏷️ Vender</div>
-          <div class="dd-item" onclick="ddNav('analytics')">📊 Métricas</div>
+          <div class="dd-item" onclick="ddNav('analytics')">📊 Centro de ventas</div>
           <div class="dd-item" onclick="toast('⭐ Reputación próximamente')">⭐ Reputación</div>
         </div>
         <div style="height:1px;background:var(--b);margin:0 8px"></div>
@@ -1212,7 +1212,7 @@ button,select,input{font-family:inherit}
     </details>
     <div class="si" id="si-publicar"  onclick="nav('publicar')">  <span class="si-icon">🏷️</span><span class="si-txt">Publicar</span></div>
 
-    <div class="si" id="si-analytics" onclick="nav('analytics')"> <span class="si-icon">📊</span><span class="si-txt">Métricas</span></div>
+    <div class="si" id="si-analytics" onclick="nav('analytics')"> <span class="si-icon">📊</span><span class="si-txt">Centro de ventas</span></div>
   </div>
 
   <div class="sb-sec">
@@ -1585,21 +1585,15 @@ button,select,input{font-family:inherit}
 <!-- ── ANALYTICS ── -->
 <div class="pg" id="pg-analytics">
   <div style="overflow-y:auto;flex:1"><div class="an-wrap">
-    <div class="pg-h1" style="margin-bottom:18px">📊 Métricas</div>
-    <div class="an-grid">
-      <div class="an-card"><div class="an-lbl">Ventas mes</div><div class="an-val">$847k</div><div class="an-ch" style="color:var(--g)">↑ +12%</div></div>
-      <div class="an-card"><div class="an-lbl">Órdenes</div><div class="an-val">47</div><div class="an-ch" style="color:var(--g)">↑ +8%</div></div>
-      <div class="an-card"><div class="an-lbl">Visitas</div><div class="an-val">3.241</div><div class="an-ch" style="color:var(--g)">↑ +24%</div></div>
-      <div class="an-card"><div class="an-lbl">Conversión</div><div class="an-val">1.45%</div><div class="an-ch" style="color:var(--rose)">↓ -0.2%</div></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-t">Ventas mensuales (miles)</div>
-      <div class="chart-bars" id="chart-bars"></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-t">Productos más vendidos</div>
-      <div id="top-prods"></div>
-    </div>
+    <p class="sb-sec-lbl">Mi local · Panel privado</p><h1 class="pg-h1">Centro de ventas</h1>
+    <p>Gestioná tus pedidos y publicaciones. En el piloto no se realizan cobros reales.</p>
+    <nav class="seller-actions" aria-label="Gestión de mi local">
+      <button type="button" onclick="SellerCenter.show('orders')">Pedidos recibidos</button>
+      <button type="button" onclick="SellerCenter.show('products')">Mi catálogo</button>
+      <button type="button" onclick="nav('publicar')">Publicar</button>
+      <button type="button" onclick="nav('perfil')">Ver mi local</button>
+    </nav>
+    <section id="seller-work" aria-live="polite"></section>
   </div></div>
 </div>
 
@@ -1627,6 +1621,7 @@ button,select,input{font-family:inherit}
 <script src="./stories.js"></script>
 <script src="./catalog.js"></script>
 <script src="./product-editor.js"></script>
+<script src="./seller-center.js"></script>
 <script src="./story-viewer.js"></script>
 <script src="./cart-dock.js"></script>
 <script src="./community.js"></script>
@@ -3174,29 +3169,7 @@ async function publishPostFromComposer(){
 // ═══════════════════════════════════════
 // ANALYTICS
 // ═══════════════════════════════════════
-function renderAnalytics(){
-  const vals=[320,480,650,420,590,847];const mths=['Oct','Nov','Dic','Ene','Feb','Mar'];const mx=Math.max(...vals);
-  document.getElementById('chart-bars').innerHTML=vals.map((v,i)=>`
-    <div class="cb-wrap">
-      <div class="cb-val">${v}</div>
-      <div class="cb" style="height:${Math.round((v/mx)*100)}%;background:${i===vals.length-1?'linear-gradient(to top,#059669,#34D399)':'var(--surf2)'}"></div>
-      <div class="cb-lbl">${mths[i]}</div>
-    </div>`).join('');
-  const tp=[{n:'MacBook Pro M3',em:'💻',s:12,r:62388000},{n:'iPhone 15 Pro',em:'📱',s:8,r:39192000},{n:'AirPods Pro 2',em:'🎧',s:18,r:19782000},{n:'iPad Pro M2',em:'📲',s:5,r:14495000}];
-  document.getElementById('top-prods').innerHTML=tp.map((p,i)=>`
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px">
-      <span style="font-size:10px;font-weight:900;width:18px;color:${i<3?'var(--amber)':'var(--t3)'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
-      <span style="font-size:20px">${p.em}</span>
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">${p.n}</div>
-        <div style="height:5px;border-radius:3px;background:var(--surf2);overflow:hidden"><div style="height:100%;border-radius:3px;width:${Math.round((p.s/tp[0].s)*100)}%;background:linear-gradient(to right,#059669,#34D399)"></div></div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:11px;font-weight:900;color:var(--g)">${fmt(p.r)}</div>
-        <div style="font-size:10px;color:var(--t3)">${p.s} uds</div>
-      </div>
-    </div>`).join('');
-}
+function renderAnalytics(){return SellerCenter.show('orders');}
 
 // ═══════════════════════════════════════
 // STORIES VIEWER
@@ -4771,6 +4744,7 @@ function listenAuth(){
           .finally(()=>{ onSignedIn(session).catch(e=>console.warn('[KMD] SIGNED_IN:',e.message)); });
       },0);
     }else if(event==='SIGNED_OUT'){
+      SellerCenter.clear();
       CommunityUI.stop();
       void LiveShopping.leave();
       setGoogleLoading(false);
