@@ -17,6 +17,9 @@
 .sb-settings .cur-sw{margin:8px 6px 16px;width:fit-content}
 .sb-settings button.si{background:none;border:0;width:100%;font:inherit;color:var(--t2);text-align:left}
 .collapsed .sb-settings{display:none}
+#sb .sb-settings button.si,#sb .side-disclosure button.si{font-family:inherit;font-size:13px;font-weight:500}
+#sb .side-disclosure button.si{display:flex;align-items:center}
+#sb.collapsed .side-disclosure summary:after,#sb.collapsed .side-disclosure> :not(summary){display:none}
 #mob-nav{display:flex}
 #mn-avatar{width:27px;height:27px;border:1px solid var(--b3);border-radius:50%;overflow:hidden;display:grid;place-items:center;position:relative}
 #mn-avatar img{width:100%;height:100%;object-fit:cover}

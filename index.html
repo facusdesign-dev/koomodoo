@@ -1206,7 +1206,7 @@ button,select,input{font-family:inherit}
 
   <div class="sb-sec">
     <span class="sb-sec-lbl sb-label">Vender</span>
-    <details class="side-disclosure"><summary class="si" id="si-live"><span class="pulso-mark" aria-hidden="true"></span><span>PULSO</span></summary>
+    <details class="side-disclosure"><summary class="si" id="si-live" aria-label="PULSO" title="PULSO"><span class="pulso-mark" aria-hidden="true"></span><span class="si-txt">PULSO</span></summary>
       <button class="si" onclick="nav('live')">Mirar PULSOS</button>
       <button class="si" onclick="closeSidebar();openLiveModal()">Transmitir</button>
     </details>
@@ -1216,7 +1216,7 @@ button,select,input{font-family:inherit}
   </div>
 
   <div class="sb-sec">
-    <details class="side-disclosure"><summary class="si">Categorías</summary><div id="sidebar-catalog"></div></details>
+    <details class="side-disclosure"><summary class="si" aria-label="Categorías" title="Categorías"><span class="si-icon" aria-hidden="true">▦</span><span class="si-txt">Categorías</span></summary><div id="sidebar-catalog"></div></details>
   </div>
   <div class="sb-sec sb-settings">
     <span class="sb-sec-lbl">Preferencias</span>
@@ -1881,7 +1881,7 @@ function fileToDataUrl(file){
 }
 function splitValues(raw){return raw.split(',').map(v=>v.trim()).filter(Boolean);}
 function categoryEmoji(cat){
-  return ({tecnologia:'💻',moda:'👗',hogar:'🏠',deportes:'👟',belleza:'💄',joyeria:'💍',cocina:'🍳'})[cat]||'📦';
+  return ({tecnologia:'💻',moda:'👗',hogar:'🏠',electrodomesticos:'🧺',cocina:'🍳',deportes:'⚽',belleza:'💄',joyeria:'💍',mascotas:'🐾',alimentos:'🥑',herramientas:'🛠️',vehiculos:'🚗',repuestos:'⚙️',bebes:'🍼',juguetes:'🧸',libros:'📚',musica:'🎸',jardin:'🌱',salud:'🩺',otros:'📦'})[cat]||'📦';
 }
 function updateProductCategoryFields(){
   const cat=document.getElementById('pub-cat')?.value||'tecnologia';
@@ -2022,6 +2022,12 @@ async function updateBadges(){
 // ═══════════════════════════════════════
 // SIDEBAR TOGGLE
 // ═══════════════════════════════════════
+document.querySelectorAll('.side-disclosure summary').forEach(summary=>summary.addEventListener('click',()=>{
+  if(window.innerWidth>768&&sbCollapsed){toggleSidebar();summary.parentElement.open=false;}
+}));
+window.matchMedia('(max-width:768px)').addEventListener('change',()=>{
+  sbCollapsed=false;document.getElementById('sb').classList.remove('collapsed');closeSidebar();document.getElementById('hbg').textContent='☰';
+});
 function toggleSidebar(){
   const isMobile=window.innerWidth<=768;
   if(isMobile){
@@ -4826,7 +4832,9 @@ async function startApp(){
   await loadSupabaseContent();
   Catalog.mount();
   document.getElementById('sidebar-catalog').replaceChildren(...Catalog.categories.map(({id,name})=>{
-    const button=document.createElement('button');button.type='button';button.className='si';button.textContent=name;
+    const button=document.createElement('button');button.type='button';button.className='si';
+    const icon=document.createElement('span');icon.className='si-icon';icon.setAttribute('aria-hidden','true');icon.textContent=categoryEmoji(id);
+    button.append(icon,document.createTextNode(name));
     button.onclick=()=>navCat(id);return button;
   }));
   StoriesModule.start(rows=>{STORY_STORE.splice(0,STORY_STORE.length,...rows.map(normalizeStoryRecord));renderStories();if(currentPage==='perfil')initStoriesTab();});
