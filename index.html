@@ -1108,7 +1108,7 @@ button,select,input{font-family:inherit}
 </div>
 <div id="live-start-modal" onclick="if(event.target===this)closeLiveModal()">
   <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Preparar PULSO">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:800;color:var(--t)">📡 Iniciar PULSO</div><button onclick="closeLiveModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:800;color:var(--t)"><span class="pulso-mark" aria-hidden="true"></span> Iniciar PULSO</div><button onclick="closeLiveModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button></div>
     <p class="live-explainer">Prepara tu vidriera, proba la camara y despues inicia. Solo se muestran productos de tu tienda.</p>
     <label for="live-title-inp">Titulo de tu PULSO</label>
     <input type="text" class="af-inp" id="live-title-inp" maxlength="100" placeholder="Ej: Novedades de mi tienda">
@@ -1206,20 +1206,17 @@ button,select,input{font-family:inherit}
 
   <div class="sb-sec">
     <span class="sb-sec-lbl sb-label">Vender</span>
-    <div class="si" onclick="nav('live')"><span class="si-icon">📡</span><span class="si-txt">Ver PULSOS</span></div>
+    <details class="side-disclosure"><summary class="si" id="si-live"><span class="pulso-mark" aria-hidden="true"></span><span>PULSO</span></summary>
+      <button class="si" onclick="nav('live')">Mirar PULSOS</button>
+      <button class="si" onclick="closeSidebar();openLiveModal()">Transmitir</button>
+    </details>
     <div class="si" id="si-publicar"  onclick="nav('publicar')">  <span class="si-icon">🏷️</span><span class="si-txt">Publicar</span></div>
-    <div class="si" id="si-live"      onclick="openLiveModal()">   <span class="si-icon">📡</span><span class="si-txt">Iniciar PULSO</span><span class="si-dot"></span></div>
+
     <div class="si" id="si-analytics" onclick="nav('analytics')"> <span class="si-icon">📊</span><span class="si-txt">Métricas</span></div>
   </div>
 
   <div class="sb-sec">
-    <span class="sb-sec-lbl sb-label">Categorías</span>
-    <div class="si" onclick="navCat('tecnologia')"><span class="si-icon">💻</span><span class="si-txt">Tecnología</span></div>
-    <div class="si" onclick="navCat('moda')">      <span class="si-icon">👗</span><span class="si-txt">Moda</span></div>
-    <div class="si" onclick="navCat('hogar')">     <span class="si-icon">🏠</span><span class="si-txt">Hogar</span></div>
-    <div class="si" onclick="navCat('deportes')">  <span class="si-icon">👟</span><span class="si-txt">Deportes</span></div>
-    <div class="si" onclick="navCat('belleza')">   <span class="si-icon">💄</span><span class="si-txt">Belleza</span></div>
-    <div class="si" onclick="navCat('joyeria')">   <span class="si-icon">💍</span><span class="si-txt">Joyería</span></div>
+    <details class="side-disclosure"><summary class="si">Categorías</summary><div id="sidebar-catalog"></div></details>
   </div>
   <div class="sb-sec sb-settings">
     <span class="sb-sec-lbl">Preferencias</span>
@@ -1249,7 +1246,7 @@ button,select,input{font-family:inherit}
     <div class="ftab on" onclick="setFTab(this,0)">Inicio</div>
     <div class="ftab" onclick="setFTab(this,1)">Siguiendo</div>
     <div class="ftab" onclick="setFTab(this,2)">Tendencias 🔥</div>
-    <div class="ftab" onclick="nav('live')">PULSO 📡</div>
+    <div class="ftab" onclick="nav('live')">PULSO <span class="pulso-mark" aria-hidden="true"></span></div>
   </div>
   <!-- Feed scroll -->
   <div id="feed-scroll">
@@ -1257,7 +1254,7 @@ button,select,input{font-family:inherit}
       <div class="feed-center" id="feed-center"></div>
       <aside id="rp">
         <div class="rp-sec">
-          <div class="rp-hdr"><span class="rp-ttl">📡 PULSO</span><button class="rp-lnk" onclick="nav('live')">Ver todos</button></div>
+          <div class="rp-hdr"><span class="rp-ttl"><span class="pulso-mark" aria-hidden="true"></span> PULSO</span><button class="rp-lnk" onclick="nav('live')">Ver todos</button></div>
           <div id="rp-live"></div>
         </div>
         <div class="rp-sec">
@@ -1401,7 +1398,7 @@ button,select,input{font-family:inherit}
           <div class="prof-location" id="prof-location-el"><span>📍</span><span>Montevideo, Uruguay</span></div>
           <div class="prof-bio" id="prof-bio-el">Emprendedor digital · Tech &amp; Moda</div>
           <div class="prof-acts" id="prof-acts-el" style="margin-top:10px">
-            <button class="btn-p btn-pri" onclick="openLiveModal()">📡 PULSO</button>
+            <button class="btn-p btn-pri" onclick="openLiveModal()"><span class="pulso-mark" aria-hidden="true"></span> PULSO</button>
             <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
             <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
             <button id="follow-btn" class="btn-p btn-sec" onclick="toggleFollow()" style="display:none">➕ Seguir</button>
@@ -1506,7 +1503,7 @@ button,select,input{font-family:inherit}
       <div class="pty on" data-pub="product" onclick="setPubType(this)"><div class="pty-ic">🏷️</div><div class="pty-nm">Producto</div><div class="pty-sub">Para vender</div></div>
       <div class="pty" data-pub="post" onclick="setPubType(this)"><div class="pty-ic">📸</div><div class="pty-nm">Post</div><div class="pty-sub">Contenido</div></div>
       <div class="pty" data-pub="story" onclick="setPubType(this)"><div class="pty-ic">⭕</div><div class="pty-nm">Historia</div><div class="pty-sub">24 horas</div></div>
-      <div class="pty" onclick="nav('live')"><div class="pty-ic">📡</div><div class="pty-nm">PULSO</div><div class="pty-sub">Conecta y vende</div></div>
+      <div class="pty" onclick="nav('live')"><div class="pty-ic"><span class="pulso-mark" aria-hidden="true"></span></div><div class="pty-nm">PULSO</div><div class="pty-sub">Conecta y vende</div></div>
     </div>
     <div class="pub-form-card" id="pub-panel-product">
       <input type="file" id="pub-media-inp" accept="image/*" multiple style="display:none" onchange="handleProductMedia(this)">
@@ -1615,7 +1612,7 @@ button,select,input{font-family:inherit}
   <div class="mob-nav-item on" id="mn-home" onclick="nav('home')"><div class="mob-nav-icon">🏠</div>Inicio</div>
   <div class="mob-nav-item" id="mn-marketplace" onclick="nav('marketplace')"><div class="mob-nav-icon">🛍️</div>Mercado</div>
   <div class="mob-nav-item" onclick="nav('publicar')"><div class="mob-nav-fab">＋</div></div>
-  <div class="mob-nav-item" id="mn-live" onclick="nav('live')"><div class="mob-nav-icon">📡</div>PULSO</div>
+  <div class="mob-nav-item" id="mn-live" onclick="nav('live')"><div class="mob-nav-icon"><span class="pulso-mark" aria-hidden="true"></span></div>PULSO</div>
   <div class="mob-nav-item" id="mn-perfil" onclick="nav('perfil')"><div class="mob-nav-icon" id="mn-avatar">👤</div>Perfil</div>
 </nav>
 
@@ -2755,7 +2752,7 @@ async function renderProfilePage(targetProfileId){
     setTxt('prof-bio-el',bio);
     if(isOwn)hdrLoggedIn(ownUser);
     setHtml('prof-acts-el', isOwn ? `
-      <button class="btn-p btn-pri" onclick="openLiveModal()">📡 PULSO</button>
+      <button class="btn-p btn-pri" onclick="openLiveModal()"><span class="pulso-mark" aria-hidden="true"></span> PULSO</button>
       <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
       <button class="btn-p btn-sec" onclick="nav('analytics')">📊 Stats</button>
     ` : `
@@ -4828,6 +4825,10 @@ async function startApp(){
   await initAuth();
   await loadSupabaseContent();
   Catalog.mount();
+  document.getElementById('sidebar-catalog').replaceChildren(...Catalog.categories.map(({id,name})=>{
+    const button=document.createElement('button');button.type='button';button.className='si';button.textContent=name;
+    button.onclick=()=>navCat(id);return button;
+  }));
   StoriesModule.start(rows=>{STORY_STORE.splice(0,STORY_STORE.length,...rows.map(normalizeStoryRecord));renderStories();if(currentPage==='perfil')initStoriesTab();});
   CommunityUI.start();
   renderCurrencySwitcher();

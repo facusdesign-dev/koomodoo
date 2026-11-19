@@ -1,4 +1,10 @@
 /* Keep the existing palette and components, with an app-style navigation shell. */
+.pulso-mark{display:inline-block;width:1.4em;height:1.4em;background:center/contain no-repeat url('./pulso.svg');vertical-align:middle;flex:none}
+.side-disclosure summary{list-style:none;cursor:pointer;min-height:44px}
+.side-disclosure summary::-webkit-details-marker{display:none}
+.side-disclosure summary:after{content:'⌄';margin-left:auto}.side-disclosure[open] summary:after{transform:rotate(180deg)}
+.side-disclosure button.si{display:block;width:100%;min-height:44px;text-align:left;padding-left:28px;background:none;border:0;font:inherit;color:var(--t2);cursor:pointer;white-space:normal}
+.side-disclosure button.si:hover,.side-disclosure button.si:focus-visible{background:var(--surf);color:var(--t)}
 #hdr .logo{min-width:0}
 #app{height:100dvh}
 #hdr .hbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
