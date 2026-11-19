@@ -31,6 +31,11 @@ window.SellerCenter = (() => {
     card.append(node('small','Pedido #'+order.id.slice(0,8)+(order.created_at?' · '+new Date(order.created_at).toLocaleString('es-UY'):'')),node('h3',state.text),node('p','Total del pedido: '+CommerceUI.money(order.total,order.currency)));
     if(state.deadline)card.append(node('p','Reserva hasta las '+new Date(state.deadline).toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'})+'.'));
     for(const item of order.order_items||[])card.append(node('p',item.product_title+' · '+item.variant_label+' × '+item.quantity));
+    const items=order.order_items||[],known=items.length&&items.every(i=>i.platform_fee!=null);
+    const fees=node('details','');fees.append(node('summary','Comisiones y liquidación'));
+    fees.append(node('p','Importe bruto: '+CommerceUI.money(order.total,order.currency)),node('p','Comisión Koomodoo: '+(known?CommerceUI.money(items.reduce((n,i)=>n+Number(i.platform_fee),0),order.currency):'pendiente de tarifa aprobada por categoría.')));
+    for(const i of items)if(i.platform_percent!=null)fees.append(node('small',i.product_title+': '+i.platform_percent+'% · '+CommerceUI.money(i.platform_fee,order.currency)));
+    fees.append(node('p','Pasarela: pendiente de proveedor. Neto y fecha de disponibilidad: sin confirmar.'));card.append(fees);
     card.append(node('p',hint),action('Conversar con el comprador',()=>openChatWith(order.buyer_id)));
     if(order.status==='pending_payment')card.append(action('Gestionar reserva en Pedidos',()=>nav('pedidos')));
     return card;
@@ -54,7 +59,7 @@ window.SellerCenter = (() => {
         charts(root,detail.data);return;
       }
       const query=catalog?getSB().from('products').select('id,title,category,image_url,price,currency,stock,available_stock').eq('user_id',id).order('category'):
-        getSB().from('orders').select('id,buyer_id,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity)').eq('seller_id',id);
+        getSB().from('orders').select('id,buyer_id,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity,platform_percent,platform_fee)').eq('seller_id',id);
       const {data,error}=await query.order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*limit,(page+1)*limit);
       if(token!==version||id!==KMD.session?.user?.id||currentPage!=='analytics')return;
       if(error)throw error;

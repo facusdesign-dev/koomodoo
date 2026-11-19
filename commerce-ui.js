@@ -1,5 +1,7 @@
 window.CommerceUI = (() => {
-  let intent = null;
+  const intents = new Map();
+  const groupKey = row => row.sellerId+':'+row.currency;
+  const intentKey = rows => JSON.stringify([KMD.session.user.id,groupKey(rows[0]),rows.map(r=>[r.variantId,r.qty,r.price])]);
   let checkingOut = false;
   let inventory = [];
   const money = (value, code = 'UYU') => new Intl.NumberFormat('es-UY', { style: 'currency', currency: code }).format(Number(value));
@@ -92,7 +94,7 @@ window.CommerceUI = (() => {
       const remove = document.createElement('button'); remove.className = 'btn-p btn-sec';
       remove.onclick = () => {
         if (checkingOut) { toast('Espera a que termine el pedido actual.'); return; }
-        selectionVersion++; cart = cart.filter(item => item.pid !== p.id); intent = null;
+        selectionVersion++; cart = cart.filter(item => item.pid !== p.id);
         updateBadges(); quantity.value = '1'; updateSelection(); toast('Producto quitado del carrito.');
       };
       const add = document.createElement('button'); add.className = 'pub-btn'; add.style.marginTop = '15px';
@@ -143,7 +145,7 @@ window.CommerceUI = (() => {
         const previous = cart.find(item => item.variantId === v.id);
         if (previous) previous.qty += amount;
         else cart.push({ pid: p.id, variantId: v.id, variantLabel: v.label, title: p.title, price: Number(v.price), currency: p.currency, sellerId: p.user_id, qty: amount });
-        intent = null; updateBadges(); overlay.remove(); toast('Producto agregado al carrito.'); if (currentPage === 'carrito') renderCart();
+        updateBadges(); overlay.remove(); toast('Producto agregado al carrito.'); if (currentPage === 'carrito') renderCart();
         } catch (error) { if (overlay.isConnected && version === selectionVersion) { availability.textContent = errorMessage(error); add.disabled = false; add.textContent = 'Reintentar agregar'; } }
       };
       const cancel = document.createElement('button'); cancel.className = 'btn-p btn-sec'; cancel.textContent = 'Cancelar seleccion'; cancel.onclick = () => overlay.remove();
@@ -202,51 +204,70 @@ window.CommerceUI = (() => {
     document.getElementById('cart-count').textContent = cart.length ? `(${cart.reduce((n, row) => n + row.qty, 0)} articulos)` : '';
     box.replaceChildren(); summary.replaceChildren();
     if (!cart.length) { box.innerHTML = '<div class="empty"><div class="empty-t">Carrito vacio</div><div class="empty-s">Selecciona un producto del marketplace.</div></div>'; return; }
+    const groups=new Map(),labels=new Map();
     for (const item of cart) {
+      const key=groupKey(item);
+      if(!groups.has(key)){
+        const section=document.createElement('section'),heading=document.createElement('h3');
+        const label=document.createElement('span');label.textContent='Local #'+item.sellerId.slice(0,8);
+        heading.append(label,' · '+item.currency);section.append(heading);box.append(section);
+        groups.set(key,{section,rows:[],label});labels.set(item.sellerId,[...(labels.get(item.sellerId)||[]),label]);
+      }
+      const group=groups.get(key);group.rows.push(item);
       const line = document.createElement('div'); line.className = 'ci';
       line.innerHTML = `<div style="flex:1"><div class="ci-nm">${escape(item.title)}</div><div class="ci-sl">${escape(item.variantLabel)}</div><div class="ci-pr">${money(item.price * item.qty, item.currency)}</div></div>`;
       for (const [label, delta] of [['-', -1], ['+', 1]]) {
         const btn = document.createElement('button'); btn.className = 'qb'; btn.textContent = label;
-        btn.onclick = () => { if (checkingOut) return; item.qty = Math.min(99, item.qty + delta); if (item.qty <= 0) cart.splice(cart.indexOf(item), 1); intent = null; renderCart(); updateBadges(); };
+        btn.onclick = () => { if (checkingOut) return; item.qty = Math.min(99, item.qty + delta); if (item.qty <= 0) cart.splice(cart.indexOf(item), 1); renderCart(); updateBadges(); };
         if (delta === 1) { const qty = document.createElement('span'); qty.textContent = String(item.qty); line.append(qty); }
         line.append(btn);
       }
       const remove = document.createElement('button'); remove.className = 'btn-p btn-sec'; remove.textContent = 'Quitar';
-      remove.onclick = () => { if (checkingOut) return; cart.splice(cart.indexOf(item), 1); intent = null; renderCart(); updateBadges(); };
+      remove.onclick = () => { if (checkingOut) return; cart.splice(cart.indexOf(item), 1); renderCart(); updateBadges(); };
       line.append(remove);
-      box.append(line);
+      group.section.append(line);
     }
-    const currencies = [...new Set(cart.map(row => row.currency))];
-    summary.innerHTML = `<div class="cs-t">Resumen del pedido</div>${currencies.map(code => `<div class="cs-row"><span>Total ${code}</span><strong>${money(cart.filter(row => row.currency === code).reduce((n, row) => n + row.price * row.qty, 0), code)}</strong></div>`).join('')}<p style="font-size:12px;color:var(--t3);line-height:1.6;margin:12px 0">El carrito no reserva unidades. Crear un pedido retiene disponibilidad por 15 minutos, pero no descuenta el stock total de tienda: eso sucede solo con pago aprobado. Al cancelar o vencer se libera la reserva. Prueba sin cobros; envio a coordinar.</p>`;
-    const btn = document.createElement('button'); btn.id = 'create-order-btn'; btn.className = 'ck-btn'; btn.textContent = 'Crear pedido sin pagar'; btn.disabled = checkingOut; btn.onclick = checkout; summary.append(btn);
+    summary.textContent='Cada tienda y moneda se confirma por separado. La reserva dura 15 minutos. No se realiza ningún cobro.';
+    for(const [key,{section,rows}] of groups){
+      const info=document.createElement('p'),btn=document.createElement('button');
+      info.textContent='Subtotal de productos: '+money(rows.reduce((sum,r)=>sum+r.price*r.qty,0),rows[0].currency)+'. Entrega o retiro a coordinar con el local. Envío no incluido; su costo aún no está confirmado.';
+      btn.className='ck-btn';btn.textContent='Reservar este pedido sin pagar';btn.disabled=checkingOut;btn.onclick=()=>checkout(key);section.append(info,btn);
+    }
+    void (async()=>{
+      try{const {data,error}=await getSB().from('public_profiles').select('id,username,first_name').in('id',[...labels.keys()]);if(error)throw error;
+        for(const profile of data||[])for(const el of labels.get(profile.id)||[])el.textContent=profile.username?'@'+profile.username:profile.first_name||el.textContent;
+      }catch(error){console.warn('[KMD nombre del local]',error.message);}
+    })();
   }
-  async function checkout() {
+  async function checkout(key) {
     if (checkingOut || !cart.length) return;
     if (!KMD.session?.user?.id) { openAuthModal('login'); return; }
-    if (new Set(cart.map(row => row.sellerId)).size !== 1 || new Set(cart.map(row => row.currency)).size !== 1) { toast('Crea un pedido por vendedor y moneda.'); return; }
+    if(!key&&new Set(cart.map(groupKey)).size!==1){toast('Elegí el pedido de un local.');return;}
+    key=key||groupKey(cart[0]);const rows=cart.filter(row=>groupKey(row)===key);if(!rows.length)return;
+    const signature=intentKey(rows);let intent=intents.get(signature);
     checkingOut = true; renderCart();
     try {
       // Preserve the submitted intent after an uncertain network response. A retry
       // must retrieve the same order, not re-check already reserved stock first.
       if (!intent) {
-        const reviewed = await CommerceModule.reviewCart(cart);
-        cart = reviewed.items;
+        const reviewed = await CommerceModule.reviewCart(rows);
+        cart=cart.map(r=>reviewed.items.find(item=>item.variantId===r.variantId)||r);
         if (reviewed.priceChanged) {
           throw new Error('Un precio cambio. Actualizamos el carrito: revisa el nuevo total y confirma nuevamente. No se creo un pedido.');
         }
-        intent = { items: cart.map(row => ({ variant_id: row.variantId, quantity: row.qty, expected_unit_price: row.price })), key: crypto.randomUUID() };
+        intent = { items: reviewed.items.map(row => ({ variant_id: row.variantId, quantity: row.qty, expected_unit_price: row.price })), key: crypto.randomUUID() };intents.set(signature,intent);
       }
       const order = await CommerceModule.reserveOrder(intent.items, intent.key);
       if (order?.status === 'expired' || order?.status === 'cancelled' ||
           (order?.expires_at && Date.parse(order.expires_at) <= Date.now())) {
-        intent = null;
+        intents.delete(signature);
         throw new Error('La reserva anterior termino. Revisa el stock e intenta crear un nuevo pedido.');
       }
       if (!order?.id || order.status !== 'pending_payment') throw new Error('No se pudo confirmar el pedido pendiente de pago.');
-      cart = []; intent = null; updateBadges(); nav('pedidos');
+      cart=cart.filter(row=>groupKey(row)!==key);intents.delete(signature);updateBadges();nav('pedidos');
       toast('Pedido creado. Reserva de 15 minutos, sin cobro.');
     } catch (error) {
-      if (/^[0-9A-Z]{5}$/.test(error?.code || '')) intent = null;
+      if (/^[0-9A-Z]{5}$/.test(error?.code || '')) intents.delete(signature);
       console.error('[KMD] reserve order:', error); toast(errorMessage(error));
     }
     finally { checkingOut = false; if (currentPage === 'carrito') renderCart(); }
