@@ -2135,14 +2135,7 @@ function openSearchResult(kind,id){
     nav('perfil');
     return;
   }
-  const product=getAllProducts().find(p=>String(p.id)===String(id));
-  if(product){
-    nav('marketplace');
-    activeCat=product.cat||'all';
-    searchQ=product.title||'';
-    const mq=document.getElementById('mp-q'); if(mq) mq.value=product.title||'';
-    renderProdGrid();
-  }
+  if(kind==='product') return CommerceUI.showProduct(id);
 }
 
 // ═══════════════════════════════════════
