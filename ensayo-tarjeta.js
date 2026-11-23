@@ -23,7 +23,8 @@ async function refresh(){
         onSubmit:async form=>{
           if(working)return;
           working=true;card.hidden=true;status.textContent=messages.processing;
-          try{const r=await call({action:'pay',token:form.token,method:form.payment_method_id,email:form.payer?.email,previous});
+          try{const r=await call({action:'pay',token:form.token,method:form.payment_method_id,email:form.payer?.email,
+            identification:form.payer?.identification,issuer:form.issuer_id,previous});
             status.textContent=messages[r.state]||messages.unknown;
           }finally{working=false;}
         }}
