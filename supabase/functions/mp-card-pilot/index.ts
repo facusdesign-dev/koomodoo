@@ -27,11 +27,12 @@ Deno.serve(async req=>{
     if(!pk || !token.startsWith('TEST-'))return reply({state:'configuration'},503);
     if(b.action==='status'){
       let state=o.attempt_state;
-      if(o.cart_order_id && ['ready','rejected'].includes(state)){
+      let closed=false;
+      if(o.cart_order_id && ['ready','rejected','processing'].includes(state)){
         const cart=await fetch(sb+'/rest/v1/orders?select=status,expires_at&id=eq.'+o.cart_order_id,{headers});
         if(!cart.ok)return reply({},503);
         const [reservation]=await cart.json();
-        if(!reservation||reservation.status!=='pending_payment'||Date.parse(reservation.expires_at)<=Date.now())state='closed';
+        closed=!reservation||reservation.status!=='pending_payment'||Date.parse(reservation.expires_at)<=Date.now();
       }
       if(state==='processing' && o.attempt_id){
         const ref='KMD-CARD-'+o.attempt_id;
@@ -51,6 +52,8 @@ Deno.serve(async req=>{
           }
         }
       }
+      if(closed && ['ready','rejected'].includes(state))state='closed';
+      if(closed && state==='processing')state='closed_pending';
       return reply({state,order:o.reference,amount:o.amount_cents/100,previous:state==='rejected'?o.attempt_id:null,publicKey:pk});
     }
     if(b.order!==o.reference)return reply({state:'review'},409);

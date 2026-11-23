@@ -308,6 +308,8 @@ window.CommerceUI = (() => {
     } catch (error) { if (!silent && version === ordersRenderVersion) box.textContent = errorMessage(error); console.error('[KMD] orders:', error); }
   }
   function orderDisplayState(order, now = Date.now()) {
+    if(order.is_payment_test && order.test_payment_state==='processing' && (['expired','cancelled'].includes(order.status) || Date.parse(order.expires_at)<=now))
+      return {text:'Reserva cerrada. El pago sigue sin confirmar. No vuelvas a pagar ni despaches.',paymentLocked:true};
     if(order.is_payment_test && order.test_payment_state==='review')return {text:'Pago de ensayo en revisión. No vuelvas a pagar ni despaches.',paymentLocked:true};
     if(order.is_payment_test && order.test_payment_state==='processing')return {text:'Confirmando pago de ensayo. No vuelvas a pagar ni despaches.',paymentLocked:true};
     if (order.status === 'expired') return { text: 'Reserva vencida. Stock liberado.' };
