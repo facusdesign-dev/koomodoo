@@ -60,7 +60,7 @@ window.SellerCenter = (() => {
         charts(root,detail.data);return;
       }
       const query=catalog?getSB().from('products').select('id,title,category,image_url,price,currency,stock,available_stock').eq('user_id',id).order('category'):
-        getSB().from('orders').select('id,buyer_id,is_payment_test,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity,platform_percent,platform_fee)').eq('seller_id',id);
+        getSB().from('orders').select('id,buyer_id,is_payment_test,test_payment_state,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity,platform_percent,platform_fee)').eq('seller_id',id);
       const {data,error}=await query.order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*limit,(page+1)*limit);
       if(token!==version||id!==KMD.session?.user?.id||currentPage!=='analytics')return;
       if(error)throw error;

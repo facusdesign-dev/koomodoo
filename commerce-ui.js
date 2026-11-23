@@ -294,11 +294,11 @@ window.CommerceUI = (() => {
           row.append(deadline);
         }
         const chat = document.createElement('button'); chat.className = 'btn-p btn-sec'; chat.textContent = ownPurchase ? 'Hablar con vendedor' : 'Hablar con comprador'; chat.onclick = () => openChatWith(ownPurchase ? order.seller_id : order.buyer_id); row.append(chat);
-        if (order.status === 'pending_payment') {
-          if (order.is_payment_test && ownPurchase && !state.overdue) {
-            const pay=document.createElement('a');pay.className='btn-p';pay.textContent='Pagar en modo prueba';
+        if (order.is_payment_test && ownPurchase && (state.paymentLocked || (order.status==='pending_payment' && !state.overdue))) {
+            const pay=document.createElement('a');pay.className='btn-p';pay.textContent=state.paymentLocked?'Consultar estado del pago':'Pagar en modo prueba';
             pay.href='/ensayo-tarjeta.html?pedido='+encodeURIComponent(order.id);row.append(pay);
-          }
+        }
+        if (order.status === 'pending_payment') {
           const cancel = document.createElement('button'); cancel.className = 'btn-p btn-sec'; cancel.style.margin = '8px'; cancel.textContent = state.overdue ? 'Verificar y liberar reserva' : 'Cancelar y liberar stock';
           cancel.onclick = async () => { cancel.disabled = true; try { const result = await CommerceModule.cancelOrder(order.id); await refreshCatalog(); await renderOrders(); toast(result.status === 'expired' ? 'Reserva vencida. Stock liberado.' : 'Pedido cancelado. Stock liberado.'); } catch (error) { toast(errorMessage(error)); cancel.disabled = false; } };
           row.append(cancel);
@@ -308,11 +308,14 @@ window.CommerceUI = (() => {
     } catch (error) { if (!silent && version === ordersRenderVersion) box.textContent = errorMessage(error); console.error('[KMD] orders:', error); }
   }
   function orderDisplayState(order, now = Date.now()) {
+    if(order.is_payment_test && order.test_payment_state==='review')return {text:'Pago de ensayo en revisión. No vuelvas a pagar ni despaches.',paymentLocked:true};
+    if(order.is_payment_test && order.test_payment_state==='processing')return {text:'Confirmando pago de ensayo. No vuelvas a pagar ni despaches.',paymentLocked:true};
     if (order.status === 'expired') return { text: 'Reserva vencida. Stock liberado.' };
     if (order.status === 'cancelled') return { text: 'Cancelado. Stock devuelto.' };
     if (order.status === 'paid') return { text: 'Pago confirmado' };
     const deadline = Date.parse(order.expires_at);
     if (Number.isFinite(deadline) && deadline <= now) return { text: 'Plazo vencido. Verificando liberacion de stock...', overdue: true };
+    if(order.is_payment_test && order.test_payment_state==='rejected')return {text:'Pago de ensayo rechazado. Podés reintentar mientras siga vigente la reserva.',deadline};
     return { text: 'Pendiente de pago · Sin cobro', deadline: Number.isFinite(deadline) ? deadline : null };
   }
   let refreshingOrders = false;

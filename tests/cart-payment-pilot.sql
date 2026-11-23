@@ -28,6 +28,17 @@ begin
  perform set_config('request.jwt.claim.sub',s::text,true);
  select coalesce(jsonb_agg(to_jsonb(x) order by currency),'[]') into new_metrics from public.my_shop_metrics() x;
  if old_metrics<>new_metrics then raise exception 'Test affected revenue';end if;
+ -- Approval arriving after cancellation must be visible as a review, never a sale.
+ set constraints mp_bind_test_cart deferred;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ o:=(public.reserve_order(jsonb_build_array(jsonb_build_object('variant_id',v,'quantity',1)),gen_random_uuid())->>'id')::uuid;
+ set constraints mp_bind_test_cart immediate;
+ a:=(public.claim_mp_test_attempt(o,null)->>'attempt')::uuid;
+ perform public.cancel_order(o);
+ if not public.finish_mp_test_attempt(o,a,'approved','98765432101235') then raise exception 'Late receipt not recorded'; end if;
+ if not exists(select from public.orders where id=o and status='cancelled' and test_payment_state='review')
+   or (select stock from public.products where id=p)<>3
+   then raise exception 'Late approval must enter review without consuming stock'; end if;
 end $$;
 rollback;
 select 'PASS' as cart_payment_pilot;
