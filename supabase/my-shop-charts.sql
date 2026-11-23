@@ -1,10 +1,10 @@
-create function public.my_shop_charts() returns jsonb
+create or replace function public.my_shop_charts() returns jsonb
 language sql stable security invoker set search_path='' as $$
   with months as (
     select generate_series(date_trunc('month',now() at time zone 'America/Montevideo')-interval '5 months',
       date_trunc('month',now() at time zone 'America/Montevideo'),interval '1 month') as month
   ), paid as (
-    select id,created_at from public.orders where seller_id=(select auth.uid()) and status='paid'
+    select id,created_at from public.orders where seller_id=(select auth.uid()) and status='paid' and not is_payment_test
   ), series as (
     select m.month,count(p.id) sales from months m left join paid p
       on date_trunc('month',p.created_at at time zone 'America/Montevideo')=m.month group by m.month

@@ -1,9 +1,10 @@
 const sb=window.supabase.createClient('https://qbpvrfouhsycbzgzltih.supabase.co','sb_publishable_WuXm4DcjX4r4ZCLeAuBBbw__2OlJl4C');
 const card=document.querySelector('#card'),status=document.querySelector('#status');
+const cartOrder=new URLSearchParams(location.search).get('pedido');
 const messages={ready:'Pedido listo para probar.',approved:'Pago aprobado. Este pedido ya no se puede pagar.',processing:'Estamos verificando el pago. No vuelvas a pagar.',rejected:'Pago rechazado. Podés intentar nuevamente.',review:'Pedido en revisión. No vuelvas a pagar.',unassigned:'Tu cuenta no tiene asignado este ensayo.',configuration:'El ensayo todavía no está configurado.',invalid:'Revisá la tarjeta y el correo de prueba.',unknown:'No pudimos verificar el estado. No vuelvas a pagar.'};
 let brick,previous=null,working=false,order=null;
 async function call(body){
-  const {data,error}=await sb.functions.invoke('mp-card-pilot',{body});
+  const {data,error}=await sb.functions.invoke('mp-card-pilot',{body:{...body,cartOrder}});
   if(!error)return data;
   return await error.context?.json?.().catch(()=>null)||{state:'unknown'};
 }
@@ -12,14 +13,15 @@ async function refresh(){
   working=true;
   try{
     const data=await call({action:'status'});
-    status.textContent=messages[data.state]||messages.unknown;
+    status.textContent=data.state==='closed'?'La reserva terminó. No se puede pagar.':messages[data.state]||messages.unknown;
+    if(Number.isFinite(data.amount))document.querySelector('#order-total').textContent=new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU'}).format(data.amount)+' · Sin entrega';
     const open=['ready','rejected'].includes(data.state);
     card.hidden=!open;
     if(!open){if(brick){await brick.unmount();brick=null;}return;}
     if(order && order!==data.order){location.reload();return;}
     order=data.order;previous=data.previous;
     if(!brick)brick=await new MercadoPago(data.publicKey,{locale:'es-UY'}).bricks().create('cardPayment','card',{
-      initialization:{amount:100},customization:{paymentMethods:{maxInstallments:1}},
+      initialization:{amount:data.amount},customization:{paymentMethods:{maxInstallments:1}},
       callbacks:{onReady:()=>{},onError:()=>{status.textContent='No se pudo cargar el formulario de prueba.';},
         onSubmit:async form=>{
           if(working)return;

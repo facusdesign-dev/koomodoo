@@ -295,6 +295,10 @@ window.CommerceUI = (() => {
         }
         const chat = document.createElement('button'); chat.className = 'btn-p btn-sec'; chat.textContent = ownPurchase ? 'Hablar con vendedor' : 'Hablar con comprador'; chat.onclick = () => openChatWith(ownPurchase ? order.seller_id : order.buyer_id); row.append(chat);
         if (order.status === 'pending_payment') {
+          if (order.is_payment_test && ownPurchase && !state.overdue) {
+            const pay=document.createElement('a');pay.className='btn-p';pay.textContent='Pagar en modo prueba';
+            pay.href='/ensayo-tarjeta.html?pedido='+encodeURIComponent(order.id);row.append(pay);
+          }
           const cancel = document.createElement('button'); cancel.className = 'btn-p btn-sec'; cancel.style.margin = '8px'; cancel.textContent = state.overdue ? 'Verificar y liberar reserva' : 'Cancelar y liberar stock';
           cancel.onclick = async () => { cancel.disabled = true; try { const result = await CommerceModule.cancelOrder(order.id); await refreshCatalog(); await renderOrders(); toast(result.status === 'expired' ? 'Reserva vencida. Stock liberado.' : 'Pedido cancelado. Stock liberado.'); } catch (error) { toast(errorMessage(error)); cancel.disabled = false; } };
           row.append(cancel);
