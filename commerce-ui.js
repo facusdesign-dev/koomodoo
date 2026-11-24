@@ -232,6 +232,10 @@ window.CommerceUI = (() => {
       const info=document.createElement('p'),btn=document.createElement('button');
       info.textContent='Subtotal de productos: '+money(rows.reduce((sum,r)=>sum+r.price*r.qty,0),rows[0].currency)+'. Entrega o retiro a coordinar con el local. Envío no incluido; su costo aún no está confirmado.';
       btn.className='ck-btn';btn.textContent='Reservar este pedido sin pagar';btn.disabled=checkingOut;btn.onclick=()=>checkout(key);section.append(info,btn);
+      if(!checkingOut && intents.has(intentKey(rows))){
+        info.textContent='Hay una reserva sin respuesta confirmada. Consultá el intento original antes de cambiar la entrega.';
+        btn.textContent='Recuperar mi reserva';
+      }else if(!checkingOut)void Delivery.choose(section,rows,info,btn,d=>checkout(key,d));
     }
     void (async()=>{
       try{const {data,error}=await getSB().from('public_profiles').select('id,username,first_name').in('id',[...labels.keys()]);if(error)throw error;
@@ -239,7 +243,7 @@ window.CommerceUI = (() => {
       }catch(error){console.warn('[KMD nombre del local]',error.message);}
     })();
   }
-  async function checkout(key) {
+  async function checkout(key,delivery=null) {
     if (checkingOut || !cart.length) return;
     if (!KMD.session?.user?.id) { openAuthModal('login'); return; }
     if(!key&&new Set(cart.map(groupKey)).size!==1){toast('Elegí el pedido de un local.');return;}
@@ -255,9 +259,9 @@ window.CommerceUI = (() => {
         if (reviewed.priceChanged) {
           throw new Error('Un precio cambio. Actualizamos el carrito: revisa el nuevo total y confirma nuevamente. No se creo un pedido.');
         }
-        intent = { items: reviewed.items.map(row => ({ variant_id: row.variantId, quantity: row.qty, expected_unit_price: row.price })), key: crypto.randomUUID() };intents.set(signature,intent);
+        intent = { items: reviewed.items.map(row => ({ variant_id: row.variantId, quantity: row.qty, expected_unit_price: row.price })), key: crypto.randomUUID(),delivery };intents.set(signature,intent);
       }
-      const order = await CommerceModule.reserveOrder(intent.items, intent.key);
+      const order = await CommerceModule.reserveOrder(intent.items, intent.key,intent.delivery);
       if (order?.status === 'expired' || order?.status === 'cancelled' ||
           (order?.expires_at && Date.parse(order.expires_at) <= Date.now())) {
         intents.delete(signature);
@@ -309,6 +313,7 @@ window.CommerceUI = (() => {
     } catch (error) { if (!silent && version === ordersRenderVersion) box.textContent = errorMessage(error); console.error('[KMD] orders:', error); }
   }
   function appendPickup(row,order,refresh){
+    if(order.delivery && Delivery.shipment(row,order,refresh))return;
     if(!order.is_payment_test || order.status!=='paid' || order.test_payment_state!=='approved')return;
     const seller=order.seller_id===KMD.session?.user?.id,buyer=order.buyer_id===KMD.session?.user?.id;
     if(!seller&&!buyer)return;

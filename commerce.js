@@ -83,9 +83,11 @@ window.CommerceModule = (() => {
     if (variants.error) throw variants.error;
     return { product: product.data, variants: variants.data || [] };
   }
-  async function reserveOrder(items, key) {
+  async function reserveOrder(items, key, delivery=null) {
     if (!KMD.session?.user?.id) throw new Error('Inicia sesion para crear el pedido.');
-    const { data, error } = await getSB().rpc('reserve_order', { p_items: items, p_key: key });
+    const args={p_items:items,p_key:key};
+    if(delivery)args.p_delivery=delivery;
+    const { data, error } = await getSB().rpc(delivery?'reserve_delivery_order':'reserve_order',args);
     if (error) throw error;
     return data;
   }

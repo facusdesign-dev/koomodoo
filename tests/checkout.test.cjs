@@ -8,7 +8,7 @@ function setup(reviewCart, reserveOrder) {
   const context = { window: {}, setInterval() {}, console: { error() {},warn() {} },
     crypto: { randomUUID: () => 'same-key' }, escHtml: String, updateBadges() {}, nav() {}, toast() {},
     currentPage: 'carrito', KMD: { session: { user: { id: 'buyer' } } },
-    CommerceModule: { reviewCart, reserveOrder },
+    CommerceModule: { reviewCart, reserveOrder }, Delivery:{choose(){}},
     document: { getElementById: element, createElement: element },
     cart: [{ pid: 'p', variantId: 'v', sellerId: 'seller', currency: 'UYU', qty: 1, price: 1000 }],
   };

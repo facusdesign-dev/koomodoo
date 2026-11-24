@@ -46,6 +46,7 @@ window.SellerCenter = (() => {
     const id=KMD.session?.user?.id,token=++version,root=box();
     root.replaceChildren();
     if(!id){root.textContent='Iniciá sesión para gestionar tu local.';return;}
+    if(tab==='delivery')return Delivery.settings();
     const catalog=tab==='products',title=catalog?'Mi catálogo':tab==='metrics'?'Métricas':'Mis pedidos';
     root.textContent='Cargando '+title.toLowerCase()+'…';
     try{
@@ -61,7 +62,7 @@ window.SellerCenter = (() => {
         charts(root,detail.data);return;
       }
       const query=catalog?getSB().from('products').select('id,title,category,image_url,price,currency,stock,available_stock').eq('user_id',id).order('category'):
-        getSB().from('orders').select('id,buyer_id,seller_id,is_payment_test,test_payment_state,pickup_ready_at,pickup_received_at,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity,platform_percent,platform_fee)').eq('seller_id',id);
+        getSB().from('orders').select('id,buyer_id,seller_id,is_payment_test,test_payment_state,pickup_ready_at,pickup_received_at,delivery,shipped_at,tracking_code,shipment_received_at,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity,platform_percent,platform_fee)').eq('seller_id',id);
       const {data,error}=await query.order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*limit,(page+1)*limit);
       if(token!==version||id!==KMD.session?.user?.id||currentPage!=='analytics')return;
       if(error)throw error;
