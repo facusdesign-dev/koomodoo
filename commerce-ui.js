@@ -303,9 +303,28 @@ window.CommerceUI = (() => {
           cancel.onclick = async () => { cancel.disabled = true; try { const result = await CommerceModule.cancelOrder(order.id); await refreshCatalog(); await renderOrders(); toast(result.status === 'expired' ? 'Reserva vencida. Stock liberado.' : 'Pedido cancelado. Stock liberado.'); } catch (error) { toast(errorMessage(error)); cancel.disabled = false; } };
           row.append(cancel);
         }
+        appendPickup(row,order,()=>renderOrders());
         box.append(row);
       }
     } catch (error) { if (!silent && version === ordersRenderVersion) box.textContent = errorMessage(error); console.error('[KMD] orders:', error); }
+  }
+  function appendPickup(row,order,refresh){
+    if(!order.is_payment_test || order.status!=='paid' || order.test_payment_state!=='approved')return;
+    const seller=order.seller_id===KMD.session?.user?.id,buyer=order.buyer_id===KMD.session?.user?.id;
+    if(!seller&&!buyer)return;
+    const note=document.createElement('p');
+    note.textContent='Retiro de ensayo · '+(order.pickup_received_at?'Entregado':order.pickup_ready_at?'Listo para retirar':'En preparación')+' · Sin entrega física.';
+    row.append(note);
+    const step=!order.pickup_ready_at&&seller?'ready':order.pickup_ready_at&&!order.pickup_received_at&&buyer?'received':null;
+    if(!step)return;
+    const b=document.createElement('button');b.type='button';b.className='btn-p';
+    b.textContent=step==='ready'?'Marcar listo para retirar':'Confirmar recepción de ensayo';
+    b.onclick=async()=>{b.disabled=true;try{
+      const {error}=await getSB().rpc('advance_test_pickup',{p_order:order.id,p_step:step});
+      if(error)throw error;
+      await refresh();
+    }catch(e){console.error('[KMD] retiro:',e);toast('No pudimos confirmar el retiro. Actualizá el pedido antes de reintentar.');b.disabled=false;}};
+    row.append(b);
   }
   function orderDisplayState(order, now = Date.now()) {
     if(order.is_payment_test && order.test_payment_state==='processing' && (['expired','cancelled'].includes(order.status) || Date.parse(order.expires_at)<=now))
@@ -327,5 +346,5 @@ window.CommerceUI = (() => {
     refreshingOrders = true;
     try { await renderOrders({ silent: true }); } finally { refreshingOrders = false; }
   }, 30000);
-  return { money, variantEditor, getInventory, resetInventory, showProduct, editInventory, renderCart, checkout, renderOrders, refreshCatalog, orderDisplayState };
+  return { money, variantEditor, getInventory, resetInventory, showProduct, editInventory, renderCart, checkout, renderOrders, refreshCatalog, orderDisplayState, appendPickup };
 })();

@@ -23,7 +23,7 @@ window.SellerCenter = (() => {
     const list=node('ol','');for(const r of ranking){const item=node('li','');item.append(node('strong',r.title),node('span',' · '+r.units+' uds.'));list.append(item);}
     panel.append(ranking.length?list:node('p','Con tu primera venta pagada empieza el ranking.'));root.append(panel);
   }
-  function orderCard(order){
+  function orderCard(order,page){
     const card=node('article','');card.className='chart-card';
     const state=CommerceUI.orderDisplayState(order);
     const hint=order.status==='paid'?'Coordiná la entrega con el comprador.':order.status==='pending_payment'?
@@ -39,6 +39,7 @@ window.SellerCenter = (() => {
     if(known)fees.append(node('p','Subtotal después de Koomodoo, antes de la pasarela: '+CommerceUI.money(order.total-items.reduce((sum,i)=>sum+Number(i.platform_fee),0),order.currency)));
     card.append(node('p',order.is_payment_test?'Ensayo sin dinero real. No despaches este pedido.':hint),action('Conversar con el comprador',()=>openChatWith(order.buyer_id)));
     if(order.status==='pending_payment')card.append(action('Gestionar reserva en Pedidos',()=>nav('pedidos')));
+    CommerceUI.appendPickup(card,order,()=>show('orders',page));
     return card;
   }
   async function show(tab='orders',page=0){
@@ -60,7 +61,7 @@ window.SellerCenter = (() => {
         charts(root,detail.data);return;
       }
       const query=catalog?getSB().from('products').select('id,title,category,image_url,price,currency,stock,available_stock').eq('user_id',id).order('category'):
-        getSB().from('orders').select('id,buyer_id,is_payment_test,test_payment_state,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity,platform_percent,platform_fee)').eq('seller_id',id);
+        getSB().from('orders').select('id,buyer_id,seller_id,is_payment_test,test_payment_state,pickup_ready_at,pickup_received_at,total,currency,status,created_at,expires_at,order_items(product_title,variant_label,quantity,platform_percent,platform_fee)').eq('seller_id',id);
       const {data,error}=await query.order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*limit,(page+1)*limit);
       if(token!==version||id!==KMD.session?.user?.id||currentPage!=='analytics')return;
       if(error)throw error;
@@ -86,7 +87,7 @@ window.SellerCenter = (() => {
           }
         }
         draw();
-      }else for(const row of data.slice(0,limit))root.append(orderCard(row));
+      }else for(const row of data.slice(0,limit))root.append(orderCard(row,page));
       if(page)root.append(action('Anterior',()=>show(tab,page-1)));
       if(data.length>limit)root.append(action('Siguiente',()=>show(tab,page+1)));
     }catch(error){if(token!==version||id!==KMD.session?.user?.id)return;console.error('[KMD centro de ventas]',error);root.replaceChildren(node('p','No pudimos cargar esta sección.'),action('Reintentar',()=>show(tab,page)));}
