@@ -1,9 +1,21 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-UY">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOOMODOO</title>
+<title>KOOMODOO | Social Commerce</title>
+<meta name="description" content="KOOMODOO es una plataforma de social commerce: mirá PULSOS en vivo, descubrí productos y comprá o vendé en Uruguay, Argentina y Chile. Versión de prueba.">
+<meta name="theme-color" content="#07090D">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="KOOMODOO">
+<meta property="og:locale" content="es_UY">
+<meta property="og:title" content="KOOMODOO | Social Commerce">
+<meta property="og:description" content="Mirá PULSOS en vivo, descubrí productos y comprá o vendé. Versión de prueba.">
+<meta property="og:url" content="https://koomodoo.vercel.app/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="KOOMODOO | Social Commerce">
+<meta name="twitter:description" content="Mirá PULSOS en vivo, descubrí productos y comprá o vendé. Versión de prueba.">
+<link rel="canonical" href="https://koomodoo.vercel.app/">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./live-shopping.css">
@@ -1007,7 +1019,7 @@ button,select,input{font-family:inherit}
 </head>
 <body>
 
-<div id="google-loading"><div class="af-spin-lg"></div><div style="font-size:14px;font-weight:700;color:var(--t2)">Conectando con Google...</div></div>
+<div id="google-loading" role="status" aria-live="polite"><div class="af-spin-lg"></div><div style="font-size:14px;font-weight:700;color:var(--t2)">Conectando con Google...</div><button type="button" onclick="setGoogleLoading(false)" style="margin-top:4px;background:none;border:1px solid var(--b2);color:var(--t2);border-radius:50px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">Cancelar</button></div>
 <div id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
   <div class="auth-box">
     <div class="auth-brand"><span class="auth-logo-txt">KOOMODOO</span><span class="auth-tagline">Social Commerce Platform</span></div>
@@ -1044,7 +1056,7 @@ button,select,input{font-family:inherit}
     <div class="cp-sec">Elegí tu avatar</div><div class="av-grid" id="cp-av-grid"></div>
     <div class="cp-sec">Información básica</div>
     <div class="cp-2col"><div><label class="af-lbl">Nombre *</label><input type="text" class="af-inp" id="cp-fn" placeholder="Carlos"></div><div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="cp-ln" placeholder="Mendoza"></div></div>
-    <label class="af-lbl">Usuario *</label><input type="text" class="af-inp" id="cp-user" placeholder="carlosmendoza" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')">
+    <label class="af-lbl">Usuario *</label><input type="text" class="af-inp" id="cp-user" placeholder="tuusuario" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')">
     <label class="af-lbl">Ubicación</label><input type="text" class="af-inp" id="cp-loc" placeholder="Montevideo, Uruguay">
     <label class="af-lbl">Bio (opcional)</label><textarea class="af-inp" id="cp-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
     <div class="cp-sec">¿Qué querés hacer?</div>
@@ -1063,13 +1075,13 @@ button,select,input{font-family:inherit}
     <div id="ep-msg"></div>
     <div style="display:flex;align-items:center;gap:13px;padding:13px;background:var(--surf);border:1px solid var(--b);border-radius:13px;margin-bottom:14px">
       <div id="ep-av-big" style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden">🦁</div>
-      <div style="flex:1"><div id="ep-name-big" style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:2px">Carlos Mendoza</div><div id="ep-email-big" style="font-size:11px;color:var(--t3)">carlos@example.com</div></div>
+      <div style="flex:1"><div id="ep-name-big" style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:2px">Usuario</div><div id="ep-email-big" style="font-size:11px;color:var(--t3)"></div></div>
       <button onclick="pickProfilePhoto()" style="padding:6px 12px;border-radius:9px;background:var(--surf2);border:1px solid var(--b2);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer">📷 Foto</button>
     </div>
     <div class="cp-sec">Avatar emoji</div><div class="av-grid" id="ep-av-grid"></div>
     <div class="cp-sec">Información básica</div>
     <div class="cp-2col"><div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="ep-fn" placeholder="Carlos"></div><div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="ep-ln" placeholder="Mendoza"></div></div>
-    <label class="af-lbl">Usuario</label><input type="text" class="af-inp" id="ep-user" placeholder="carlosmendoza">
+    <label class="af-lbl">Usuario</label><input type="text" class="af-inp" id="ep-user" placeholder="tuusuario">
     <label class="af-lbl">Bio</label><textarea class="af-inp" id="ep-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
     <div class="cp-2col"><div><label class="af-lbl">Ubicación pública (ciudad/país)</label><input type="text" class="af-inp" id="ep-loc" placeholder="Montevideo, UY"></div><div><label class="af-lbl">Teléfono privado</label><input type="tel" class="af-inp" id="ep-phone" placeholder="+598 99 000 000"></div></div>
     <div class="cp-2col">
@@ -1389,14 +1401,14 @@ button,select,input{font-family:inherit}
           <div class="prof-photo-overlay">📷</div>
         </div>
         <div class="prof-info-body">
-          <div class="prof-nm" id="prof-nm-el">Carlos Mendoza</div>
+          <div class="prof-nm" id="prof-nm-el">Usuario</div>
           <div class="prof-hndl" id="prof-hndl-el">
-            <span>@carlosmendoza</span>
+            <span>@usuario</span>
             <span style="color:var(--b2)">·</span>
-            <span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">Vendedor Pro</span>
+            <span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">Miembro</span>
           </div>
-          <div class="prof-location" id="prof-location-el"><span>📍</span><span>Montevideo, Uruguay</span></div>
-          <div class="prof-bio" id="prof-bio-el">Emprendedor digital · Tech &amp; Moda</div>
+          <div class="prof-location" id="prof-location-el"><span>📍</span><span>Uruguay</span></div>
+          <div class="prof-bio" id="prof-bio-el">Miembro de KOOMODOO</div>
           <div class="prof-acts" id="prof-acts-el" style="margin-top:10px">
             <button class="btn-p btn-pri" onclick="openLiveModal()"><span class="pulso-mark" aria-hidden="true"></span> PULSO</button>
             <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
@@ -2716,8 +2728,6 @@ function getProfileTargetId(){
 }
 
 async function renderProfilePage(targetProfileId){
-  console.log('🔥 RENDER REAL DE PERFIL DETECTADO');
-  console.log('renderProfilePage ejecutado');
   const ownUser=KMD&&KMD.user;if(!ownUser)return;
   const setTxt=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   const setHtml=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
@@ -3831,9 +3841,21 @@ function hdrAuthClick(){KMD.loggedIn?toggleDd():openAuthModal('login');}
 // ── Auth modal ────────────────────────────────────────────────────────────────
 function openAuthModal(tab){document.getElementById('auth-modal').classList.add('open');switchTab(tab||'login');}
 function closeAuthModal(){document.getElementById('auth-modal').classList.remove('open');}
+var googleLoadingTimer=null;
 function setGoogleLoading(open){
   const gl=document.getElementById('google-loading');
   if(gl)gl.classList.toggle('open',!!open);
+  if(googleLoadingTimer){clearTimeout(googleLoadingTimer);googleLoadingTimer=null;}
+  if(open){
+    // Salida de seguridad: si el ingreso con Google no termina, se libera la pantalla.
+    googleLoadingTimer=setTimeout(function(){
+      googleLoadingTimer=null;
+      if(gl&&gl.classList.contains('open')){
+        gl.classList.remove('open');
+        toast('No pudimos completar el ingreso con Google. Probá de nuevo.');
+      }
+    },20000);
+  }
 }
 function switchTab(tab){
   const isL=tab==='login';
@@ -4200,7 +4222,7 @@ async function doLogout(){
 
 // ── Post-login flow ───────────────────────────────────────────────────────────
 async function onSignedIn(session,profile){
-  const gl=document.getElementById('google-loading');if(gl)gl.classList.remove('open');
+  setGoogleLoading(false);
   if(pendingOAuthCleanup&&window.history?.replaceState){
     window.history.replaceState({},'',window.location.pathname);
     pendingOAuthCleanup=false;
