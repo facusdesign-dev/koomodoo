@@ -12,16 +12,20 @@ window.Delivery=(()=>{
   async function settings(){
     const root=document.getElementById('seller-work'),panel=el('section');root.replaceChildren(panel);panel.className='chart-card';
     const uid=KMD.session?.user?.id;if(!uid)return;
-    panel.append(el('h2','Entregas de mi local'),el('p','Tarifas manuales por departamento y moneda. En el piloto no se envían paquetes.'));
+    panel.append(el('h2','Entregas de mi local'),el('p','Estas condiciones se aplican a todos tus productos. El comprador elige entre las opciones de su departamento y moneda. En el piloto no se envían paquetes.'));
     const db=getSB(),list=el('div');panel.append(list);
     async function load(){const {data,error}=await db.from('shop_delivery').select('*').eq('seller_id',uid).order('label');if(error)throw error;
       list.replaceChildren();for(const r of data){const line=el('p',modes[r.mode]+' · '+r.label+' · '+r.zone+' · '+CommerceUI.money(r.fee,r.currency)+' · '+r.eta+' · '+(r.enabled?'Activa':'Inactiva'));
         button(line,r.enabled?'Desactivar':'Activar',async e=>{e.target.disabled=true;try{const {error}=await db.from('shop_delivery').update({enabled:!r.enabled}).eq('id',r.id);if(error)throw error;await load();}catch(err){toast(err.message);e.target.disabled=false;}});list.append(line);}}
     const form=el('form');panel.append(form);
-    const mode=field(form,'Modalidad',Object.entries(modes)),zone=field(form,'Departamento',pairs(departments)),label=field(form,'Punto de retiro, zona o agencia y tipo de entrega'),eta=field(form,'Plazo u horario'),currency=field(form,'Moneda',pairs(['UYU','USD'])),fee=field(form,'Costo (0 si es gratis)');
-    label.placeholder='Ej.: DAC a sucursal';label.maxLength=eta.maxLength=100;fee.type='number';fee.min='0';fee.step='0.01';for(const i of [label,eta,fee])i.required=true;
+    const mode=field(form,'Modalidad',Object.entries(modes)),zone=field(form,'Departamento',pairs(departments)),label=field(form,'Punto de retiro, zona o agencia y tipo de entrega');
+    const period=field(form,'Plazo estimado',[['','Elegí un plazo'],...pairs(['En el día','1 a 2 días hábiles','3 a 5 días hábiles','5 a 10 días hábiles','Otro plazo u horario'])]),eta=field(form,'Indicá el plazo u horario');
+    const currency=field(form,'Moneda',pairs(['UYU','USD'])),priceType=field(form,'Costo para el comprador',[['','Elegí una opción'],['free','Gratis'],['fixed','Precio fijo']]),fee=field(form,'Precio de la entrega');
+    function updateFields(){eta.disabled=period.value!=='Otro plazo u horario';fee.disabled=priceType.value!=='fixed';eta.parentElement.hidden=eta.disabled;fee.parentElement.hidden=fee.disabled;}
+    period.onchange=priceType.onchange=updateFields;updateFields();
+    label.placeholder='Ej.: DAC a sucursal';label.maxLength=eta.maxLength=100;fee.type='number';fee.min='0.01';fee.step='0.01';for(const i of [label,period,priceType,eta,fee])i.required=true;
     const save=el('button','Agregar opción');save.className='btn-p';form.append(save);
-    form.onsubmit=async e=>{e.preventDefault();save.disabled=true;try{const {error}=await db.from('shop_delivery').insert({seller_id:uid,mode:mode.value,zone:zone.value,label:label.value.trim(),eta:eta.value.trim(),currency:currency.value,fee:Number(fee.value)});if(error)throw error;form.reset();await load();toast('Opción guardada.');}catch(err){toast(err.message);}finally{save.disabled=false;}};
+    form.onsubmit=async e=>{e.preventDefault();save.disabled=true;try{const {error}=await db.from('shop_delivery').insert({seller_id:uid,mode:mode.value,zone:zone.value,label:label.value.trim(),eta:eta.disabled?period.value:eta.value.trim(),currency:currency.value,fee:priceType.value==='free'?0:Number(fee.value)});if(error)throw error;form.reset();updateFields();await load();toast('Opción guardada.');}catch(err){toast(err.message);}finally{save.disabled=false;}};
     try{await load();}catch(err){list.textContent=err.message;}
   }
   async function choose(section,rows,info,btn,submit){

@@ -1548,6 +1548,7 @@ button,select,input{font-family:inherit}
       </div>
       <div class="fg"><label id="pub-category-hint-label">Especificaciones por categoría</label><textarea class="fi" id="pub-category-notes" rows="2" style="resize:none" placeholder="Agregá detalles propios de la categoría"></textarea></div>
       <div class="fg"><button type="button" class="btn-p btn-sec" onclick="CommerceUI.variantEditor()">Generar variantes y stock</button><p style="font-size:12px;color:var(--t2);margin-top:8px">Genera las combinaciones de las opciones de tu producto y asigna precio y stock a cada una. Sin opciones se usa el stock principal.</p><div id="pub-inventory"></div></div>
+      <p>Este producto usa las opciones de retiro y envío de Mi Local → Entregas.</p>
       <button class="pub-btn" onclick="publishProduct()">🚀 Publicar producto</button>
     </div>
     <div class="pub-form-card" id="pub-panel-post" style="display:none">
@@ -1588,10 +1589,9 @@ button,select,input{font-family:inherit}
     <p class="sb-sec-lbl">Panel privado del vendedor</p><h1 class="pg-h1">MI LOCAL</h1>
     <p>Gestioná tus pedidos y publicaciones. En el piloto no se realizan cobros reales.</p>
     <nav class="seller-actions" aria-label="Gestión de mi local">
-      <button type="button" onclick="SellerCenter.show('orders')">Mis pedidos</button>
+      <button type="button" onclick="SellerCenter.show('products')">Catálogo</button>
+      <button type="button" onclick="SellerCenter.show('orders')">Pedidos</button>
       <button type="button" onclick="SellerCenter.show('delivery')">Entregas</button>
-      <button type="button" onclick="SellerCenter.show('products')">Mi catálogo</button>
-
       <button type="button" onclick="SellerCenter.show('metrics')">Métricas</button>
     </nav>
     <section id="seller-work" aria-live="polite"></section>
@@ -3164,7 +3164,7 @@ async function publishPostFromComposer(){
 // ═══════════════════════════════════════
 // ANALYTICS
 // ═══════════════════════════════════════
-function renderAnalytics(){return SellerCenter.show('orders');}
+function renderAnalytics(){return SellerCenter.show('products');}
 
 // ═══════════════════════════════════════
 // STORIES VIEWER
