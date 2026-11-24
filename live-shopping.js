@@ -11,8 +11,8 @@ window.LiveShopping = (() => {
   const userId = () => KMD.session?.user?.id;
   const sdk = () => sdkPromise ||= import('https://cdn.jsdelivr.net/npm/livekit-client@2.24.1/dist/livekit-client.esm.mjs').catch(error => { sdkPromise = null; throw error; });
   const errorText = error => /Permission|NotAllowed/i.test(error?.name || '')
-    ? 'Permiti el acceso a camara y microfono para continuar.'
-    : /NotFound/i.test(error?.name || '') ? 'No encontramos una camara o un microfono disponible.'
+    ? 'Permití el acceso a la cámara y al micrófono para continuar.'
+    : /NotFound/i.test(error?.name || '') ? 'No encontramos una cámara o un micrófono disponible.'
     : error?.message || 'No se pudo completar la accion. Intenta nuevamente.';
   const showError = error => { console.error('[KMD live]', error); toast(errorText(error)); };
   function status(text) { if ($('live-status')) $('live-status').textContent = text; }
@@ -73,7 +73,7 @@ window.LiveShopping = (() => {
         console.log('[KMD camera]', { requested: value, width: settings.width, height: settings.height, facing: settings.facingMode });
       }
       cameraFacing = value;
-      const message = value === 'environment' ? 'Camara trasera seleccionada.' : 'Camara frontal seleccionada.';
+      const message = value === 'environment' ? 'Cámara trasera seleccionada.' : 'Cámara frontal seleccionada.';
       if (isPresenter()) status(message);
       else if ($('live-setup-status')) $('live-setup-status').textContent = message + ' En PC se usa la camara disponible; algunos equipos no tienen camara trasera.';
     } catch (error) {
@@ -89,7 +89,7 @@ window.LiveShopping = (() => {
   }
   function renderCameraInfo(info) {
     const text = info
-      ? `Captura real: ${info.sourceWidth} x ${info.sourceHeight} (${info.sourceHeight > info.sourceWidth ? 'vertical' : 'horizontal'}). Emision: ${info.outputWidth} x ${info.outputHeight}.` + (info.appleMobile && info.sourceWidth > info.sourceHeight ? ' Sostene el iPhone vertical y volve a probar la camara.' : '')
+      ? `Captura real: ${info.sourceWidth} x ${info.sourceHeight} (${info.sourceHeight > info.sourceWidth ? 'vertical' : 'horizontal'}). Emisión: ${info.outputWidth} x ${info.outputHeight}.` + (info.appleMobile && info.sourceWidth > info.sourceHeight ? ' Sostené el iPhone vertical y volvé a probar la cámara.' : '')
       : 'No se pudo medir la captura procesada. Se esta usando la camara original.';
     for (const id of ['live-camera-info', 'live-setup-camera-info']) if ($(id)) $(id).textContent = text;
   }
@@ -217,7 +217,7 @@ window.LiveShopping = (() => {
     try {
       const config = await api('status');
       $('live-setup-status').textContent = config.configured
-        ? 'Video disponible. Elegi tus productos y proba la camara antes de iniciar.'
+        ? 'Video disponible. Elegí tus productos y probá la cámara antes de iniciar.'
         : 'Falta vincular LiveKit. Podes probar la camara, pero PULSO aun no esta habilitado.';
       const { data, error } = await getSB().from('products').select('id,title,price,currency').eq('user_id', userId()).eq('status', 'published').order('created_at', { ascending: false }).limit(100);
       if (error) throw error;
@@ -254,7 +254,7 @@ window.LiveShopping = (() => {
     let prepared = null;
     try {
       if (!localTracks.length) await preview();
-      if (!localTracks.some(track => track.kind === 'video')) throw new Error('Necesitamos tu camara para iniciar.');
+      if (!localTracks.some(track => track.kind === 'video')) throw new Error('Necesitamos tu cámara para iniciar.');
       const result = await api('prepare', { title, productIds: ids }); prepared = result.room;
       active = prepared; roomProducts = [];
       $('live-start-modal').classList.remove('open');
@@ -305,7 +305,7 @@ window.LiveShopping = (() => {
         try {
           const participant = connection.localParticipant;
           await participant.setMicrophoneEnabled(!participant.isMicrophoneEnabled);
-          labelControl(mic, participant.isMicrophoneEnabled ? 'Silenciar microfono' : 'Activar microfono');
+          labelControl(mic, participant.isMicrophoneEnabled ? 'Silenciar micrófono' : 'Activar micrófono');
         } catch (error) { showError(error); } finally { mic.disabled = false; }
       });
       const finish = control('live-end', 'Finalizar', 'end', () => end()); finish.classList.add('end');
@@ -611,7 +611,7 @@ window.LiveShopping = (() => {
     await disconnect(); stopPreview();
     if (previous?.user_id === previousUserId) {
       try { await api('end', { roomId: previous.id }); }
-      catch (error) { console.error('[KMD live end]', error); toast('Camara apagada. No pudimos confirmar el cierre de sala: revisalo en PULSO.'); }
+      catch (error) { console.error('[KMD live end]', error); toast('Cámara apagada. No pudimos confirmar el cierre de sala: revisalo en PULSO.'); }
     }
   }
   async function end() {

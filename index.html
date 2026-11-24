@@ -1113,7 +1113,7 @@ button,select,input{font-family:inherit}
     <div id="story-preview" style="width:100%;aspect-ratio:9/16;max-height:280px;border-radius:14px;background:var(--surf2);border:2px dashed rgba(52,211,153,.3);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden;margin-bottom:12px;cursor:pointer" onclick="document.getElementById('story-file-inp').click()">📷<input type="file" id="story-file-inp" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)"></div>
     <input type="text" class="af-inp" id="story-caption-inp" placeholder="Texto opcional para tu historia" style="margin-bottom:10px">
     <select class="af-inp" id="story-product-sel" style="margin-bottom:12px"><option value="">Sin producto destacado</option></select>
-    <label for="story-duration">Duracion de reproduccion</label><select id="story-duration" class="af-inp"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select>
+    <label for="story-duration">Duración de reproducción</label><select id="story-duration" class="af-inp"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select>
     <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px">La historia dura 24 horas · JPG, PNG, MP4</div>
     <button id="story-publish-btn" onclick="publishStory()" class="af-btn"><span>📤 Publicar historia</span></button>
   </div>
@@ -1121,18 +1121,18 @@ button,select,input{font-family:inherit}
 <div id="live-start-modal" onclick="if(event.target===this)closeLiveModal()">
   <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Preparar PULSO">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:800;color:var(--t)"><span class="pulso-mark" aria-hidden="true"></span> Iniciar PULSO</div><button onclick="closeLiveModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button></div>
-    <p class="live-explainer">Prepara tu vidriera, proba la camara y despues inicia. Solo se muestran productos de tu tienda.</p>
-    <label for="live-title-inp">Titulo de tu PULSO</label>
+    <p class="live-explainer">Prepará tu vidriera, probá la cámara y después iniciá. Solo se muestran productos de tu tienda.</p>
+    <label for="live-title-inp">Título de tu PULSO</label>
     <input type="text" class="af-inp" id="live-title-inp" maxlength="100" placeholder="Ej: Novedades de mi tienda">
-    <label for="live-setup-camera">Camara para transmitir</label>
+    <label for="live-setup-camera">Cámara para transmitir</label>
     <select id="live-setup-camera" class="af-inp" onchange="LiveShopping.setCamera(this.value)"><option value="user">Frontal</option><option value="environment">Trasera</option></select>
     <div id="live-preview" class="live-preview"></div>
-    <p id="live-setup-camera-info" class="live-setup-status" role="status">Sostene el celular vertical antes de probar la camara.</p>
-    <button id="live-preview-btn" class="af-btn sec" onclick="LiveShopping.preview()">Probar camara y microfono</button>
+    <p id="live-setup-camera-info" class="live-setup-status" role="status">Sostené el celular vertical antes de probar la cámara.</p>
+    <button id="live-preview-btn" class="af-btn sec" onclick="LiveShopping.preview()">Probar cámara y micrófono</button>
     <p id="live-setup-status" class="live-setup-status" role="status"></p>
     <strong>Productos de PULSO (hasta 12)</strong>
     <div id="live-product-picker" class="live-product-picker"></div>
-    <p class="live-setup-status">Piloto de hasta 10 personas por sala. Sin grabacion ni cobros reales.</p>
+    <p class="live-setup-status">Piloto de hasta 10 personas por sala. Sin grabación ni cobros reales.</p>
     <button id="live-start-btn" class="af-btn" onclick="startLiveSession()" disabled>Iniciar PULSO</button>
     <button onclick="closeLiveModal()" class="af-btn sec">Cancelar</button>
   </div>
@@ -1448,8 +1448,8 @@ button,select,input{font-family:inherit}
 <!-- ── LIVE ── -->
 <div class="pg" id="pg-live">
   <section id="live-directory" class="live-directory">
-    <h1>Descubri tu proxima compra en PULSO.</h1>
-    <p class="live-explainer">Mira al vendedor, pregunta en el chat y conoce los productos sin salir del video. Conectate a los PULSOS del piloto.</p>
+    <h1>Descubrí tu próxima compra en PULSO.</h1>
+    <p class="live-explainer">Mirá al vendedor, preguntá en el chat y conocé los productos sin salir del video. Conectate a los PULSOS del piloto.</p>
     <button class="btn-p btn-pri" onclick="openLiveModal()">Preparar mi PULSO</button>
     <div id="live-room-list" class="live-room-list"></div>
   </section>
@@ -1473,7 +1473,7 @@ button,select,input{font-family:inherit}
       <nav class="live-feed-nav" aria-label="Cambiar de PULSO"><button type="button" onclick="LiveShopping.nextRoom(-1)" aria-label="PULSO anterior">↑</button><button type="button" onclick="LiveShopping.nextRoom(1)" aria-label="Siguiente PULSO">↓</button></nav>
       <section id="live-settings" class="live-settings" hidden aria-label="Panel del vendedor">
         <div class="live-settings-heading"><strong>Panel del vendedor</strong><button type="button" onclick="LiveShopping.toggleSettings()" aria-label="Cerrar ajustes">&#215;</button></div>
-        <label for="live-camera">Camara para transmitir</label>
+        <label for="live-camera">Cámara para transmitir</label>
         <select id="live-camera" onchange="LiveShopping.setCamera(this.value)"><option value="user">Frontal</option><option value="environment">Trasera</option></select>
         <p id="live-camera-info" role="status">Midiendo la imagen recibida de la camara...</p>
         <label for="live-quality">Calidad de emision</label>
@@ -1484,7 +1484,7 @@ button,select,input{font-family:inherit}
         <input id="live-beauty" type="range" min="0" max="60" step="10" value="0" onchange="LiveShopping.setBeauty(this.value)">
         <p>Se aplica al video enviado. Suavizado de toda la imagen, sin reconocimiento facial. Puede cambiar colores y texturas de los productos. Calidad limitada por tu camara y conexion.</p>
         <p>Si tu navegador necesita el modo compatible, los filtros de color se procesan hasta 480p y 15 fps para cuidar el dispositivo.</p>
-        <p>PULSO usa un marco vertical 9:16 y conserva la imagen completa, sin zoom agregado. Sostene el celular vertical. Si la camara solo entrega otro formato, se muestran bandas para no recortar ni deformar. En PC puede no haber camara trasera.</p>
+        <p>PULSO usa un marco vertical 9:16 y conserva la imagen completa, sin zoom agregado. Sostené el celular vertical. Si la cámara solo entrega otro formato, se muestran bandas para no recortar ni deformar. En PC puede no haber cámara trasera.</p>
         <button type="button" onclick="LiveShopping.fullscreen()">Pantalla completa</button>
         <strong>Productos de PULSO</strong>
         <div id="live-product-controls" class="live-product-controls"></div>
@@ -1515,7 +1515,7 @@ button,select,input{font-family:inherit}
       <div class="pty on" data-pub="product" onclick="setPubType(this)"><div class="pty-ic">🏷️</div><div class="pty-nm">Producto</div><div class="pty-sub">Para vender</div></div>
       <div class="pty" data-pub="post" onclick="setPubType(this)"><div class="pty-ic">📸</div><div class="pty-nm">Post</div><div class="pty-sub">Contenido</div></div>
       <div class="pty" data-pub="story" onclick="setPubType(this)"><div class="pty-ic">⭕</div><div class="pty-nm">Historia</div><div class="pty-sub">24 horas</div></div>
-      <div class="pty" onclick="nav('live')"><div class="pty-ic"><span class="pulso-mark" aria-hidden="true"></span></div><div class="pty-nm">PULSO</div><div class="pty-sub">Conecta y vende</div></div>
+      <div class="pty" onclick="nav('live')"><div class="pty-ic"><span class="pulso-mark" aria-hidden="true"></span></div><div class="pty-nm">PULSO</div><div class="pty-sub">Conectá y vendé</div></div>
     </div>
     <div class="pub-form-card" id="pub-panel-product">
       <input type="file" id="pub-media-inp" accept="image/*" multiple style="display:none" onchange="handleProductMedia(this)">
@@ -1540,7 +1540,7 @@ button,select,input{font-family:inherit}
         <div class="fg"><label>Stock</label><input class="fi" id="pub-stock" type="number" value="1" min="0"></div>
         <div class="fg"><label>Condición</label><select class="fi" id="pub-condition"><option>Nuevo</option><option>Usado</option><option>Reacondicionado</option></select></div>
       </div>
-      <div class="fg"><label>Moneda de venta</label><select class="fi" id="pub-currency"><option value="UYU">Pesos uruguayos (UYU)</option><option value="ARS">Pesos argentinos (ARS)</option><option value="USD">Dolares (USD)</option><option value="BRL">Reales (BRL)</option><option value="CLP">Pesos chilenos (CLP)</option><option value="EUR">Euros (EUR)</option></select></div>
+      <div class="fg"><label>Moneda de venta</label><select class="fi" id="pub-currency"><option value="UYU">Pesos uruguayos (UYU)</option><option value="ARS">Pesos argentinos (ARS)</option><option value="USD">Dólares (USD)</option><option value="BRL">Reales (BRL)</option><option value="CLP">Pesos chilenos (CLP)</option><option value="EUR">Euros (EUR)</option></select></div>
       <div class="fg"><label>Descripción</label><textarea class="fi" id="pub-desc" rows="3" style="resize:none" placeholder="Describí tu producto..."></textarea></div>
       <div class="fg2">
         <div class="fg"><label>Colores</label><input class="fi" id="pub-colors" placeholder="Ej: Negro, Blanco, Azul"></div>
@@ -1589,7 +1589,7 @@ button,select,input{font-family:inherit}
       </div>
       <div class="fg"><label>Texto opcional</label><input class="fi" id="pub-story-caption" placeholder="Ej: Nuevo ingreso, últimas unidades"></div>
       <div class="fg"><label>Producto destacado (opcional)</label><select class="fi" id="pub-story-product"><option value="">Sin producto</option></select></div>
-      <div class="fg"><label for="pub-story-duration">Duracion de reproduccion</label><select class="fi" id="pub-story-duration"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select></div>
+      <div class="fg"><label for="pub-story-duration">Duración de reproducción</label><select class="fi" id="pub-story-duration"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select></div>
       <button class="pub-btn" id="pub-story-submit-btn" onclick="publishStory()">⭕ Publicar historia</button>
     </div>
   </div></div>
