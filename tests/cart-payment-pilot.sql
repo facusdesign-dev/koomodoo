@@ -28,6 +28,26 @@ begin
  perform set_config('request.jwt.claim.sub',s::text,true);
  select coalesce(jsonb_agg(to_jsonb(x) order by currency),'[]') into new_metrics from public.my_shop_metrics() x;
  if old_metrics<>new_metrics then raise exception 'Test affected revenue';end if;
+ -- Reject, cancel instead of retrying, then reopen the old payment link.
+ set constraints mp_bind_test_cart deferred;
+ perform set_config('request.jwt.claim.sub',b::text,true);
+ o:=(public.reserve_order(jsonb_build_array(jsonb_build_object('variant_id',v,'quantity',1)),gen_random_uuid())->>'id')::uuid;
+ set constraints mp_bind_test_cart immediate;
+ a:=(public.claim_mp_test_attempt(o,null)->>'attempt')::uuid;
+ if not public.finish_mp_test_attempt(o,a,'rejected','124')
+    or not exists(select from public.product_variants where id=v and total_stock=3 and reserved_stock=1)
+    then raise exception 'Rejected payment must preserve physical inventory and reservation'; end if;
+ perform public.cancel_order(o);
+ begin
+   perform public.claim_mp_test_attempt(o,a);
+   raise exception 'Cancelled checkout accepted retry';
+ exception when raise_exception then
+   if sqlerrm <> 'La reserva no está vigente' then raise; end if;
+ end;
+ if not exists(select from public.orders where id=o and status='cancelled')
+    or exists(select from private.order_payment_receipts where order_id=o)
+    or not exists(select from public.product_variants where id=v and stock=3 and reserved_stock=0 and total_stock=3)
+    then raise exception 'Cancellation must release stock without a receipt'; end if;
  -- Approval arriving after cancellation must be visible as a review, never a sale.
  set constraints mp_bind_test_cart deferred;
  perform set_config('request.jwt.claim.sub',b::text,true);
