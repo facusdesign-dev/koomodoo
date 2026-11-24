@@ -20,6 +20,12 @@ test('confirmed refusal offers retry or cancel; uncertainty and closure never ex
   await element('#retry').onclick();
   assert.equal(element('#card').hidden,false);
   await element('#cancel').onclick();
+  assert.equal(calls.length,0);
+  assert.equal(element('#cancel').textContent,'Confirmar cancelación');
+  await element('#retry').onclick();
+  assert.equal(calls.length,0);
+  await element('#cancel').onclick();
+  await element('#cancel').onclick();
   assert.deepEqual(calls,[['cancel_order','qa']]);
   for (state of ['closed','processing','closed_pending','review','approved','unknown']){
     await tick(); await new Promise(resolve=>setImmediate(resolve));

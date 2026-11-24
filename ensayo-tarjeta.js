@@ -7,9 +7,13 @@ const actions=document.querySelector('#rejection-actions');
 messages.closed_pending='La reserva terminó y el pago sigue sin confirmar. No vuelvas a pagar. No hay entrega autorizada.';
 messages.rejected='Pago rechazado. Podés reintentar mientras la reserva siga vigente o cancelar el pedido.';
 let retryAttempt=null;
-document.querySelector('#retry').onclick=async()=>{if(!working){retryAttempt=previous;await refresh();}};
+let cancelAttempt=null;
+const cancelButton=document.querySelector('#cancel'),retryButton=document.querySelector('#retry');
+retryButton.onclick=async()=>{if(!working){retryAttempt=cancelAttempt?null:previous;cancelAttempt=null;await refresh();}};
 document.querySelector('#cancel').onclick=async()=>{
-  if(working||!cartOrder||!previous||!confirm('¿Cancelar este pedido y liberar la unidad reservada?'))return;
+  if(working||!cartOrder||!previous)return;
+  if(cancelAttempt!==previous){cancelAttempt=previous;retryAttempt=null;await refresh();return;}
+  cancelAttempt=null;
   working=true;actions.hidden=true;card.hidden=true;
   try{const {error}=await sb.rpc('cancel_order',{p_order:cartOrder});if(error)throw error;}
   catch{status.textContent='No se pudo confirmar la cancelación. Consultá el estado antes de volver a intentar.';}
@@ -28,6 +32,10 @@ async function refresh(){
     status.textContent=data.state==='closed'?'La reserva terminó. No se puede pagar.':messages[data.state]||messages.unknown;
     if(Number.isFinite(data.amount))document.querySelector('#order-total').textContent=new Intl.NumberFormat('es-UY',{style:'currency',currency:'UYU'}).format(data.amount)+' · Sin entrega';
     actions.hidden=!(cartOrder && data.state==='rejected' && data.previous);
+    if(actions.hidden||cancelAttempt!==data.previous)cancelAttempt=null;
+    cancelButton.textContent=cancelAttempt?'Confirmar cancelación':'Cancelar pedido y liberar stock';
+    retryButton.textContent=cancelAttempt?'Conservar pedido':'Reintentar pago';
+    if(cancelAttempt)status.textContent='¿Querés cancelar este pedido y liberar la unidad reservada?';
     const open=data.state==='ready'||(data.state==='rejected' && (!cartOrder||retryAttempt===data.previous));
     previous=data.previous;
     card.hidden=!open;
