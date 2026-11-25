@@ -3,7 +3,7 @@ window.Catalog = (() => {
   const color=field('color','Color','Negro, Blanco, Azul'),size=field('size','Talle / tamano','S, M, L'),material=field('material','Material','Algodon, Cuero, Acero');
   const families={
     apparel:{axes:[color,size],details:[material,field('brand','Marca'),field('fit','Calce'),field('gender','Publico / genero')]},
-    shoes:{axes:[color,field('size','Numero de calzado','35, 36, 37')],details:[material,field('brand','Marca'),field('sole','Tipo de suela')]},
+    shoes:{axes:[color,field('size','Número de calzado','35, 36, 37')],details:[material,field('brand','Marca'),field('sole','Tipo de suela')]},
     bags:{axes:[color,field('dimensions','Medidas / capacidad')],details:[material,field('brand','Marca'),field('closure','Tipo de cierre'),field('pockets','Bolsillos')]},
     phone:{axes:[color,field('capacity','Almacenamiento','128 GB, 256 GB')],details:[field('brand','Marca'),field('model','Modelo'),field('ram','Memoria RAM'),field('network','Red / conectividad'),field('warranty','Garantia')]},
     computer:{axes:[field('capacity','Disco / almacenamiento','512 GB, 1 TB'),field('ram','RAM','8 GB, 16 GB')],details:[field('brand','Marca'),field('model','Modelo'),field('processor','Procesador'),field('screen','Pantalla'),field('os','Sistema operativo'),field('warranty','Garantia')]},
@@ -21,7 +21,7 @@ window.Catalog = (() => {
     food:{axes:[field('flavor','Sabor / variedad'),field('weight','Peso / presentacion')],details:[field('brand','Marca / productor'),field('ingredients','Ingredientes / alergenos'),field('expiry','Vencimiento / lote'),field('storage','Conservacion')]},
     tools:{axes:[field('measure','Medida / potencia'),field('kit','Presentacion / kit')],details:[field('brand','Marca'),field('model','Modelo'),field('power','Alimentacion'),material,field('warranty','Garantia')]},
     vehicle:{axes:[color,field('model','Version')],details:[field('brand','Marca'),field('year','Ano'),field('mileage','Kilometraje'),field('fuel','Combustible'),field('transmission','Transmision')]},
-    parts:{axes:[field('compatibility','Compatibilidad'),field('measure','Medida')],details:[field('brand','Marca'),field('code','Numero de pieza / OEM'),field('vehicle','Vehiculo compatible'),material]},
+    parts:{axes:[field('compatibility','Compatibilidad'),field('measure','Medida')],details:[field('brand','Marca'),field('code','Número de pieza / OEM'),field('vehicle','Vehículo compatible'),material]},
     books:{axes:[field('format','Formato','Papel, Tapa dura'),field('language','Idioma')],details:[field('author','Autor'),field('publisher','Editorial'),field('isbn','ISBN'),field('year','Ano de edicion')]},
     toys:{axes:[color,field('version','Modelo / version')],details:[field('brand','Marca'),field('age','Edad recomendada'),material,field('safety','Advertencias de seguridad')]},
     garden:{axes:[field('size','Tamano / medida'),field('variety','Variedad')],details:[field('brand','Marca / productor'),material,field('care','Cuidados'),field('use','Uso')]},
@@ -39,8 +39,8 @@ window.Catalog = (() => {
     ['mascotas','Mascotas',[['alimentos','Alimentos','petfood'],['collares','Collares y correas','pets'],['camas','Camas y transportadoras','pets'],['juguetes','Juguetes y accesorios','pets'],['higiene','Higiene y cuidado','pets']]],
     ['alimentos','Alimentos y bebidas',[['almacen','Almacen','food'],['bebidas','Bebidas sin alcohol','food'],['cafe','Cafe, te e infusiones','food'],['reposteria','Panaderia y reposteria','food'],['frescos','Productos frescos','food']]],
     ['herramientas','Herramientas y construccion',[['electricas','Herramientas electricas','tools'],['manuales','Herramientas manuales','tools'],['materiales','Materiales de construccion','tools'],['seguridad','Seguridad y proteccion','apparel']]],
-    ['vehiculos','Vehiculos',[['autos','Autos','vehicle'],['motos','Motos','vehicle'],['utilitarios','Utilitarios','vehicle']]],
-    ['repuestos','Repuestos y accesorios',[['automotor','Repuestos automotores','parts'],['motos','Repuestos para motos','parts'],['neumaticos','Neumaticos y ruedas','parts'],['accesorios','Accesorios para vehiculos','parts']]],
+    ['vehiculos','Vehículos',[['autos','Autos','vehicle'],['motos','Motos','vehicle'],['utilitarios','Utilitarios','vehicle']]],
+    ['repuestos','Repuestos y accesorios',[['automotor','Repuestos automotores','parts'],['motos','Repuestos para motos','parts'],['neumaticos','Neumaticos y ruedas','parts'],['accesorios','Accesorios para vehículos','parts']]],
     ['bebes','Bebes y maternidad',[['ropa','Ropa y calzado','apparel'],['paseo','Paseo y transporte','general'],['alimentacion','Alimentacion','kitchen'],['cuidado','Higiene y cuidado','beauty']]],
     ['juguetes','Juguetes y juegos',[['didacticos','Didacticos','toys'],['mesa','Juegos de mesa','toys'],['figuras','Figuras y munecos','toys'],['exterior','Juegos de exterior','toys']]],
     ['libros','Libros y papeleria',[['libros','Libros','books'],['escolar','Escolar y oficina','general'],['arte','Arte y manualidades','general']]],
@@ -59,8 +59,8 @@ window.Catalog = (() => {
   function axes(box,root,leaf){return config(root,leaf).axes.map(spec=>({...spec,values:[...new Set((values(box)[spec.key]||'').split(',').map(s=>s.trim()).filter(Boolean))]})).filter(axis=>axis.values.length);}
   function combinations(list,price,stock=0){
     let rows=[{label:'',attributes:{},price:Number(price),stock:Number(stock)}];
-    for(const axis of list){if(rows.length*axis.values.length>100)throw new Error('Maximo 100 combinaciones por publicacion.');rows=rows.flatMap(row=>axis.values.map(value=>({...row,label:[row.label,value].filter(Boolean).join(' / '),attributes:{...row.attributes,[axis.key]:value}})));}
-    if(rows.some(row=>row.label.length>180))throw new Error('Acorta los nombres de las variantes: maximo 180 caracteres por combinacion.');
+    for(const axis of list){if(rows.length*axis.values.length>100)throw new Error('Máximo 100 combinaciones por publicación.');rows=rows.flatMap(row=>axis.values.map(value=>({...row,label:[row.label,value].filter(Boolean).join(' / '),attributes:{...row.attributes,[axis.key]:value}})));}
+    if(rows.some(row=>row.label.length>180))throw new Error('Acortá los nombres de las variantes: máximo 180 caracteres por combinación.');
     return rows.map(row=>({...row,label:row.label||'Unica'}));
   }
   function options(select,list,value){select.replaceChildren();for(const item of list){const option=document.createElement('option');option.value=item.id;option.textContent=item.name;select.append(option);}if(list.some(item=>item.id===value))select.value=value;}

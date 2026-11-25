@@ -8,21 +8,21 @@ window.ProductEditor = (() => {
   async function open(id){
     document.getElementById('commerce-detail')?.remove();document.getElementById('publication-editor')?.remove();
     const overlay=document.createElement('div');overlay.id='publication-editor';overlay.className='community-overlay';
-    const panel=document.createElement('section');panel.className='publication-editor';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','Editar publicacion completa');
-    const title=document.createElement('h2');title.textContent='Editar publicacion';panel.append(title);
+    const panel=document.createElement('section');panel.className='publication-editor';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','Editar publicación completa');
+    const title=document.createElement('h2');title.textContent='Editar publicación';panel.append(title);
     let saving=false,photos=[];
     const close=()=>{if(saving)return;for(const photo of photos)if(photo.file)URL.revokeObjectURL(photo.url);overlay.remove();};
     action('Cerrar',close,panel);overlay.onclick=event=>{if(event.target===overlay)close();};overlay.append(panel);document.body.append(overlay);
-    const status=document.createElement('p');status.setAttribute('role','status');status.textContent='Cargando publicacion...';panel.append(status);
+    const status=document.createElement('p');status.setAttribute('role','status');status.textContent='Cargando publicación...';panel.append(status);
     try{
       const {product,variants:original}=await CommerceModule.getProductDetails(id);
       if(!overlay.isConnected)return;
       if(product.user_id!==KMD.session?.user?.id)throw new Error('Solo el propietario puede editar.');
       status.textContent='Los pedidos anteriores conservan sus datos. No se eliminan variantes con pedidos o reservas.';
       const form=document.createElement('form');form.className='publication-form';panel.append(form);
-      const name=field(form,'Titulo',product.title);name.required=true;name.minLength=3;name.maxLength=120;
-      const description=field(form,'Descripcion',product.description,'textarea');description.maxLength=4000;description.rows=4;
-      const root=field(form,'Categoria',product.category,'select');Catalog.options(root,Catalog.categories,product.category);
+      const name=field(form,'Título',product.title);name.required=true;name.minLength=3;name.maxLength=120;
+      const description=field(form,'Descripción',product.description,'textarea');description.maxLength=4000;description.rows=4;
+      const root=field(form,'Categoría',product.category,'select');Catalog.options(root,Catalog.categories,product.category);
       const sub=field(form,'Tipo de producto',null,'select');
       const condition=field(form,'Condicion',product.condition,'select');Catalog.options(condition,['Nuevo','Usado','Reacondicionado'].map(id=>({id,name:id})),product.condition);
       const currency=field(form,'Moneda',product.currency,'select');Catalog.options(currency,['UYU','ARS','USD','BRL','CLP','EUR'].map(id=>({id,name:id})),product.currency);
@@ -45,13 +45,13 @@ window.ProductEditor = (() => {
         action('Quitar',()=>{const removed=photos.splice(index,1)[0];if(removed.file)URL.revokeObjectURL(removed.url);drawPhotos();},card);gallery.append(card);
       });}drawPhotos();
       const files=field(form,'Agregar fotos',null,'file');files.accept='image/jpeg,image/png,image/webp';files.multiple=true;
-      files.onchange=()=>{for(const file of files.files){if(photos.length>=8){status.textContent='Maximo 8 fotos.';break;}if(!formats[file.type]||file.size>10485760){status.textContent='Usa JPG, PNG o WEBP de hasta 10 MB por foto.';continue;}photos.push({file,url:URL.createObjectURL(file)});}files.value='';drawPhotos();};
+      files.onchange=()=>{for(const file of files.files){if(photos.length>=8){status.textContent='Máximo 8 fotos.';break;}if(!formats[file.type]||file.size>10485760){status.textContent='Usá JPG, PNG o WEBP de hasta 10 MB por foto.';continue;}photos.push({file,url:URL.createObjectURL(file)});}files.value='';drawPhotos();};
       const base=field(form,'Precio base para nuevas variantes',product.price,'number');base.min='0.01';base.step='0.01';
       let rows=original.map(row=>({...row,attributes:{...row.attributes}}));
       const list=document.createElement('div');list.className='editor-variants';
       function drawVariants(){list.replaceChildren();rows.forEach((row,index)=>{
         const box=document.createElement('fieldset');const legend=document.createElement('legend');legend.textContent=`Variante ${index+1}`;box.append(legend);
-        for(const [key,label,type] of [['label','Nombre / combinacion','text'],['sku','SKU / codigo','text'],['price','Precio','number'],['stock','Stock disponible','number']]){
+        for(const [key,label,type] of [['label','Nombre / combinación','text'],['sku','SKU / código','text'],['price','Precio','number'],['stock','Stock disponible','number']]){
           const el=field(box,label,row[key],type);el.required=key!=='sku';if(type==='number'){el.min=key==='price'?'0.01':'0';el.step=key==='price'?'0.01':'1';}el.oninput=()=>{row[key]=type==='number'?Number(el.value):el.value;};
         }
         for(const axis of Catalog.config(root.value,sub.value).axes){
@@ -60,13 +60,13 @@ window.ProductEditor = (() => {
         }
         action('Quitar variante',()=>{rows.splice(index,1);drawVariants();},box);list.append(box);
       });}drawVariants();
-      action('Generar combinaciones de esta categoria',()=>{try{
+      action('Generar combinaciones de esta categoría',()=>{try{
         const current=new Map(rows.map(row=>[row.label,row]));
         rows=Catalog.combinations(Catalog.axes(axes,root.value,sub.value),base.value,0).map(row=>current.get(row.label)||original.find(old=>old.label===row.label)||row);drawVariants();
       }catch(error){status.textContent=error.message;}},form);
-      action('Agregar variante manual',()=>{if(rows.length>=100){status.textContent='Maximo 100 variantes.';return;}rows.push({label:`Variante ${rows.length+1}`,price:Number(base.value),stock:0,attributes:{}});drawVariants();},form);
+      action('Agregar variante manual',()=>{if(rows.length>=100){status.textContent='Máximo 100 variantes.';return;}rows.push({label:`Variante ${rows.length+1}`,price:Number(base.value),stock:0,attributes:{}});drawVariants();},form);
       action('Aplicar precio base a todas',()=>{rows.forEach(row=>{row.price=Number(base.value);});drawVariants();},form);form.append(list);
-      const save=document.createElement('button');save.type='submit';save.className='pub-btn';save.textContent='Guardar publicacion completa';form.append(save);
+      const save=document.createElement('button');save.type='submit';save.className='pub-btn';save.textContent='Guardar publicación completa';form.append(save);
       form.onsubmit=async event=>{
         event.preventDefault();if(saving||!form.reportValidity())return;
         if(!photos.length||!rows.length){status.textContent='Carga al menos una foto y una variante.';return;}
@@ -84,10 +84,10 @@ window.ProductEditor = (() => {
           await CommerceModule.savePublication(product,{title:name.value.trim(),description:description.value,category:root.value,currency:currency.value,condition:condition.value,media_urls:urls,variants:{...product.variants,subcategory:sub.value,categoryPath:[Catalog.config(root.value,sub.value).category.name,Catalog.config(root.value,sub.value).sub.name],details:Catalog.values(details),axisValues:Catalog.values(axes)}},rows,removed);
           committed=true;
           try{await CommerceUI.refreshCatalog();if(currentPage==='perfil')setPTab(0);else if(currentPage==='marketplace')renderProdGrid();else if(currentPage==='home')renderHome();}catch(error){console.error('[KMD edit refresh]',error);}
-          saving=false;close();toast('Publicacion actualizada con fotos, detalles y variantes.');
+          saving=false;close();toast('Publicación actualizada con fotos, detalles y variantes.');
         }catch(error){console.error('[KMD full edit]',error);status.textContent=error.message||'No pudimos guardar los cambios.';
           if(!committed&&uploaded.length)await getSB().storage.from('product-media').remove(uploaded).catch(console.error);
-        }finally{saving=false;save.textContent='Guardar publicacion completa';for(const control of form.querySelectorAll('input,textarea,select,button'))control.disabled=false;}
+        }finally{saving=false;save.textContent='Guardar publicación completa';for(const control of form.querySelectorAll('input,textarea,select,button'))control.disabled=false;}
       };
     }catch(error){status.textContent=error.message;console.error('[KMD editor]',error);}
   }

@@ -31,11 +31,11 @@ window.LiveVideoEffects = (() => {
         video.removeEventListener?.('loadeddata', loaded);
         if (error) reject(error); else resolve();
       };
-      timer = setTimeout(() => finish(new Error('No se recibio una imagen de la camara.')), timeout);
+      timer = setTimeout(() => finish(new Error('No se recibió una imagen de la cámara.')), timeout);
       if (video.requestVideoFrameCallback) frameId = video.requestVideoFrameCallback(() => finish());
       else { video.addEventListener?.('loadeddata', loaded); loaded(); }
     });
-    return { promise, cancel: () => finish(new Error('Se cancelo el ajuste de camara.')) };
+    return { promise, cancel: () => finish(new Error('Se canceló el ajuste de cámara.')) };
   }
   function paintedFrameSize(video, probe) {
     const reported = { width: video.videoWidth, height: video.videoHeight };
@@ -105,22 +105,22 @@ window.LiveVideoEffects = (() => {
         await processor.destroy();
         const version = ++serial; stopped = false;
         await configureCameraSource(track);
-        if (version !== serial || stopped) throw new Error('Se cancelo el ajuste.');
+        if (version !== serial || stopped) throw new Error('Se canceló el ajuste.');
         video = document.createElement('video'); video.muted = true; video.defaultMuted = true; video.volume = 0; video.playsInline = true;
         video.style.cssText = 'position:fixed;left:-10000px;width:2px;height:2px;pointer-events:none';
         video.srcObject = new MediaStream([track]); document.body.append(video);
         canvas = document.createElement('canvas'); small = document.createElement('canvas'); probe = document.createElement('canvas');
         const context = canvas.getContext('2d', { alpha: false }), soft = small.getContext('2d', { alpha: false });
         if (!canvas.captureStream || !context || !soft) {
-          await processor.destroy(); throw new Error('Este dispositivo no permite procesar la pista de video. PULSO puede continuar con la camara original.');
+          await processor.destroy(); throw new Error('Este dispositivo no permite procesar la pista de video. PULSO puede continuar con la cámara original.');
         }
         nativeFilter = !forceCompatibility && typeof context.filter === 'string';
         try {
           await video.play();
-          if (version !== serial || stopped) throw new Error('Se cancelo el ajuste.');
+          if (version !== serial || stopped) throw new Error('Se canceló el ajuste.');
           const first = firstCameraFrame(video); cancelFrameWait = first.cancel;
           await first.promise; cancelFrameWait = null;
-          if (version !== serial || stopped) throw new Error('Se cancelo el ajuste.');
+          if (version !== serial || stopped) throw new Error('Se canceló el ajuste.');
           let lastDraw = -Infinity;
           let source = null, sourceKey = '', dirty = true;
           video.addEventListener?.('resize', () => { dirty = true; });

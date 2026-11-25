@@ -47,7 +47,7 @@ window.CommunityUI = (() => {
       for(const person of result.people)box.append(row(person));
       offset+=result.people.length;more.hidden=!result.hasMore;
       if(!offset)box.textContent='Todavia no hay perfiles en esta lista.';
-    }catch(error){if(token===version)box.textContent='No se pudo cargar la lista. Cerra y volve a intentar.';console.error('[KMD connections]',error);}
+    }catch(error){if(token===version)box.textContent='No se pudo cargar la lista. Cerrá y volvé a intentar.';console.error('[KMD connections]',error);}
     finally{if(pending===token)pending=false;if(token===version)more.disabled=false;}
   }
   function openConnections(id,kind='followers') { dialog(kind==='followers'?'Seguidores':'Siguiendo');modalKind=kind;profileId=id;offset=0;void loadConnections(); }
@@ -69,7 +69,7 @@ window.CommunityUI = (() => {
       if(!append)box.replaceChildren();
       for(const n of notifications)box.append(row({id:n.actorId,username:n.actorName,avatar_url:n.avatarUrl,following:n.following},n.type==='story_like'?'indicó que le gusta tu historia':'te comenzó a seguir'));
       offset+=notifications.length;more.hidden=notifications.length<50;more.onclick=()=>void loadNotifications(true);
-      if(!offset)box.textContent='Todavia no tenes notificaciones.';
+      if(!offset)box.textContent='Todavía no tenés notificaciones.';
       const unread=notifications.filter(n=>!n.read).map(n=>n.id);
       if(unread.length){const result=await getSB().from('notifications').update({read:true}).eq('user_id',id).in('id',unread);if(result.error)throw result.error;}
       await updateBadge();

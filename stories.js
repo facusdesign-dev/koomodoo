@@ -3,16 +3,16 @@ window.StoriesModule = (() => {
   const types = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp', 'image/gif':'gif', 'video/mp4':'mp4', 'video/webm':'webm', 'video/quicktime':'mov' };
   async function publishingUser() {
     const sb = getSB();
-    if (!sb) throw new Error('No pudimos conectar con Supabase. Intenta nuevamente.');
+    if (!sb) throw new Error('No pudimos conectar con Supabase. Intentá nuevamente.');
     const result = await sb.auth.getUser();
-    if (result.error || !result.data?.user) throw new Error('Tu sesion no esta activa. Inicia sesion nuevamente para publicar.');
-    if (result.data.user.id !== KMD.session?.user?.id) throw new Error('La cuenta activa cambio. Recarga la pagina antes de publicar.');
+    if (result.error || !result.data?.user) throw new Error('Tu sesión no está activa. Iniciá sesión nuevamente para publicar.');
+    if (result.data.user.id !== KMD.session?.user?.id) throw new Error('La cuenta activa cambió. Recargá la página antes de publicar.');
     return result.data.user;
   }
   async function getPublishableProducts() {
     const user = await publishingUser();
     const result = await getSB().from('products').select('id,title').eq('user_id',user.id).eq('status','published').order('created_at',{ascending:false}).limit(100);
-    if (result.error) throw new Error('No pudimos cargar tus productos. Intenta nuevamente.');
+    if (result.error) throw new Error('No pudimos cargar tus productos. Intentá nuevamente.');
     return result.data || [];
   }
   const urls=new Map();
@@ -51,16 +51,16 @@ window.StoriesModule = (() => {
     duration=Number(duration);if(!Number.isInteger(duration)||duration<15||duration>30)throw new Error('La duracion debe estar entre 15 y 30 segundos.');
     productId = productId ? String(productId).trim() : null;
     if (productId) {
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId)) throw new Error('El producto no es valido. Elegi uno de tu tienda o Sin producto.');
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(productId)) throw new Error('El producto no es válido. Elegí uno de tu tienda o Sin producto.');
       const product = await sb.from('products').select('id').eq('id',productId).eq('user_id',user.id).eq('status','published').maybeSingle();
-      if (product.error) throw new Error('No pudimos comprobar el producto. Intenta nuevamente.');
-      if (!product.data) throw new Error('Solo podes destacar productos propios y publicados. Elegi uno de tu tienda o Sin producto.');
+      if (product.error) throw new Error('No pudimos comprobar el producto. Intentá nuevamente.');
+      if (!product.data) throw new Error('Solo podés destacar productos propios y publicados. Elegí uno de tu tienda o Sin producto.');
     }
-    if (!/^data:(image|video)\//i.test(mediaUrl || '')) throw new Error('Selecciona una foto o video de tu dispositivo.');
+    if (!/^data:(image|video)\//i.test(mediaUrl || '')) throw new Error('Seleccioná una foto o video de tu dispositivo.');
     const blob = await (await fetch(mediaUrl)).blob();
     if (!types[blob.type] || blob.size > 10485760) throw new Error('Usa una foto o video compatible de hasta 10 MB.');
     caption = String(caption).trim();
-    if (caption.length > 500) throw new Error('La descripcion admite hasta 500 caracteres.');
+    if (caption.length > 500) throw new Error('La descripción admite hasta 500 caracteres.');
     const path = `stories/${user.id}/${crypto.randomUUID()}.${types[blob.type]}`;
     const upload = await sb.storage.from('story-media').upload(path, blob, { upsert:false, contentType:blob.type });
     if (upload.error) throw upload.error;
@@ -68,14 +68,14 @@ window.StoriesModule = (() => {
     if (result.error) {
       await sb.storage.from('story-media').remove([path]).catch(error => console.error('[KMD story cleanup]',error));
       console.error('[KMD story insert]', result.error);
-      if (result.error.code === '42501') throw new Error('No se autorizo la historia. Verifica tu sesion y que el producto siga publicado en tu cuenta, o elegi Sin producto.');
+      if (result.error.code === '42501') throw new Error('No se autorizó la historia. Verificá tu sesión y que el producto siga publicado en tu cuenta, o elegí Sin producto.');
       throw result.error;
     }
     // Publication is confirmed by the database, not by an in-memory preview.
     let rows;
     try { rows = await hydrate([result.data], true); }
     catch (error) {
-      const failure = new Error('La historia se guardo, pero no pudimos cargar su vista previa. Recarga la pagina para comprobarla.');
+      const failure = new Error('La historia se guardó, pero no pudimos cargar su vista previa. Recargá la página para comprobarla.');
       failure.published = true; console.error('[KMD story preview]', error); throw failure;
     }
     await refresh().catch(error => console.warn('[KMD story published, feed refresh pending]',error));
@@ -102,7 +102,7 @@ window.StoriesModule = (() => {
   async function remove(id){
     const user=await publishingUser(),sb=getSB();
     const result=await sb.from('stories').delete().eq('id',id).eq('user_id',user.id).select('id,media_url').maybeSingle();
-    if(result.error)throw result.error;if(!result.data)throw new Error('No podes eliminar esta historia o ya no esta disponible.');
+    if(result.error)throw result.error;if(!result.data)throw new Error('No podés eliminar esta historia o ya no está disponible.');
     try{const cleanup=await sb.storage.from('story-media').remove([result.data.media_url]);if(cleanup.error)console.warn('[KMD deleted story file cleanup]',cleanup.error);}
     catch(error){console.warn('[KMD deleted story file cleanup]',error);}
     await refresh().catch(console.error);return true;
@@ -125,7 +125,7 @@ window.StoriesModule = (() => {
     if(result.error&&result.error.code!=='23505')throw result.error;return liked;
   }
   async function comment(id,text){
-    const user=await publishingUser();text=String(text).trim();if(!text||text.length>500)throw new Error('Escribi un comentario de hasta 500 caracteres.');
+    const user=await publishingUser();text=String(text).trim();if(!text||text.length>500)throw new Error('Escribí un comentario de hasta 500 caracteres.');
     const result=await getSB().from('story_comments').insert({story_id:id,user_id:user.id,text});if(result.error)throw result.error;
   }
   return { list, publish, refresh, start, getPublishableProducts, remove, activity, like, comment };
