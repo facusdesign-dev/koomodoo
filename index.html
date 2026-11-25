@@ -2464,7 +2464,7 @@ function renderNotificationsPanel(){
     <div style="padding:10px 12px 6px;font-size:11px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Notificaciones</div>
     ${notificationsData.map(n=>`
       <div class="mt">
-        <div class="mt-av">${n.avatarUrl?`<img src="${escHtml(resolveAvatarDisplayUrl(n.avatarUrl))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`:n.actorAvatar||'👤'}</div>
+        <div class="mt-av">${n.avatarUrl?`<img src="${escHtml(resolveAvatarDisplayUrl(n.avatarUrl))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`:escHtml(n.actorAvatar||'👤')}</div>
         <div style="flex:1;min-width:0">
           <div class="mt-nm">${escHtml(n.actorName||'Usuario')}</div>
           <div class="mt-pr">${n.type==='story_like'?'indicó que le gusta tu historia':'te comenzó a seguir'}</div>
@@ -2492,7 +2492,7 @@ function renderMessages(){
     const nm=m.partnerName||seller.name||'Usuario';
     return `<div class="mt ${activeMsgId===m.id?'on':''}" onclick="openChat('${m.id}')">
       <div class="mt-av">${av}</div>
-      <div style="flex:1;min-width:0"><div class="mt-nm">${nm}</div><div class="mt-pr">${escHtml(m.preview||'')}</div></div>
+      <div style="flex:1;min-width:0"><div class="mt-nm">${escHtml(nm)}</div><div class="mt-pr">${escHtml(m.preview||'')}</div></div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="mt-tm">${m.time||''}</div>${m.unread?`<div class="mt-un">${m.unread}</div>`:''}</div>
     </div>`;}).join('')||`<div class="empty" style="padding:18px"><div class="empty-t">Sin mensajes aún</div><div class="empty-s">Las respuestas a historias y chats van a aparecer acá</div></div>`;
   updateBadges();
