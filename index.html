@@ -2955,7 +2955,8 @@ function setPTab(idx){
       tc.innerHTML=profileStories.length?profileStories.map(story=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="StoryViewer.open('${story.id}')"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid #fb7185">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${escHtml(story.caption||'Historia')}</div><div style="font-size:11px;color:var(--t3)">Disponible por 24 horas</div></div></div>`).join(''):`<div class="empty" style="padding:22px"><div class="empty-t">Sin historias activas</div><div class="empty-s">Este perfil no tiene historias visibles ahora mismo.</div></div>`;
     }
   }else if(idx===3){
-    tc.innerHTML='<div id="aff-panel"></div>';renderAffPanel();
+    // El programa de afiliados todavía no existe: el panel anterior era una maqueta con datos de ejemplo.
+    tc.innerHTML='<div class="empty" style="padding:22px"><div class="empty-t">Afiliados: próximamente</div><div class="empty-s">Todavía estamos preparando el programa de afiliados. Por ahora no hay comisiones ni ventas por referidos.</div></div>';
   }
 }
 
