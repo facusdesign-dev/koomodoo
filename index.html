@@ -2932,7 +2932,7 @@ function setPTab(idx){
         <div class="pgrid-inner">${prods.map(p=>buildProdCard(p)).join('')}</div>
       </div>`).join(''):`<div class="empty" style="padding:22px"><div class="empty-t">Sin productos aún</div><div class="empty-s">${isOwnTarget?'Publicá tu primer producto.':'Este perfil todavía no publicó productos.'}</div></div>`;
   }else if(idx===1){
-    const profilePosts=[...POSTS_STORE,...(isOwnTarget?getMockPosts():[])].filter(post=>(post.userId||post.user_id||'')===targetId || (isOwnTarget&&String(post.id||'').startsWith('mp')));
+    const profilePosts=POSTS_STORE.filter(post=>(post.userId||post.user_id||'')===targetId);
     if(isOwnTarget){
       tc.innerHTML=renderPostsTab();
       initPostTab();
@@ -4562,18 +4562,10 @@ async function submitPost(){
 
 function renderPostsFeed(){
   const feed=document.getElementById('posts-feed');if(!feed)return;
-  const allPosts=[...POSTS_STORE,...getMockPosts()];
+  const allPosts=[...POSTS_STORE];
   if(!allPosts.length){feed.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--t3)"><div style="font-size:36px;margin-bottom:10px">✍️</div><div style="font-size:14px;font-weight:700;color:var(--t2)">Sin posts aún</div></div>`;return;}
   feed.innerHTML=allPosts.map(p=>buildPostCard(p)).join('');
 }
-
-function getMockPosts(){
-  const u=KMD.user;const name=u?([u.firstName,u.lastName].filter(Boolean).join(' ')||'Carlos'):'Carlos';
-  const avType=u?.avatar_type||'emoji';const avValue=u?.avatar_value||u?.avatar||'🦁';
-  return[
-    {id:'mp1',authorName:name,authorAvatar:avValue,authorAvatarType:avType,authorHandle:'@'+(u?.username||'carlosm'),text:'¡Acabo de publicar nuevos productos en mi tienda! 🔥 Mirá las ofertas de esta semana.',imageUrl:'',videoUrl:'',likes:12,comments:[{user:'@sofia_uy',av:'🦊',text:'¡Me encantan! 😍'},{user:'@pedro_tech',av:'🐺',text:'¿Hacen envíos a Canelones?'}],timeAgo:'hace 2h'},
-    {id:'mp2',authorName:name,authorAvatar:avValue,authorAvatarType:avType,authorHandle:'@'+(u?.username||'carlosm'),text:'Nueva colección disponible 🛍️ Tecnología y moda al mejor precio en Uruguay.',imageUrl:'',videoUrl:'',likes:28,comments:[],timeAgo:'hace 1 día'},
-  ];}
 
 function buildPostCard(post){
   const isLiked=LIKED_POSTS.has(post.id);
@@ -4614,7 +4606,7 @@ function buildPostCard(post){
 
 function togglePostLike(postId,btn){
   if(!KMD.loggedIn){openAuthModal('login');return;}
-  const allPosts=[...POSTS_STORE,...getMockPosts()];const post=allPosts.find(p=>p.id===postId);if(!post)return;
+  const allPosts=[...POSTS_STORE];const post=allPosts.find(p=>p.id===postId);if(!post)return;
   if(LIKED_POSTS.has(postId)){LIKED_POSTS.delete(postId);post.likes=Math.max(0,post.likes-1);btn.classList.remove('liked');btn.innerHTML=`🤍 <span id="lc-${postId}">${post.likes}</span>`;}
   else{LIKED_POSTS.add(postId);post.likes++;btn.classList.add('liked');btn.innerHTML=`❤️ <span id="lc-${postId}">${post.likes}</span>`;}
   // In production: await getSB().from('likes').upsert({ post_id: postId, user_id: KMD.session.user.id })
@@ -4624,7 +4616,7 @@ function addComment(postId){
   if(!KMD.loggedIn){openAuthModal('login');return;}
   const inp=document.getElementById('cinp-'+postId);if(!inp)return;
   const text=inp.value.trim();if(!text)return;
-  const allPosts=[...POSTS_STORE,...getMockPosts()];const post=allPosts.find(p=>p.id===postId);if(!post)return;
+  const allPosts=[...POSTS_STORE];const post=allPosts.find(p=>p.id===postId);if(!post)return;
   const c={user:'@'+(KMD.user.username||KMD.user.email?.split('@')[0]),av:KMD.user?.avatar||'💬',text};
   post.comments.push(c);
   inp.value='';
