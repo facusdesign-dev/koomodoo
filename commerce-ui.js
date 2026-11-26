@@ -249,6 +249,10 @@ window.CommerceUI = (() => {
     if(!key&&new Set(cart.map(groupKey)).size!==1){toast('Elegí el pedido de un local.');return;}
     key=key||groupKey(cart[0]);const rows=cart.filter(row=>groupKey(row)===key);if(!rows.length)return;
     const signature=intentKey(rows);let intent=intents.get(signature);
+    if (intent && delivery != null) {
+      toast('Recuperá primero la reserva original antes de elegir otra entrega.');
+      return;
+    }
     checkingOut = true; renderCart();
     try {
       // Preserve the submitted intent after an uncertain network response. A retry

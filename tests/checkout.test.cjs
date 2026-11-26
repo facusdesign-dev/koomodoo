@@ -48,3 +48,23 @@ test('reservar una tienda no modifica las otras tiendas ni monedas',async()=>{
   await ctx.window.CommerceUI.checkout('seller:UYU');
   assert.equal(selected.length,1);assert.equal(selected[0].variant_id,'v');assert.equal(ctx.cart.length,2);
 });
+test('una respuesta perdida no confirma silenciosamente una entrega distinta', async () => {
+  const calls = [], notices = [];
+  const pickup = { id: 'p', mode: 'pickup' };
+  const shipping = { id: 's', mode: 'local', destination: 'Destino de prueba' };
+  const ctx = setup(async items => ({ items }), async (_items, key, delivery) => {
+    calls.push({ key, delivery });
+    if (calls.length === 1) throw new TypeError('Respuesta perdida');
+    return { id: 'pedido-original', status: 'pending_payment' };
+  });
+  ctx.toast = message => notices.push(message);
+  await ctx.window.CommerceUI.checkout('seller:UYU', pickup);
+  await ctx.window.CommerceUI.checkout('seller:UYU', shipping);
+  assert.equal(calls.length, 1);
+  assert.equal(ctx.cart.length, 1);
+  assert.match(notices.at(-1), /recuper/i);
+  await ctx.window.CommerceUI.checkout('seller:UYU');
+  assert.deepEqual(calls, [calls[0], calls[0]]);
+  assert.equal(calls[1].delivery.mode, 'pickup');
+  assert.equal(ctx.cart.length, 0);
+});

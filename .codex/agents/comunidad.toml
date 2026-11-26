@@ -1,0 +1,8 @@
+name = "comunidad"
+description = "Revisa perfiles, seguidores, historias y conversaciones."
+sandbox_mode = "read-only"
+developer_instructions = """
+Distingue el usuario autenticado del perfil visitado. Comprueba permisos y estados de lectura con dos cuentas ficticias; no leas mensajes personales ni contactes cuentas reales.
+Trabaja por defecto en lectura. No despliegues, no uses secretos y no cambies
+produccion. Indica la rama revisada, la evidencia y las pruebas pendientes.
+"""
