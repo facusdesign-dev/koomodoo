@@ -1,5 +1,13 @@
 window.CommerceUI = (() => {
-  const intents = new Map();
+  const receiptSlot = uid => 'koomodoo:pending-reservation:v1:' + uid;
+  function pendingIntent(uid) {
+    const raw = sessionStorage.getItem(receiptSlot(uid));
+    if (raw === null) return null;
+    const intent = JSON.parse(raw);
+    if (!intent?.key || !intent.group || !Array.isArray(intent.items) || !intent.items.length)
+      throw new Error('No pudimos leer la reserva anterior. Revisá Mis pedidos.');
+    return intent;
+  }
   const groupKey = row => row.sellerId+':'+row.currency;
   const intentKey = rows => JSON.stringify([KMD.session.user.id,groupKey(rows[0]),rows.map(r=>[r.variantId,r.qty,r.price])]);
   let checkingOut = false;
@@ -203,6 +211,22 @@ window.CommerceUI = (() => {
     const summary = document.getElementById('cart-summary');
     document.getElementById('cart-count').textContent = cart.length ? `(${cart.reduce((n, row) => n + row.qty, 0)} articulos)` : '';
     box.replaceChildren(); summary.replaceChildren();
+    let pending;
+    const uid = KMD.session?.user?.id;
+    try { pending = uid && pendingIntent(uid); }
+    catch (error) {
+      console.error('[KMD] recuperar reserva:', error);
+      summary.textContent = 'No podemos comprobar si hay una reserva pendiente. Revisá Mis pedidos antes de continuar.';
+      return;
+    }
+    if (pending) {
+      summary.textContent = 'Hay una reserva sin respuesta confirmada. Recuperá el intento original antes de crear otro pedido.';
+      const recover = document.createElement('button');
+      recover.className = 'ck-btn'; recover.textContent = 'Recuperar mi reserva'; recover.disabled = checkingOut;
+      recover.onclick = () => checkout(pending.group);
+      summary.append(recover);
+      return;
+    }
     if (!cart.length) { box.innerHTML = '<div class="empty"><div class="empty-t">Carrito vacío</div><div class="empty-s">Seleccioná un producto del marketplace.</div></div>'; return; }
     const groups=new Map(),labels=new Map();
     for (const item of cart) {
@@ -232,10 +256,7 @@ window.CommerceUI = (() => {
       const info=document.createElement('p'),btn=document.createElement('button');
       info.textContent='Subtotal de productos: '+money(rows.reduce((sum,r)=>sum+r.price*r.qty,0),rows[0].currency)+'. Entrega o retiro a coordinar con el local. Envío no incluido; su costo aún no está confirmado.';
       btn.className='ck-btn';btn.textContent='Reservar este pedido sin pagar';btn.disabled=checkingOut;btn.onclick=()=>checkout(key);section.append(info,btn);
-      if(!checkingOut && intents.has(intentKey(rows))){
-        info.textContent='Hay una reserva sin respuesta confirmada. Consultá el intento original antes de cambiar la entrega.';
-        btn.textContent='Recuperar mi reserva';
-      }else if(!checkingOut)void Delivery.choose(section,rows,info,btn,d=>checkout(key,d));
+      if(!checkingOut)void Delivery.choose(section,rows,info,btn,d=>checkout(key,d));
     }
     void (async()=>{
       try{const {data,error}=await getSB().from('public_profiles').select('id,username,first_name').in('id',[...labels.keys()]);if(error)throw error;
@@ -244,15 +265,22 @@ window.CommerceUI = (() => {
     })();
   }
   async function checkout(key,delivery=null) {
-    if (checkingOut || !cart.length) return;
-    if (!KMD.session?.user?.id) { openAuthModal('login'); return; }
-    if(!key&&new Set(cart.map(groupKey)).size!==1){toast('Elegí el pedido de un local.');return;}
-    key=key||groupKey(cart[0]);const rows=cart.filter(row=>groupKey(row)===key);if(!rows.length)return;
-    const signature=intentKey(rows);let intent=intents.get(signature);
-    if (intent && delivery != null) {
+    if (checkingOut) return;
+    const uid = KMD.session?.user?.id;
+    if (!uid) { openAuthModal('login'); return; }
+    let intent;
+    try { intent = pendingIntent(uid); }
+    catch (error) { console.error('[KMD] reserva pendiente:',error); toast('No podemos recuperar la reserva. Revisá Mis pedidos.'); return; }
+    const recovering = Boolean(intent);
+    if (intent && (delivery != null || (key && key !== intent.group))) {
       toast('Recuperá primero la reserva original antes de elegir otra entrega.');
       return;
     }
+    if (!intent && !cart.length) return;
+    if(!intent&&!key&&new Set(cart.map(groupKey)).size!==1){toast('Elegí el pedido de un local.');return;}
+    key=key||intent?.group||groupKey(cart[0]);
+    const rows=cart.filter(row=>groupKey(row)===key);
+    if (!intent && !rows.length) return;
     checkingOut = true; renderCart();
     try {
       // Preserve the submitted intent after an uncertain network response. A retry
@@ -263,19 +291,40 @@ window.CommerceUI = (() => {
         if (reviewed.priceChanged) {
           throw new Error('Un precio cambió. Actualizamos el carrito: revisá el nuevo total y confirma nuevamente. No se creo un pedido.');
         }
-        intent = { items: reviewed.items.map(row => ({ variant_id: row.variantId, quantity: row.qty, expected_unit_price: row.price })), key: crypto.randomUUID(),delivery };intents.set(signature,intent);
+        if (KMD.session?.user?.id !== uid) return;
+        intent = { group:key, signature:intentKey(reviewed.items), items: reviewed.items.map(row => ({ variant_id: row.variantId, quantity: row.qty, expected_unit_price: row.price })), key: crypto.randomUUID(),delivery };
+        // Persist before the request: even a refresh during the POST must reuse this key.
+        try { sessionStorage.setItem(receiptSlot(uid), JSON.stringify(intent)); }
+        catch { throw new Error('No pudimos guardar el intento en esta pestaña. No se envió el pedido.'); }
       }
-      const order = await CommerceModule.reserveOrder(intent.items, intent.key,intent.delivery);
-      if (order?.status === 'expired' || order?.status === 'cancelled' ||
-          (order?.expires_at && Date.parse(order.expires_at) <= Date.now())) {
-        intents.delete(signature);
-        throw new Error('La reserva anterior terminó. Revisá el stock e intentá crear un nuevo pedido.');
+      let order;
+      try {
+        order = await CommerceModule.reserveOrder(intent.items, intent.key,intent.delivery);
+      } catch (error) {
+        // A database refusal is distinct from a transport error. On recovery,
+        // check the original key before releasing it or suggesting a new order.
+        if (!/^(P0001|22[0-9A-Z]{3}|23[0-9A-Z]{3})$/.test(error?.code || '')) throw error;
+        if (KMD.session?.user?.id !== uid) return;
+        if (recovering) {
+          const result = await getSB().from('orders').select('id,status,expires_at')
+            .eq('buyer_id',uid).eq('idempotency_key',intent.key).maybeSingle();
+          if (result.error) throw result.error;
+          order = result.data;
+        }
+        if (!order) { sessionStorage.removeItem(receiptSlot(uid)); throw error; }
       }
-      if (!order?.id || order.status !== 'pending_payment') throw new Error('No se pudo confirmar el pedido pendiente de pago.');
-      cart=cart.filter(row=>groupKey(row)!==key);intents.delete(signature);updateBadges();nav('pedidos');
-      toast('Pedido creado. Reserva de 15 minutos, sin cobro.');
+      if (KMD.session?.user?.id !== uid) return;
+      if (order?.status === 'expired' || order?.status === 'cancelled') {
+        sessionStorage.removeItem(receiptSlot(uid));
+        nav('pedidos');
+        toast('La reserva anterior terminó. Consultá su estado en Mis pedidos.');
+        return;
+      }
+      if (!order?.id || !['paid','pending_payment'].includes(order.status)) throw new Error('No se pudo confirmar el estado del pedido.');
+      if (rows.length && intentKey(rows) === intent.signature) cart=cart.filter(row=>groupKey(row)!==key);
+      sessionStorage.removeItem(receiptSlot(uid));updateBadges();nav('pedidos');
+      toast(recovering ? 'Pedido recuperado. Revisá su estado en Mis pedidos.' : 'Pedido creado. Reserva de 15 minutos, sin cobro.');
     } catch (error) {
-      if (/^[0-9A-Z]{5}$/.test(error?.code || '')) intents.delete(signature);
       console.error('[KMD] reserve order:', error); toast(errorMessage(error));
     }
     finally { checkingOut = false; if (currentPage === 'carrito') renderCart(); }

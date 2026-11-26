@@ -45,6 +45,7 @@ test('retiro sin stock: el reintento reserva solo el envio elegido', async () =>
   };
   const roots = new Map();
   const ctx = vm.createContext({
+    sessionStorage: require('./tab-storage.cjs')(),
     cart: [item], currentPage: 'carrito', KMD: { session: { user: { id: 'comprador' } } },
     getSB: () => db, crypto: { randomUUID: () => 'test-key' }, escHtml: String,
     setInterval() {}, updateBadges() {}, nav() {}, toast: msg => messages.push(msg),
