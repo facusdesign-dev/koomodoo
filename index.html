@@ -1,9 +1,21 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-UY">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOOMODOO</title>
+<title>KOOMODOO | Social Commerce</title>
+<meta name="description" content="KOOMODOO es una plataforma de social commerce: mirá PULSOS en vivo, descubrí productos y comprá o vendé en Uruguay, Argentina y Chile. Versión de prueba.">
+<meta name="theme-color" content="#07090D">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="KOOMODOO">
+<meta property="og:locale" content="es_UY">
+<meta property="og:title" content="KOOMODOO | Social Commerce">
+<meta property="og:description" content="Mirá PULSOS en vivo, descubrí productos y comprá o vendé. Versión de prueba.">
+<meta property="og:url" content="https://koomodoo.vercel.app/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="KOOMODOO | Social Commerce">
+<meta name="twitter:description" content="Mirá PULSOS en vivo, descubrí productos y comprá o vendé. Versión de prueba.">
+<link rel="canonical" href="https://koomodoo.vercel.app/">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./live-shopping.css">
@@ -1007,7 +1019,7 @@ button,select,input{font-family:inherit}
 </head>
 <body>
 
-<div id="google-loading"><div class="af-spin-lg"></div><div style="font-size:14px;font-weight:700;color:var(--t2)">Conectando con Google...</div></div>
+<div id="google-loading" role="status" aria-live="polite"><div class="af-spin-lg"></div><div style="font-size:14px;font-weight:700;color:var(--t2)">Conectando con Google...</div><button type="button" onclick="setGoogleLoading(false)" style="margin-top:4px;background:none;border:1px solid var(--b2);color:var(--t2);border-radius:50px;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">Cancelar</button></div>
 <div id="auth-modal" onclick="if(event.target===this)closeAuthModal()">
   <div class="auth-box">
     <div class="auth-brand"><span class="auth-logo-txt">KOOMODOO</span><span class="auth-tagline">Social Commerce Platform</span></div>
@@ -1044,7 +1056,7 @@ button,select,input{font-family:inherit}
     <div class="cp-sec">Elegí tu avatar</div><div class="av-grid" id="cp-av-grid"></div>
     <div class="cp-sec">Información básica</div>
     <div class="cp-2col"><div><label class="af-lbl">Nombre *</label><input type="text" class="af-inp" id="cp-fn" placeholder="Carlos"></div><div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="cp-ln" placeholder="Mendoza"></div></div>
-    <label class="af-lbl">Usuario *</label><input type="text" class="af-inp" id="cp-user" placeholder="carlosmendoza" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')">
+    <label class="af-lbl">Usuario *</label><input type="text" class="af-inp" id="cp-user" placeholder="tuusuario" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')">
     <label class="af-lbl">Ubicación</label><input type="text" class="af-inp" id="cp-loc" placeholder="Montevideo, Uruguay">
     <label class="af-lbl">Bio (opcional)</label><textarea class="af-inp" id="cp-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
     <div class="cp-sec">¿Qué querés hacer?</div>
@@ -1063,13 +1075,13 @@ button,select,input{font-family:inherit}
     <div id="ep-msg"></div>
     <div style="display:flex;align-items:center;gap:13px;padding:13px;background:var(--surf);border:1px solid var(--b);border-radius:13px;margin-bottom:14px">
       <div id="ep-av-big" style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#059669,#2DD4BF);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden">🦁</div>
-      <div style="flex:1"><div id="ep-name-big" style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:2px">Carlos Mendoza</div><div id="ep-email-big" style="font-size:11px;color:var(--t3)">carlos@example.com</div></div>
+      <div style="flex:1"><div id="ep-name-big" style="font-size:14px;font-weight:700;color:var(--t);margin-bottom:2px">Usuario</div><div id="ep-email-big" style="font-size:11px;color:var(--t3)"></div></div>
       <button onclick="pickProfilePhoto()" style="padding:6px 12px;border-radius:9px;background:var(--surf2);border:1px solid var(--b2);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer">📷 Foto</button>
     </div>
     <div class="cp-sec">Avatar emoji</div><div class="av-grid" id="ep-av-grid"></div>
     <div class="cp-sec">Información básica</div>
     <div class="cp-2col"><div><label class="af-lbl">Nombre</label><input type="text" class="af-inp" id="ep-fn" placeholder="Carlos"></div><div><label class="af-lbl">Apellido</label><input type="text" class="af-inp" id="ep-ln" placeholder="Mendoza"></div></div>
-    <label class="af-lbl">Usuario</label><input type="text" class="af-inp" id="ep-user" placeholder="carlosmendoza">
+    <label class="af-lbl">Usuario</label><input type="text" class="af-inp" id="ep-user" placeholder="tuusuario">
     <label class="af-lbl">Bio</label><textarea class="af-inp" id="ep-bio" rows="2" style="resize:none" placeholder="Contá algo sobre vos..."></textarea>
     <div class="cp-2col"><div><label class="af-lbl">Ubicación pública (ciudad/país)</label><input type="text" class="af-inp" id="ep-loc" placeholder="Montevideo, UY"></div><div><label class="af-lbl">Teléfono privado</label><input type="tel" class="af-inp" id="ep-phone" placeholder="+598 99 000 000"></div></div>
     <div class="cp-2col">
@@ -1101,7 +1113,7 @@ button,select,input{font-family:inherit}
     <div id="story-preview" style="width:100%;aspect-ratio:9/16;max-height:280px;border-radius:14px;background:var(--surf2);border:2px dashed rgba(52,211,153,.3);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden;margin-bottom:12px;cursor:pointer" onclick="document.getElementById('story-file-inp').click()">📷<input type="file" id="story-file-inp" accept="image/*,video/*" style="display:none" onchange="handleStoryFile(this)"></div>
     <input type="text" class="af-inp" id="story-caption-inp" placeholder="Texto opcional para tu historia" style="margin-bottom:10px">
     <select class="af-inp" id="story-product-sel" style="margin-bottom:12px"><option value="">Sin producto destacado</option></select>
-    <label for="story-duration">Duracion de reproduccion</label><select id="story-duration" class="af-inp"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select>
+    <label for="story-duration">Duración de reproducción</label><select id="story-duration" class="af-inp"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select>
     <div style="font-size:11px;color:var(--t3);text-align:center;margin-bottom:12px">La historia dura 24 horas · JPG, PNG, MP4</div>
     <button id="story-publish-btn" onclick="publishStory()" class="af-btn"><span>📤 Publicar historia</span></button>
   </div>
@@ -1109,18 +1121,18 @@ button,select,input{font-family:inherit}
 <div id="live-start-modal" onclick="if(event.target===this)closeLiveModal()">
   <div class="photo-modal-box" role="dialog" aria-modal="true" aria-label="Preparar PULSO">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:16px;font-weight:800;color:var(--t)"><span class="pulso-mark" aria-hidden="true"></span> Iniciar PULSO</div><button onclick="closeLiveModal()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button></div>
-    <p class="live-explainer">Prepara tu vidriera, proba la camara y despues inicia. Solo se muestran productos de tu tienda.</p>
-    <label for="live-title-inp">Titulo de tu PULSO</label>
+    <p class="live-explainer">Prepará tu vidriera, probá la cámara y después iniciá. Solo se muestran productos de tu tienda.</p>
+    <label for="live-title-inp">Título de tu PULSO</label>
     <input type="text" class="af-inp" id="live-title-inp" maxlength="100" placeholder="Ej: Novedades de mi tienda">
-    <label for="live-setup-camera">Camara para transmitir</label>
+    <label for="live-setup-camera">Cámara para transmitir</label>
     <select id="live-setup-camera" class="af-inp" onchange="LiveShopping.setCamera(this.value)"><option value="user">Frontal</option><option value="environment">Trasera</option></select>
     <div id="live-preview" class="live-preview"></div>
-    <p id="live-setup-camera-info" class="live-setup-status" role="status">Sostene el celular vertical antes de probar la camara.</p>
-    <button id="live-preview-btn" class="af-btn sec" onclick="LiveShopping.preview()">Probar camara y microfono</button>
+    <p id="live-setup-camera-info" class="live-setup-status" role="status">Sostené el celular vertical antes de probar la cámara.</p>
+    <button id="live-preview-btn" class="af-btn sec" onclick="LiveShopping.preview()">Probar cámara y micrófono</button>
     <p id="live-setup-status" class="live-setup-status" role="status"></p>
     <strong>Productos de PULSO (hasta 12)</strong>
     <div id="live-product-picker" class="live-product-picker"></div>
-    <p class="live-setup-status">Piloto de hasta 10 personas por sala. Sin grabacion ni cobros reales.</p>
+    <p class="live-setup-status">Piloto de hasta 10 personas por sala. Sin grabación ni cobros reales.</p>
     <button id="live-start-btn" class="af-btn" onclick="startLiveSession()" disabled>Iniciar PULSO</button>
     <button onclick="closeLiveModal()" class="af-btn sec">Cancelar</button>
   </div>
@@ -1223,7 +1235,7 @@ button,select,input{font-family:inherit}
     <span class="sb-setting-label">Moneda para ver precios</span>
     <div class="cur-sw"><button class="cur-btn on" id="cur-local" onclick="setCurrency(localCurrency)">UYU</button><button class="cur-btn" id="cur-usd" onclick="setCurrency('USD')">USD</button></div>
     <button class="si account-only" onclick="openEditModal();closeSidebar()">Editar perfil</button>
-    <button class="si account-only" onclick="doLogout()">Cerrar sesion</button>
+    <button class="si account-only" onclick="doLogout()">Cerrar sesión</button>
     <button class="si guest-only" onclick="openAuthModal('login');closeSidebar()">Ingresar</button>
   </div>
 </aside>
@@ -1389,14 +1401,14 @@ button,select,input{font-family:inherit}
           <div class="prof-photo-overlay">📷</div>
         </div>
         <div class="prof-info-body">
-          <div class="prof-nm" id="prof-nm-el">Carlos Mendoza</div>
+          <div class="prof-nm" id="prof-nm-el">Usuario</div>
           <div class="prof-hndl" id="prof-hndl-el">
-            <span>@carlosmendoza</span>
+            <span>@usuario</span>
             <span style="color:var(--b2)">·</span>
-            <span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">Vendedor Pro</span>
+            <span id="prof-role-badge" style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;background:rgba(52,211,153,.1);color:var(--g);border:1px solid rgba(52,211,153,.2)">Miembro</span>
           </div>
-          <div class="prof-location" id="prof-location-el"><span>📍</span><span>Montevideo, Uruguay</span></div>
-          <div class="prof-bio" id="prof-bio-el">Emprendedor digital · Tech &amp; Moda</div>
+          <div class="prof-location" id="prof-location-el"><span>📍</span><span>Uruguay</span></div>
+          <div class="prof-bio" id="prof-bio-el">Miembro de KOOMODOO</div>
           <div class="prof-acts" id="prof-acts-el" style="margin-top:10px">
             <button class="btn-p btn-pri" onclick="openLiveModal()"><span class="pulso-mark" aria-hidden="true"></span> PULSO</button>
             <button class="btn-p btn-sec" onclick="nav('publicar')">➕ Publicar</button>
@@ -1436,8 +1448,8 @@ button,select,input{font-family:inherit}
 <!-- ── LIVE ── -->
 <div class="pg" id="pg-live">
   <section id="live-directory" class="live-directory">
-    <h1>Descubri tu proxima compra en PULSO.</h1>
-    <p class="live-explainer">Mira al vendedor, pregunta en el chat y conoce los productos sin salir del video. Conectate a los PULSOS del piloto.</p>
+    <h1>Descubrí tu próxima compra en PULSO.</h1>
+    <p class="live-explainer">Mirá al vendedor, preguntá en el chat y conocé los productos sin salir del video. Conectate a los PULSOS del piloto.</p>
     <button class="btn-p btn-pri" onclick="openLiveModal()">Preparar mi PULSO</button>
     <div id="live-room-list" class="live-room-list"></div>
   </section>
@@ -1461,18 +1473,18 @@ button,select,input{font-family:inherit}
       <nav class="live-feed-nav" aria-label="Cambiar de PULSO"><button type="button" onclick="LiveShopping.nextRoom(-1)" aria-label="PULSO anterior">↑</button><button type="button" onclick="LiveShopping.nextRoom(1)" aria-label="Siguiente PULSO">↓</button></nav>
       <section id="live-settings" class="live-settings" hidden aria-label="Panel del vendedor">
         <div class="live-settings-heading"><strong>Panel del vendedor</strong><button type="button" onclick="LiveShopping.toggleSettings()" aria-label="Cerrar ajustes">&#215;</button></div>
-        <label for="live-camera">Camara para transmitir</label>
+        <label for="live-camera">Cámara para transmitir</label>
         <select id="live-camera" onchange="LiveShopping.setCamera(this.value)"><option value="user">Frontal</option><option value="environment">Trasera</option></select>
         <p id="live-camera-info" role="status">Midiendo la imagen recibida de la camara...</p>
-        <label for="live-quality">Calidad de emision</label>
+        <label for="live-quality">Calidad de emisión</label>
         <select id="live-quality" onchange="LiveShopping.setQuality(this.value)"><option value="economy">Ahorro (hasta 360p)</option><option value="standard" selected>Equilibrada (hasta 720p)</option><option value="high">Alta (hasta 1080p)</option></select>
-        <label for="live-filter">Filtro de emision</label>
-        <select id="live-filter" onchange="LiveShopping.setFilter(this.value)"><option value="natural">Natural</option><option value="clear">Mas claridad</option><option value="warm">Calido</option></select>
+        <label for="live-filter">Filtro de emisión</label>
+        <select id="live-filter" onchange="LiveShopping.setFilter(this.value)"><option value="natural">Natural</option><option value="clear">Más claridad</option><option value="warm">Cálido</option></select>
         <label for="live-beauty">Suavizado estetico <output id="live-beauty-label">0%</output></label>
         <input id="live-beauty" type="range" min="0" max="60" step="10" value="0" onchange="LiveShopping.setBeauty(this.value)">
-        <p>Se aplica al video enviado. Suavizado de toda la imagen, sin reconocimiento facial. Puede cambiar colores y texturas de los productos. Calidad limitada por tu camara y conexion.</p>
+        <p>Se aplica al video enviado. Suavizado de toda la imagen, sin reconocimiento facial. Puede cambiar colores y texturas de los productos. Calidad limitada por tu cámara y conexión.</p>
         <p>Si tu navegador necesita el modo compatible, los filtros de color se procesan hasta 480p y 15 fps para cuidar el dispositivo.</p>
-        <p>PULSO usa un marco vertical 9:16 y conserva la imagen completa, sin zoom agregado. Sostene el celular vertical. Si la camara solo entrega otro formato, se muestran bandas para no recortar ni deformar. En PC puede no haber camara trasera.</p>
+        <p>PULSO usa un marco vertical 9:16 y conserva la imagen completa, sin zoom agregado. Sostené el celular vertical. Si la cámara solo entrega otro formato, se muestran bandas para no recortar ni deformar. En PC puede no haber cámara trasera.</p>
         <button type="button" onclick="LiveShopping.fullscreen()">Pantalla completa</button>
         <strong>Productos de PULSO</strong>
         <div id="live-product-controls" class="live-product-controls"></div>
@@ -1485,7 +1497,7 @@ button,select,input{font-family:inherit}
       <div id="live-comments" class="live-comments" aria-live="polite"></div>
       <div class="live-bottom-line">
         <form class="live-comment-form" onsubmit="event.preventDefault();LiveShopping.sendComment()">
-          <input id="live-comment" class="fi" maxlength="300" placeholder="Hace tu pregunta..." aria-label="Comentario de PULSO" required>
+          <input id="live-comment" class="fi" maxlength="300" placeholder="Hacé tu pregunta..." aria-label="Comentario de PULSO" required>
           <button id="live-comment-send" type="submit" aria-label="Enviar comentario"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 19 9-19 9 4-9-4-9Z M7 12h15"/></svg></button>
         </form>
         <div id="live-like-slot" class="live-like-slot"></div>
@@ -1503,7 +1515,7 @@ button,select,input{font-family:inherit}
       <div class="pty on" data-pub="product" onclick="setPubType(this)"><div class="pty-ic">🏷️</div><div class="pty-nm">Producto</div><div class="pty-sub">Para vender</div></div>
       <div class="pty" data-pub="post" onclick="setPubType(this)"><div class="pty-ic">📸</div><div class="pty-nm">Post</div><div class="pty-sub">Contenido</div></div>
       <div class="pty" data-pub="story" onclick="setPubType(this)"><div class="pty-ic">⭕</div><div class="pty-nm">Historia</div><div class="pty-sub">24 horas</div></div>
-      <div class="pty" onclick="nav('live')"><div class="pty-ic"><span class="pulso-mark" aria-hidden="true"></span></div><div class="pty-nm">PULSO</div><div class="pty-sub">Conecta y vende</div></div>
+      <div class="pty" onclick="nav('live')"><div class="pty-ic"><span class="pulso-mark" aria-hidden="true"></span></div><div class="pty-nm">PULSO</div><div class="pty-sub">Conectá y vendé</div></div>
     </div>
     <div class="pub-form-card" id="pub-panel-product">
       <input type="file" id="pub-media-inp" accept="image/*" multiple style="display:none" onchange="handleProductMedia(this)">
@@ -1528,7 +1540,7 @@ button,select,input{font-family:inherit}
         <div class="fg"><label>Stock</label><input class="fi" id="pub-stock" type="number" value="1" min="0"></div>
         <div class="fg"><label>Condición</label><select class="fi" id="pub-condition"><option>Nuevo</option><option>Usado</option><option>Reacondicionado</option></select></div>
       </div>
-      <div class="fg"><label>Moneda de venta</label><select class="fi" id="pub-currency"><option value="UYU">Pesos uruguayos (UYU)</option><option value="ARS">Pesos argentinos (ARS)</option><option value="USD">Dolares (USD)</option><option value="BRL">Reales (BRL)</option><option value="CLP">Pesos chilenos (CLP)</option><option value="EUR">Euros (EUR)</option></select></div>
+      <div class="fg"><label>Moneda de venta</label><select class="fi" id="pub-currency"><option value="UYU">Pesos uruguayos (UYU)</option><option value="ARS">Pesos argentinos (ARS)</option><option value="USD">Dólares (USD)</option><option value="BRL">Reales (BRL)</option><option value="CLP">Pesos chilenos (CLP)</option><option value="EUR">Euros (EUR)</option></select></div>
       <div class="fg"><label>Descripción</label><textarea class="fi" id="pub-desc" rows="3" style="resize:none" placeholder="Describí tu producto..."></textarea></div>
       <div class="fg2">
         <div class="fg"><label>Colores</label><input class="fi" id="pub-colors" placeholder="Ej: Negro, Blanco, Azul"></div>
@@ -1547,7 +1559,7 @@ button,select,input{font-family:inherit}
         <div class="fg"><label id="pub-extra2-label">Variante técnica</label><input class="fi" id="pub-extra2" placeholder="Ej: 256GB / 8GB RAM"></div>
       </div>
       <div class="fg"><label id="pub-category-hint-label">Especificaciones por categoría</label><textarea class="fi" id="pub-category-notes" rows="2" style="resize:none" placeholder="Agregá detalles propios de la categoría"></textarea></div>
-      <div class="fg"><button type="button" class="btn-p btn-sec" onclick="CommerceUI.variantEditor()">Generar variantes y stock</button><p style="font-size:12px;color:var(--t2);margin-top:8px">Genera las combinaciones de las opciones de tu producto y asigna precio y stock a cada una. Sin opciones se usa el stock principal.</p><div id="pub-inventory"></div></div>
+      <div class="fg"><button type="button" class="btn-p btn-sec" onclick="CommerceUI.variantEditor()">Generar variantes y stock</button><p style="font-size:12px;color:var(--t2);margin-top:8px">Generá las combinaciones de las opciones de tu producto y asigná precio y stock a cada una. Sin opciones se usa el stock principal.</p><div id="pub-inventory"></div></div>
       <p>Este producto usa las opciones de retiro y envío de Mi Local → Entregas.</p>
       <button class="pub-btn" onclick="publishProduct()">🚀 Publicar producto</button>
     </div>
@@ -1577,7 +1589,7 @@ button,select,input{font-family:inherit}
       </div>
       <div class="fg"><label>Texto opcional</label><input class="fi" id="pub-story-caption" placeholder="Ej: Nuevo ingreso, últimas unidades"></div>
       <div class="fg"><label>Producto destacado (opcional)</label><select class="fi" id="pub-story-product"><option value="">Sin producto</option></select></div>
-      <div class="fg"><label for="pub-story-duration">Duracion de reproduccion</label><select class="fi" id="pub-story-duration"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select></div>
+      <div class="fg"><label for="pub-story-duration">Duración de reproducción</label><select class="fi" id="pub-story-duration"><option value="15">15 segundos</option><option value="20">20 segundos</option><option value="30">30 segundos</option></select></div>
       <button class="pub-btn" id="pub-story-submit-btn" onclick="publishStory()">⭕ Publicar historia</button>
     </div>
   </div></div>
@@ -2277,7 +2289,7 @@ function renderRP(){
 // MARKETPLACE
 // ═══════════════════════════════════════
 async function renderMarketplace(){
-  try{await CommerceUI.refreshCatalog();}catch(error){console.error('[KMD] catalog:',error);toast('No se pudo actualizar el catalogo. Intenta nuevamente.');return;}
+  try{await CommerceUI.refreshCatalog();}catch(error){console.error('[KMD] catalog:',error);toast('No se pudo actualizar el catálogo. Intentá nuevamente.');return;}
   document.getElementById('mp-cats').innerHTML=CATS.map(c=>`
     <div class="cat ${activeCat===c.slug?'on':''}" onclick="setMpCat(this,'${c.slug}')">${c.em} ${c.name}</div>`).join('');
   renderProdGrid();
@@ -2452,7 +2464,7 @@ function renderNotificationsPanel(){
     <div style="padding:10px 12px 6px;font-size:11px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Notificaciones</div>
     ${notificationsData.map(n=>`
       <div class="mt">
-        <div class="mt-av">${n.avatarUrl?`<img src="${escHtml(resolveAvatarDisplayUrl(n.avatarUrl))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`:n.actorAvatar||'👤'}</div>
+        <div class="mt-av">${n.avatarUrl?`<img src="${escHtml(resolveAvatarDisplayUrl(n.avatarUrl))}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`:escHtml(n.actorAvatar||'👤')}</div>
         <div style="flex:1;min-width:0">
           <div class="mt-nm">${escHtml(n.actorName||'Usuario')}</div>
           <div class="mt-pr">${n.type==='story_like'?'indicó que le gusta tu historia':'te comenzó a seguir'}</div>
@@ -2480,7 +2492,7 @@ function renderMessages(){
     const nm=m.partnerName||seller.name||'Usuario';
     return `<div class="mt ${activeMsgId===m.id?'on':''}" onclick="openChat('${m.id}')">
       <div class="mt-av">${av}</div>
-      <div style="flex:1;min-width:0"><div class="mt-nm">${nm}</div><div class="mt-pr">${escHtml(m.preview||'')}</div></div>
+      <div style="flex:1;min-width:0"><div class="mt-nm">${escHtml(nm)}</div><div class="mt-pr">${escHtml(m.preview||'')}</div></div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="mt-tm">${m.time||''}</div>${m.unread?`<div class="mt-un">${m.unread}</div>`:''}</div>
     </div>`;}).join('')||`<div class="empty" style="padding:18px"><div class="empty-t">Sin mensajes aún</div><div class="empty-s">Las respuestas a historias y chats van a aparecer acá</div></div>`;
   updateBadges();
@@ -2646,7 +2658,7 @@ async function sendMsg(id){
     }finally{f.disabled=false;}
   }else{
     f.disabled=false;
-    toast('Inicia sesion para enviar mensajes.');
+    toast('Iniciá sesión para enviar mensajes.');
   }
 }
 
@@ -2716,8 +2728,6 @@ function getProfileTargetId(){
 }
 
 async function renderProfilePage(targetProfileId){
-  console.log('🔥 RENDER REAL DE PERFIL DETECTADO');
-  console.log('renderProfilePage ejecutado');
   const ownUser=KMD&&KMD.user;if(!ownUser)return;
   const setTxt=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   const setHtml=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
@@ -2852,7 +2862,7 @@ async function renderProfilePage(targetProfileId){
         console.log('🔄 perfil actualizado después de follow');
         }catch(error){
           console.error('[KMD] follow action:',error);
-          toast('No se pudo actualizar el seguimiento. Intenta nuevamente.');
+          toast('No se pudo actualizar el seguimiento. Intentá nuevamente.');
         }finally{followBtn.disabled=false;}
       };
     }
@@ -2922,7 +2932,7 @@ function setPTab(idx){
         <div class="pgrid-inner">${prods.map(p=>buildProdCard(p)).join('')}</div>
       </div>`).join(''):`<div class="empty" style="padding:22px"><div class="empty-t">Sin productos aún</div><div class="empty-s">${isOwnTarget?'Publicá tu primer producto.':'Este perfil todavía no publicó productos.'}</div></div>`;
   }else if(idx===1){
-    const profilePosts=[...POSTS_STORE,...(isOwnTarget?getMockPosts():[])].filter(post=>(post.userId||post.user_id||'')===targetId || (isOwnTarget&&String(post.id||'').startsWith('mp')));
+    const profilePosts=POSTS_STORE.filter(post=>(post.userId||post.user_id||'')===targetId);
     if(isOwnTarget){
       tc.innerHTML=renderPostsTab();
       initPostTab();
@@ -2945,7 +2955,8 @@ function setPTab(idx){
       tc.innerHTML=profileStories.length?profileStories.map(story=>`<div style="display:flex;gap:12px;align-items:center;padding:12px;border-radius:14px;background:var(--surf);border:1px solid var(--b);margin-bottom:10px;cursor:pointer" onclick="StoryViewer.open('${story.id}')"><div style="width:54px;height:54px;border-radius:50%;overflow:hidden;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid #fb7185">${story.mediaType==='image'&&story.mediaUrl?`<img src="${story.mediaUrl}" style="width:100%;height:100%;object-fit:cover">`:story.em}</div><div style="flex:1"><div style="font-size:13px;font-weight:800;color:var(--t)">${escHtml(story.caption||'Historia')}</div><div style="font-size:11px;color:var(--t3)">Disponible por 24 horas</div></div></div>`).join(''):`<div class="empty" style="padding:22px"><div class="empty-t">Sin historias activas</div><div class="empty-s">Este perfil no tiene historias visibles ahora mismo.</div></div>`;
     }
   }else if(idx===3){
-    tc.innerHTML='<div id="aff-panel"></div>';renderAffPanel();
+    // El programa de afiliados todavía no existe: el panel anterior era una maqueta con datos de ejemplo.
+    tc.innerHTML='<div class="empty" style="padding:22px"><div class="empty-t">Afiliados: próximamente</div><div class="empty-s">Todavía estamos preparando el programa de afiliados. Por ahora no hay comisiones ni ventas por referidos.</div></div>';
   }
 }
 
@@ -2975,7 +2986,7 @@ async function handleProductMedia(input){
   const files=[...(input.files||[])].slice(0,8);
   if(!files.length)return;
   for(const file of files){
-    if(pendingProductMedia.length>=8){toast('Maximo 8 fotos por publicacion.');break;}
+    if(pendingProductMedia.length>=8){toast('Máximo 8 fotos por publicación.');break;}
     if(!['image/jpeg','image/png','image/webp'].includes(file.type)){toast('Usa fotos JPG, PNG o WEBP.');continue;}
     if(file.size>10*1024*1024){toast(`⚠️ ${file.name} supera 10MB`);continue;}
     pendingProductMedia.push({name:file.name,type:file.type,url:await fileToDataUrl(file)});
@@ -3011,7 +3022,7 @@ async function publishProduct(){
   const title=AuthModule.sanitizeText(document.getElementById('pub-title')?.value||'',120);
   const price=Number(document.getElementById('pub-price')?.value||0);
   const cat=document.getElementById('pub-cat')?.value||'tecnologia';
-  if(title.length<3||!Number.isFinite(price)||price<=0){toast('Completa titulo y un precio mayor que cero.');return;}
+  if(title.length<3||!Number.isFinite(price)||price<=0){toast('Completá título y un precio mayor que cero.');return;}
   if(!pendingProductMedia.length){toast('Carga al menos una foto del producto.');return;}
   let inventory;
   try{inventory=CommerceUI.getInventory();}catch(error){toast(error.message);return;}
@@ -3078,7 +3089,7 @@ async function publishProduct(){
       return;
     }
   }else{
-    toast('Necesitas una sesion activa para publicar.');
+    toast('Necesitás una sesión activa para publicar.');
     if(btn){btn.disabled=false;btn.textContent='Publicar producto';}
     return;
   }
@@ -3831,9 +3842,21 @@ function hdrAuthClick(){KMD.loggedIn?toggleDd():openAuthModal('login');}
 // ── Auth modal ────────────────────────────────────────────────────────────────
 function openAuthModal(tab){document.getElementById('auth-modal').classList.add('open');switchTab(tab||'login');}
 function closeAuthModal(){document.getElementById('auth-modal').classList.remove('open');}
+var googleLoadingTimer=null;
 function setGoogleLoading(open){
   const gl=document.getElementById('google-loading');
   if(gl)gl.classList.toggle('open',!!open);
+  if(googleLoadingTimer){clearTimeout(googleLoadingTimer);googleLoadingTimer=null;}
+  if(open){
+    // Salida de seguridad: si el ingreso con Google no termina, se libera la pantalla.
+    googleLoadingTimer=setTimeout(function(){
+      googleLoadingTimer=null;
+      if(gl&&gl.classList.contains('open')){
+        gl.classList.remove('open');
+        toast('No pudimos completar el ingreso con Google. Probá de nuevo.');
+      }
+    },20000);
+  }
 }
 function switchTab(tab){
   const isL=tab==='login';
@@ -4200,7 +4223,7 @@ async function doLogout(){
 
 // ── Post-login flow ───────────────────────────────────────────────────────────
 async function onSignedIn(session,profile){
-  const gl=document.getElementById('google-loading');if(gl)gl.classList.remove('open');
+  setGoogleLoading(false);
   if(pendingOAuthCleanup&&window.history?.replaceState){
     window.history.replaceState({},'',window.location.pathname);
     pendingOAuthCleanup=false;
@@ -4540,18 +4563,10 @@ async function submitPost(){
 
 function renderPostsFeed(){
   const feed=document.getElementById('posts-feed');if(!feed)return;
-  const allPosts=[...POSTS_STORE,...getMockPosts()];
+  const allPosts=[...POSTS_STORE];
   if(!allPosts.length){feed.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--t3)"><div style="font-size:36px;margin-bottom:10px">✍️</div><div style="font-size:14px;font-weight:700;color:var(--t2)">Sin posts aún</div></div>`;return;}
   feed.innerHTML=allPosts.map(p=>buildPostCard(p)).join('');
 }
-
-function getMockPosts(){
-  const u=KMD.user;const name=u?([u.firstName,u.lastName].filter(Boolean).join(' ')||'Carlos'):'Carlos';
-  const avType=u?.avatar_type||'emoji';const avValue=u?.avatar_value||u?.avatar||'🦁';
-  return[
-    {id:'mp1',authorName:name,authorAvatar:avValue,authorAvatarType:avType,authorHandle:'@'+(u?.username||'carlosm'),text:'¡Acabo de publicar nuevos productos en mi tienda! 🔥 Mirá las ofertas de esta semana.',imageUrl:'',videoUrl:'',likes:12,comments:[{user:'@sofia_uy',av:'🦊',text:'¡Me encantan! 😍'},{user:'@pedro_tech',av:'🐺',text:'¿Hacen envíos a Canelones?'}],timeAgo:'hace 2h'},
-    {id:'mp2',authorName:name,authorAvatar:avValue,authorAvatarType:avType,authorHandle:'@'+(u?.username||'carlosm'),text:'Nueva colección disponible 🛍️ Tecnología y moda al mejor precio en Uruguay.',imageUrl:'',videoUrl:'',likes:28,comments:[],timeAgo:'hace 1 día'},
-  ];}
 
 function buildPostCard(post){
   const isLiked=LIKED_POSTS.has(post.id);
@@ -4592,7 +4607,7 @@ function buildPostCard(post){
 
 function togglePostLike(postId,btn){
   if(!KMD.loggedIn){openAuthModal('login');return;}
-  const allPosts=[...POSTS_STORE,...getMockPosts()];const post=allPosts.find(p=>p.id===postId);if(!post)return;
+  const allPosts=[...POSTS_STORE];const post=allPosts.find(p=>p.id===postId);if(!post)return;
   if(LIKED_POSTS.has(postId)){LIKED_POSTS.delete(postId);post.likes=Math.max(0,post.likes-1);btn.classList.remove('liked');btn.innerHTML=`🤍 <span id="lc-${postId}">${post.likes}</span>`;}
   else{LIKED_POSTS.add(postId);post.likes++;btn.classList.add('liked');btn.innerHTML=`❤️ <span id="lc-${postId}">${post.likes}</span>`;}
   // In production: await getSB().from('likes').upsert({ post_id: postId, user_id: KMD.session.user.id })
@@ -4602,7 +4617,7 @@ function addComment(postId){
   if(!KMD.loggedIn){openAuthModal('login');return;}
   const inp=document.getElementById('cinp-'+postId);if(!inp)return;
   const text=inp.value.trim();if(!text)return;
-  const allPosts=[...POSTS_STORE,...getMockPosts()];const post=allPosts.find(p=>p.id===postId);if(!post)return;
+  const allPosts=[...POSTS_STORE];const post=allPosts.find(p=>p.id===postId);if(!post)return;
   const c={user:'@'+(KMD.user.username||KMD.user.email?.split('@')[0]),av:KMD.user?.avatar||'💬',text};
   post.comments.push(c);
   inp.value='';
@@ -4678,7 +4693,7 @@ async function publishStory(){
   }catch(error){
     console.error('[KMD publish story]',error);
     if(error.published){pendingStoryDataUrl=null;toast(error.message);}
-    else{afMsg('story-msg','err',error.message||'No se pudo guardar la historia.');toast('No se pudo completar la publicacion. Revisa el mensaje e intenta nuevamente.');}
+    else{afMsg('story-msg','err',error.message||'No se pudo guardar la historia.');toast('No se pudo completar la publicación. Revisá el mensaje e intentá nuevamente.');}
   }
   finally{
   storyPublishing=false;

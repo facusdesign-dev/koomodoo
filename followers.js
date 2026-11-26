@@ -1,12 +1,12 @@
 window.FollowersModule = (() => {
   function client() {
     const sb = getSB();
-    if (!sb) throw new Error('Supabase no esta disponible.');
+    if (!sb) throw new Error('Supabase no está disponible.');
     return sb;
   }
   function viewer() {
     const id = KMD.session?.user?.id;
-    if (!id) throw new Error('Inicia sesion para continuar.');
+    if (!id) throw new Error('Iniciá sesión para continuar.');
     return id;
   }
   async function isFollowing(targetId) {

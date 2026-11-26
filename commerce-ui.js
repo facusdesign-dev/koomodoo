@@ -6,7 +6,7 @@ window.CommerceUI = (() => {
   let inventory = [];
   const money = (value, code = 'UYU') => new Intl.NumberFormat('es-UY', { style: 'currency', currency: code }).format(Number(value));
   const escape = value => escHtml(String(value ?? ''));
-  const errorMessage = error => error?.message || 'No se pudo completar la operacion.';
+  const errorMessage = error => error?.message || 'No se pudo completar la operación.';
   async function refreshCatalog() {
     const { data, error } = await getSB().from('products').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(100);
     if (error) throw error;
@@ -44,7 +44,7 @@ window.CommerceUI = (() => {
       const axes=Catalog.publishAxes();
       if(!axes.length)return Catalog.combinations([],document.getElementById('pub-price').value,document.getElementById('pub-stock').value);
       const expected=Catalog.combinations(axes,1).map(row=>row.label);
-      if(JSON.stringify(expected)!==JSON.stringify(inventory.map(row=>row.label)))throw new Error('Genera las variantes de esta categoria antes de publicar.');
+      if(JSON.stringify(expected)!==JSON.stringify(inventory.map(row=>row.label)))throw new Error('Generá las variantes de esta categoría antes de publicar.');
       if(!inventory.some(row=>row.stock>0))throw new Error('Carga stock para al menos una variante.');
       return inventory.map(row=>({...row}));
     }
@@ -115,12 +115,12 @@ window.CommerceUI = (() => {
         const pending = document.createElement('p'); pending.style.cssText = 'font-size:11px;color:var(--t3);margin-top:6px';
         pending.textContent = 'Un pedido pendiente puede apartar disponibilidad por 15 minutos; no equivale a una venta pagada.';
         const selection = document.createElement('p'); selection.style.marginTop = '8px';
-        selection.textContent = count > 0 ? `Si agregas ${valid ? amount : 0}, podras agregar ${Math.max(0, count - (valid ? amount : 0))} mas a tu carrito.`
-          : Number(variant?.stock || 0) > 0 ? 'Ya tenes en el carrito todas las unidades disponibles de esta variante.'
+        selection.textContent = count > 0 ? `Si agregás ${valid ? amount : 0}, vas a poder agregar ${Math.max(0, count - (valid ? amount : 0))} más a tu carrito.`
+          : Number(variant?.stock || 0) > 0 ? 'Ya tenés en el carrito todas las unidades disponibles de esta variante.'
           : Number(variant?.reserved_stock || 0) > 0 ? 'Sin disponibilidad por reservas pendientes.' : 'Agotado.';
         availability.append(stats, note, pending, selection);
         const productQuantity = cart.filter(item => item.pid === p.id).reduce((sum, item) => sum + item.qty, 0);
-        remove.textContent = productQuantity ? `Quitar producto del carrito (${productQuantity})` : 'Este producto no esta en tu carrito';
+        remove.textContent = productQuantity ? `Quitar producto del carrito (${productQuantity})` : 'Este producto no está en tu carrito';
         remove.disabled = !productQuantity;
         for (const option of select.children) {
           const row = variants.find(v => v.id === option.value); option.disabled = !row || remaining(row) <= 0;
@@ -139,8 +139,8 @@ window.CommerceUI = (() => {
         try {
           const fresh = await CommerceModule.getProductDetails(p.id);
           const current = fresh.variants.find(row => row.id === v.id);
-          if (!current || fresh.product.status !== 'published' || current.stock - Number(cart.find(item => item.variantId === v.id)?.qty || 0) < amount) throw new Error('El stock cambio. Volve a abrir el producto para actualizarlo.');
-          if (Number(current.price) !== Number(v.price)) throw new Error('El precio cambio. Volve a abrir el producto para revisar el nuevo precio.');
+          if (!current || fresh.product.status !== 'published' || current.stock - Number(cart.find(item => item.variantId === v.id)?.qty || 0) < amount) throw new Error('El stock cambió. Volvé a abrir el producto para actualizarlo.');
+          if (Number(current.price) !== Number(v.price)) throw new Error('El precio cambió. Volvé a abrir el producto para revisar el nuevo precio.');
           if (!overlay.isConnected || version !== selectionVersion) return;
         const previous = cart.find(item => item.variantId === v.id);
         if (previous) previous.qty += amount;
@@ -148,9 +148,9 @@ window.CommerceUI = (() => {
         updateBadges(); overlay.remove(); toast('Producto agregado al carrito.'); if (currentPage === 'carrito') renderCart();
         } catch (error) { if (overlay.isConnected && version === selectionVersion) { availability.textContent = errorMessage(error); add.disabled = false; add.textContent = 'Reintentar agregar'; } }
       };
-      const cancel = document.createElement('button'); cancel.className = 'btn-p btn-sec'; cancel.textContent = 'Cancelar seleccion'; cancel.onclick = () => overlay.remove();
+      const cancel = document.createElement('button'); cancel.className = 'btn-p btn-sec'; cancel.textContent = 'Cancelar selección'; cancel.onclick = () => overlay.remove();
       if (p.user_id === KMD.session?.user?.id) {
-        const full = document.createElement('button');full.className='pub-btn';full.textContent='Editar publicacion completa';full.onclick=()=>ProductEditor.open(p.id);content.append(full);
+        const full = document.createElement('button');full.className='pub-btn';full.textContent='Editar publicación completa';full.onclick=()=>ProductEditor.open(p.id);content.append(full);
         const edit = document.createElement('button'); edit.className = 'pub-btn'; edit.textContent = 'Editar precio y stock';
         edit.onclick = () => editInventory(p.id); content.append(edit); edit.focus();
       } else { content.append(select, quantityLabel, availability, remove, cancel, add); select.focus(); }
@@ -165,7 +165,7 @@ window.CommerceUI = (() => {
       if (product.user_id !== KMD.session?.user?.id) throw new Error('Solo el vendedor puede editar el inventario.');
       content.replaceChildren();
       const title = document.createElement('h2'); title.textContent = product.title; title.style.margin = '16px 0'; content.append(title);
-      const note = document.createElement('p'); note.textContent = 'Editas disponibilidad para nuevos pedidos. El stock total de tienda incluye tambien las reservas pendientes y solo baja al aprobarse el pago. Cancelar o vencer libera disponibilidad, sin aumentar el total. Los precios de pedidos existentes no cambian.';
+      const note = document.createElement('p'); note.textContent = 'Editás disponibilidad para nuevos pedidos. El stock total de tienda incluye también las reservas pendientes y solo baja al aprobarse el pago. Cancelar o vencer libera disponibilidad, sin aumentar el total. Los precios de pedidos existentes no cambian.';
       note.style.cssText = 'font-size:12px;color:var(--t3);line-height:1.6;margin:12px 0'; content.append(note);
       const form = document.createElement('form');
       const fields = variants.map(variant => {
@@ -203,7 +203,7 @@ window.CommerceUI = (() => {
     const summary = document.getElementById('cart-summary');
     document.getElementById('cart-count').textContent = cart.length ? `(${cart.reduce((n, row) => n + row.qty, 0)} articulos)` : '';
     box.replaceChildren(); summary.replaceChildren();
-    if (!cart.length) { box.innerHTML = '<div class="empty"><div class="empty-t">Carrito vacio</div><div class="empty-s">Selecciona un producto del marketplace.</div></div>'; return; }
+    if (!cart.length) { box.innerHTML = '<div class="empty"><div class="empty-t">Carrito vacío</div><div class="empty-s">Seleccioná un producto del marketplace.</div></div>'; return; }
     const groups=new Map(),labels=new Map();
     for (const item of cart) {
       const key=groupKey(item);
@@ -257,7 +257,7 @@ window.CommerceUI = (() => {
         const reviewed = await CommerceModule.reviewCart(rows);
         cart=cart.map(r=>reviewed.items.find(item=>item.variantId===r.variantId)||r);
         if (reviewed.priceChanged) {
-          throw new Error('Un precio cambio. Actualizamos el carrito: revisa el nuevo total y confirma nuevamente. No se creo un pedido.');
+          throw new Error('Un precio cambió. Actualizamos el carrito: revisá el nuevo total y confirma nuevamente. No se creo un pedido.');
         }
         intent = { items: reviewed.items.map(row => ({ variant_id: row.variantId, quantity: row.qty, expected_unit_price: row.price })), key: crypto.randomUUID(),delivery };intents.set(signature,intent);
       }
@@ -265,7 +265,7 @@ window.CommerceUI = (() => {
       if (order?.status === 'expired' || order?.status === 'cancelled' ||
           (order?.expires_at && Date.parse(order.expires_at) <= Date.now())) {
         intents.delete(signature);
-        throw new Error('La reserva anterior termino. Revisa el stock e intenta crear un nuevo pedido.');
+        throw new Error('La reserva anterior terminó. Revisá el stock e intentá crear un nuevo pedido.');
       }
       if (!order?.id || order.status !== 'pending_payment') throw new Error('No se pudo confirmar el pedido pendiente de pago.');
       cart=cart.filter(row=>groupKey(row)!==key);intents.delete(signature);updateBadges();nav('pedidos');
@@ -340,7 +340,7 @@ window.CommerceUI = (() => {
     if (order.status === 'cancelled') return { text: 'Cancelado. Stock devuelto.' };
     if (order.status === 'paid') return { text: 'Pago confirmado' };
     const deadline = Date.parse(order.expires_at);
-    if (Number.isFinite(deadline) && deadline <= now) return { text: 'Plazo vencido. Verificando liberacion de stock...', overdue: true };
+    if (Number.isFinite(deadline) && deadline <= now) return { text: 'Plazo vencido. Verificando liberación de stock...', overdue: true };
     if(order.is_payment_test && order.test_payment_state==='rejected')return {text:'Pago de ensayo rechazado. Podés reintentar mientras siga vigente la reserva.',deadline};
     return { text: 'Pendiente de pago · Sin cobro', deadline: Number.isFinite(deadline) ? deadline : null };
   }

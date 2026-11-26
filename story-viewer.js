@@ -46,7 +46,7 @@ window.StoryViewer = (() => {
       try{await StoriesModule.like(story.id,!liked);if(token===serial)await refreshActivity();}catch(error){if(token===serial)$('story-action-status').textContent=error.message;}finally{liking=false;if(token===serial)$('story-like').disabled=false;}
     };
     $('story-delete').hidden=story.userId!==KMD.session?.user?.id;
-    $('story-delete').onclick=async()=>{if(!confirm('Eliminar esta historia? Se quitaran tambien sus likes y comentarios.'))return;
+    $('story-delete').onclick=async()=>{if(!confirm('¿Eliminar esta historia? Se quitarán también sus likes y comentarios.'))return;
       $('story-delete').disabled=true;paused=true;
       try{await StoriesModule.remove(story.id);if(token!==serial)return;STORY_STORE.splice(0,STORY_STORE.length,...STORY_STORE.filter(item=>item.id!==story.id));playlist.splice(index,1);renderStories();toast('Historia eliminada.');if(index>=playlist.length)close();else void render();}
       catch(error){if(token===serial){$('story-action-status').textContent=error.message;$('story-delete').disabled=false;paused=false;}}
@@ -65,7 +65,7 @@ window.StoryViewer = (() => {
     poll=setInterval(()=>void refreshActivity(),10000);
   }
   function open(id){
-    const stories=STORY_STORE.filter(story=>Date.parse(story.expiresAt)>Date.now()),selected=stories.find(story=>story.id===id);if(!selected){toast('Esta historia ya no esta disponible.');return;}
+    const stories=STORY_STORE.filter(story=>Date.parse(story.expiresAt)>Date.now()),selected=stories.find(story=>story.id===id);if(!selected){toast('Esta historia ya no está disponible.');return;}
     playlist=[...stories.filter(s=>s.userId===selected.userId).sort((a,b)=>Date.parse(a.createdAt)-Date.parse(b.createdAt)),...stories.filter(s=>s.userId!==selected.userId)];index=playlist.findIndex(s=>s.id===id);void render();
   }
   document.addEventListener('keydown',event=>{if(!$('sv-overlay')?.classList.contains('show'))return;if(event.key==='Escape')close();if(event.target.closest('input,textarea'))return;if(event.key==='ArrowRight')advance();if(event.key==='ArrowLeft')advance(-1);});

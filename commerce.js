@@ -2,7 +2,7 @@ window.CommerceModule = (() => {
   async function createProduct(data) {
     const sb = getSB();
     const userId = KMD?.session?.user?.id;
-    if (!sb || !userId) throw new Error('Inicia sesion para publicar.');
+    if (!sb || !userId) throw new Error('Iniciá sesión para publicar.');
     const payload = {
       user_id: userId,
       title: AuthModule.sanitizeText(data.title, 120),
@@ -17,7 +17,7 @@ window.CommerceModule = (() => {
     };
     const variants = data.inventory || [{ label: 'Unica', price: payload.price, stock: Number(data.stock || 0), attributes: {} }];
     if (!Number.isFinite(payload.price) || payload.price <= 0) throw new Error('El precio debe ser mayor que cero.');
-    if (variants.some(v => !Number.isInteger(v.stock) || v.stock < 0 || !Number.isFinite(v.price) || v.price <= 0)) throw new Error('Revisa precio y stock de las variantes.');
+    if (variants.some(v => !Number.isInteger(v.stock) || v.stock < 0 || !Number.isFinite(v.price) || v.price <= 0)) throw new Error('Revisá precio y stock de las variantes.');
     const { data: row, error } = await sb.rpc('publish_product', { p_product: payload, p_variants: variants });
     if (error) {
       console.error('[KMD] createProduct:', error);
@@ -64,17 +64,17 @@ window.CommerceModule = (() => {
 
   async function createSale(productId, sellerId) {
     const { variants } = await getProductDetails(productId);
-    if (variants.length !== 1) throw new Error('Selecciona una variante desde el producto.');
+    if (variants.length !== 1) throw new Error('Seleccioná una variante desde el producto.');
     return reserveOrder([{ variant_id: variants[0].id, quantity: 1 }], crypto.randomUUID());
   }
 
   async function completeSale(saleId, rating) {
-    throw new Error('El pago aun no esta integrado. Una venta solo se completara con confirmacion del proveedor.');
+    throw new Error('El pago aún no está integrado. Una venta solo se completará con confirmación del proveedor.');
   }
 
   async function getProductDetails(id) {
     const sb = getSB();
-    if (!sb) throw new Error('Sin conexion con Supabase.');
+    if (!sb) throw new Error('Sin conexión con Supabase.');
     const [product, variants] = await Promise.all([
       sb.from('products').select('*').eq('id', id).single(),
       sb.from('product_variants').select('*').eq('product_id', id).order('label'),
@@ -84,7 +84,7 @@ window.CommerceModule = (() => {
     return { product: product.data, variants: variants.data || [] };
   }
   async function reserveOrder(items, key, delivery=null) {
-    if (!KMD.session?.user?.id) throw new Error('Inicia sesion para crear el pedido.');
+    if (!KMD.session?.user?.id) throw new Error('Iniciá sesión para crear el pedido.');
     const args={p_items:items,p_key:key};
     if(delivery)args.p_delivery=delivery;
     const { data, error } = await getSB().rpc(delivery?'reserve_delivery_order':'reserve_order',args);
@@ -104,10 +104,10 @@ window.CommerceModule = (() => {
   }
 
   async function saveInventory(productId, variants) {
-    if (!KMD.session?.user?.id) throw new Error('Inicia sesion para editar.');
+    if (!KMD.session?.user?.id) throw new Error('Iniciá sesión para editar.');
     if (!variants.length || variants.some(v => !Number.isSafeInteger(v.stock) || v.stock < 0 ||
         !Number.isFinite(v.price) || v.price <= 0 || !Number.isSafeInteger(Number(v.revision)))) {
-      throw new Error('Revisa precio y stock de las variantes.');
+      throw new Error('Revisá precio y stock de las variantes.');
     }
     const { data, error } = await getSB().rpc('save_product_inventory', {
       p_product: productId,
@@ -130,11 +130,11 @@ window.CommerceModule = (() => {
       if (!details.has(item.pid)) details.set(item.pid, await getProductDetails(item.pid));
       const { product, variants } = details.get(item.pid);
       const variant = variants.find(v => v.id === item.variantId);
-      if (product.status !== 'published' || !variant) throw new Error('Un producto ya no esta disponible. Revisa tu carrito.');
+      if (product.status !== 'published' || !variant) throw new Error('Un producto ya no está disponible. Revisá tu carrito.');
       if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > 99 || variant.stock < item.qty) {
         throw new Error(`Stock insuficiente para ${product.title} (${variant.label}).`);
       }
-      if (product.currency !== item.currency || product.user_id !== item.sellerId) throw new Error('El producto cambio. Vuelve a agregarlo al carrito.');
+      if (product.currency !== item.currency || product.user_id !== item.sellerId) throw new Error('El producto cambió. Volvé a agregarlo al carrito.');
       const price = Number(variant.price);
       if (price !== Number(item.price)) priceChanged = true;
       updated.push({ ...item, price, title: product.title, variantLabel: variant.label });

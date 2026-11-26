@@ -11,9 +11,9 @@ window.LiveShopping = (() => {
   const userId = () => KMD.session?.user?.id;
   const sdk = () => sdkPromise ||= import('https://cdn.jsdelivr.net/npm/livekit-client@2.24.1/dist/livekit-client.esm.mjs').catch(error => { sdkPromise = null; throw error; });
   const errorText = error => /Permission|NotAllowed/i.test(error?.name || '')
-    ? 'Permiti el acceso a camara y microfono para continuar.'
-    : /NotFound/i.test(error?.name || '') ? 'No encontramos una camara o un microfono disponible.'
-    : error?.message || 'No se pudo completar la accion. Intenta nuevamente.';
+    ? 'Permití el acceso a la cámara y al micrófono para continuar.'
+    : /NotFound/i.test(error?.name || '') ? 'No encontramos una cámara o un micrófono disponible.'
+    : error?.message || 'No se pudo completar la acción. Intentá nuevamente.';
   const showError = error => { console.error('[KMD live]', error); toast(errorText(error)); };
   function status(text) { if ($('live-status')) $('live-status').textContent = text; }
   function button(text, handler, className = 'btn-p btn-sec') {
@@ -67,15 +67,15 @@ window.LiveShopping = (() => {
         await track.restartTrack(captureOptions(value));
         if (version !== previewGeneration || active?.id !== roomId) return;
         const settings = track.getSourceTrackSettings?.() || {};
-        if (settings.facingMode && settings.facingMode !== value) throw new Error('Este dispositivo no ofrece la camara seleccionada.');
+        if (settings.facingMode && settings.facingMode !== value) throw new Error('Este dispositivo no ofrece la cámara seleccionada.');
         await applyOutgoingEffect(track, filter, beauty);
         if (version !== previewGeneration || active?.id !== roomId) return;
         console.log('[KMD camera]', { requested: value, width: settings.width, height: settings.height, facing: settings.facingMode });
       }
       cameraFacing = value;
-      const message = value === 'environment' ? 'Camara trasera seleccionada.' : 'Camara frontal seleccionada.';
+      const message = value === 'environment' ? 'Cámara trasera seleccionada.' : 'Cámara frontal seleccionada.';
       if (isPresenter()) status(message);
-      else if ($('live-setup-status')) $('live-setup-status').textContent = message + ' En PC se usa la camara disponible; algunos equipos no tienen camara trasera.';
+      else if ($('live-setup-status')) $('live-setup-status').textContent = message + ' En PC se usa la cámara disponible; algunos equipos no tienen cámara trasera.';
     } catch (error) {
       if (track && version === previewGeneration && active?.id === roomId) {
         try { await track.restartTrack(captureOptions(previous)); await applyOutgoingEffect(track, filter, beauty); }
@@ -89,8 +89,8 @@ window.LiveShopping = (() => {
   }
   function renderCameraInfo(info) {
     const text = info
-      ? `Captura real: ${info.sourceWidth} x ${info.sourceHeight} (${info.sourceHeight > info.sourceWidth ? 'vertical' : 'horizontal'}). Emision: ${info.outputWidth} x ${info.outputHeight}.` + (info.appleMobile && info.sourceWidth > info.sourceHeight ? ' Sostene el iPhone vertical y volve a probar la camara.' : '')
-      : 'No se pudo medir la captura procesada. Se esta usando la camara original.';
+      ? `Captura real: ${info.sourceWidth} x ${info.sourceHeight} (${info.sourceHeight > info.sourceWidth ? 'vertical' : 'horizontal'}). Emisión: ${info.outputWidth} x ${info.outputHeight}.` + (info.appleMobile && info.sourceWidth > info.sourceHeight ? ' Sostené el iPhone vertical y volvé a probar la cámara.' : '')
+      : 'No se pudo medir la captura procesada. Se está usando la cámara original.';
     for (const id of ['live-camera-info', 'live-setup-camera-info']) if ($(id)) $(id).textContent = text;
   }
   async function applyOutgoingEffect(track, preset, amount) {
@@ -112,7 +112,7 @@ window.LiveShopping = (() => {
   }
   async function updateEffects(preset, amount) {
     if (!isPresenter() || effectBusy || cameraBusy) return;
-    const track = cameraTrack(); if (!track) { toast('La camara todavia no esta lista.'); return; }
+    const track = cameraTrack(); if (!track) { toast('La cámara todavía no está lista.'); return; }
     let values;
     try { values = LiveVideoEffects.options(preset, amount); } catch (error) { showError(error); return; }
     const id = active.id, previous = { filter, beauty };
@@ -143,7 +143,7 @@ window.LiveShopping = (() => {
       const result = await getSB().from('live_rooms').update({ video_quality: value }).eq('id', id).select().single();
       if (result.error) throw result.error;
       active = result.data; quality = value;
-      status('Calidad de emision actualizada. Se adapta a tu camara y conexion.');
+      status('Calidad de emisión actualizada. Se adapta a tu cámara y conexión.');
     } catch (error) {
       quality = previous;
       try { await track.restartTrack(captureOptions(cameraFacing, previous)); await applyOutgoingEffect(track, filter, beauty); } catch (rollbackError) { console.error('[KMD quality rollback]', rollbackError); }
@@ -169,7 +169,7 @@ window.LiveShopping = (() => {
     } catch { toast('No se pudo ocultar la barra del navegador. El video sigue en modo inmersivo.'); }
   }
   async function api(action, data = {}) {
-    if (!userId() && action !== 'token') throw new Error('Inicia sesion para participar de PULSO.');
+    if (!userId() && action !== 'token') throw new Error('Iniciá sesión para participar de PULSO.');
     const { data: result, error } = await getSB().functions.invoke('live-access', { body: { action, ...data } });
     if (error) {
       let message;
@@ -201,7 +201,7 @@ window.LiveShopping = (() => {
       catch (error) { renderCameraInfo(null); console.warn('[KMD portrait preview]', error.message); }
       const video = localTracks.find(track => track.kind === 'video').attach();
       video.muted = true; video.playsInline = true; $('live-preview').append(video);
-      $('live-setup-status').textContent = 'Vista previa privada. Todavia no estas transmitiendo.';
+      $('live-setup-status').textContent = 'Vista previa privada. Todavía no estás transmitiendo.';
     } catch (error) { stopPreview(); $('live-setup-status').textContent = errorText(error); }
     finally { previewBusy = false; syncCameraControls(); if (control) control.disabled = false; }
   }
@@ -217,8 +217,8 @@ window.LiveShopping = (() => {
     try {
       const config = await api('status');
       $('live-setup-status').textContent = config.configured
-        ? 'Video disponible. Elegi tus productos y proba la camara antes de iniciar.'
-        : 'Falta vincular LiveKit. Podes probar la camara, pero PULSO aun no esta habilitado.';
+        ? 'Video disponible. Elegí tus productos y probá la cámara antes de iniciar.'
+        : 'Falta vincular LiveKit. Podés probar la cámara, pero PULSO aún no está habilitado.';
       const { data, error } = await getSB().from('products').select('id,title,price,currency').eq('user_id', userId()).eq('status', 'published').order('created_at', { ascending: false }).limit(100);
       if (error) throw error;
       list.replaceChildren();
@@ -247,14 +247,14 @@ window.LiveShopping = (() => {
     if (busy || cameraBusy || previewBusy) return;
     const ids = [...document.querySelectorAll('#live-product-picker input:checked')].map(input => input.value);
     const title = $('live-title-inp').value.trim();
-    if (title.length < 3 || title.length > 100) { toast('Escribi un titulo de 3 a 100 caracteres.'); return; }
-    if (!ids.length || ids.length > 12) { toast('Elegi entre 1 y 12 productos para tu PULSO.'); return; }
+    if (title.length < 3 || title.length > 100) { toast('Escribí un título de 3 a 100 caracteres.'); return; }
+    if (!ids.length || ids.length > 12) { toast('Elegí entre 1 y 12 productos para tu PULSO.'); return; }
     busy = true; $('live-start-btn').disabled = true;
     $('live-setup-status').textContent = 'Preparando PULSO...';
     let prepared = null;
     try {
       if (!localTracks.length) await preview();
-      if (!localTracks.some(track => track.kind === 'video')) throw new Error('Necesitamos tu camara para iniciar.');
+      if (!localTracks.some(track => track.kind === 'video')) throw new Error('Necesitamos tu cámara para iniciar.');
       const result = await api('prepare', { title, productIds: ids }); prepared = result.room;
       active = prepared; roomProducts = [];
       $('live-start-modal').classList.remove('open');
@@ -271,7 +271,7 @@ window.LiveShopping = (() => {
         try { await api('heartbeat', { roomId: active.id }); }
         catch (error) { status(errorText(error)); }
       }, 25000);
-      status('Tu PULSO esta activo. Los productos destacados aparecen sobre el video.');
+      status('Tu PULSO está activo. Los productos destacados aparecen sobre el video.');
       renderStories(); renderRP();
     } catch (error) {
       stopPreview(); await disconnect();
@@ -305,7 +305,7 @@ window.LiveShopping = (() => {
         try {
           const participant = connection.localParticipant;
           await participant.setMicrophoneEnabled(!participant.isMicrophoneEnabled);
-          labelControl(mic, participant.isMicrophoneEnabled ? 'Silenciar microfono' : 'Activar microfono');
+          labelControl(mic, participant.isMicrophoneEnabled ? 'Silenciar micrófono' : 'Activar micrófono');
         } catch (error) { showError(error); } finally { mic.disabled = false; }
       });
       const finish = control('live-end', 'Finalizar', 'end', () => end()); finish.classList.add('end');
@@ -340,7 +340,7 @@ window.LiveShopping = (() => {
     room.on(RoomEvent.LocalTrackPublished, publication => { if (publication.track) attach(publication.track, room.localParticipant, true); });
     room.on(RoomEvent.ParticipantConnected, renderAudience);
     room.on(RoomEvent.ParticipantDisconnected, participant => {
-      renderAudience(); if (participant.identity === row.user_id) status('El vendedor se desconecto. Esperando reconexion...');
+      renderAudience(); if (participant.identity === row.user_id) status('El vendedor se desconectó. Esperando reconexión...');
     });
     room.on(RoomEvent.Reconnecting, () => status('Reconectando el video...'));
     room.on(RoomEvent.Reconnected, () => status('Video reconectado'));
@@ -350,7 +350,7 @@ window.LiveShopping = (() => {
       for (const track of tracks) {
         if (track.kind === 'video') {
           try { await applyOutgoingEffect(track, filter, beauty); }
-          catch (error) { status('PULSO usa la camara original en este dispositivo.'); console.warn('[KMD portrait]', error.message); }
+          catch (error) { status('PULSO usa la cámara original en este dispositivo.'); console.warn('[KMD portrait]', error.message); }
         }
         await room.localParticipant.publishTrack(track);
       }
@@ -360,7 +360,7 @@ window.LiveShopping = (() => {
   }
   function renderAudience() {
     if ($('live-audience')) $('live-audience').textContent = connection?.state === 'connected'
-      ? `${connection.remoteParticipants.size + 1} conectados` : 'Sin conexion';
+      ? `${connection.remoteParticipants.size + 1} conectados` : 'Sin conexión';
     $('live-audience')?.setAttribute('title', 'Incluye al vendedor y los espectadores conectados');
   }
   async function loadHost() {
@@ -426,8 +426,8 @@ window.LiveShopping = (() => {
       await disconnect();
       const { data, error } = await getSB().from('live_rooms').select('*').eq('id', id).single();
       if (error) throw error;
-      if (data.user_id === userId()) throw new Error('Para retomar tu camara, finaliza el PULSO anterior y prepara uno nuevo.');
-      if (data.status !== 'live' || Date.parse(data.lease_until) <= Date.now()) throw new Error('Este PULSO ya no esta disponible.');
+      if (data.user_id === userId()) throw new Error('Para retomar tu cámara, finalizá el PULSO anterior y prepará uno nuevo.');
+      if (data.status !== 'live' || Date.parse(data.lease_until) <= Date.now()) throw new Error('Este PULSO ya no está disponible.');
       active = data; nav('live'); await connect(data); await watchRoom(); await refreshRoom();
     } catch (error) { await disconnect(); active = null; showError(error); await directory(); }
     finally { busy = false; }
@@ -452,7 +452,7 @@ window.LiveShopping = (() => {
       if (generation !== version || active?.id !== id) return;
       if (!row || row.status === 'ended' || Date.parse(row.lease_until) <= Date.now()) {
         await disconnect(); active = null; currentLiveSession = null;
-        await directory(); status('PULSO termino o perdio conexion.'); return;
+        await directory(); status('PULSO terminó o perdió conexión.'); return;
       }
       active = row;
       renderEffectControls();
@@ -572,7 +572,7 @@ window.LiveShopping = (() => {
       const { data: profiles, error: profileError } = ids.length ? await getSB().from('public_profiles').select('id,username,first_name').in('id', ids) : { data: [], error: null };
       if (profileError) throw profileError;
       box.replaceChildren();
-      if (!rooms.length) box.textContent = 'Todavia no hay PULSOS activos. Cuando un vendedor inicie, aparecera aca.';
+      if (!rooms.length) box.textContent = 'Todavía no hay PULSOS activos. Cuando un vendedor inicie, aparecerá acá.';
       for (const row of rooms) {
         const card = document.createElement('article'); card.className = 'live-room-card';
         const title = document.createElement('h3'); title.textContent = row.title;
@@ -611,7 +611,7 @@ window.LiveShopping = (() => {
     await disconnect(); stopPreview();
     if (previous?.user_id === previousUserId) {
       try { await api('end', { roomId: previous.id }); }
-      catch (error) { console.error('[KMD live end]', error); toast('Camara apagada. No pudimos confirmar el cierre de sala: revisalo en PULSO.'); }
+      catch (error) { console.error('[KMD live end]', error); toast('Cámara apagada. No pudimos confirmar el cierre de sala: revisalo en PULSO.'); }
     }
   }
   async function end() {
@@ -621,8 +621,8 @@ window.LiveShopping = (() => {
     finally { busy = false; }
   }
   function canLeave() {
-    if (busy) { toast('Espera a que termine la conexion de PULSO.'); return false; }
-    return !active || active.user_id !== userId() || confirm('Al salir se apagara tu camara y se cerrara PULSO. Continuar?');
+    if (busy) { toast('Esperá a que termine la conexión de PULSO.'); return false; }
+    return !active || active.user_id !== userId() || confirm('Al salir se apagará tu cámara y se cerrará PULSO. ¿Continuar?');
   }
   async function page() {
     if (active || busy) return;
